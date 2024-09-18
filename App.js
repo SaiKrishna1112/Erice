@@ -1,12 +1,18 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { PaperProvider } from 'react-native-paper';
+// stack screen imports
+import StacksScreens from './src/Navigations/StacksScreens';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+    <PaperProvider>
+    <NavigationContainer>
+      <StacksScreens/>
       <StatusBar style="auto" />
-    </View>
+    </NavigationContainer>
+    </PaperProvider>
   );
 }
 
