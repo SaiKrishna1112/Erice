@@ -5,274 +5,313 @@ import {
   Text,
   TouchableOpacity,
   View,
-		ScrollView,
-		FlatList,
+  ScrollView,
+  FlatList,
+  Dimensions,
+  Alert,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import { useNavigation, useRoute, setOptions } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import BackIcon from "../../assets/SVG/BackIcon";
-import HeartIcon from "../../assets/SVG/HeartIcon";
-import { RiceSuggestedProducts } from "../../Data/RiceSuggestedProducts";
-import Animated, {
-  FadeInDown,
-  FadeInLeft,
-  FadeInRight,
-} from "react-native-reanimated";
-import SingleProductCard from "../Components/productsDesign/SingleProductCard";
-import { riceData } from "../../Data/RiceData";
+import React, { useState, useEffect, useLayoutEffect } from "react";
+import Animated from "react-native-reanimated";
+import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import Icon from "react-native-vector-icons/Ionicons";
+import CartScreen from "./View/CartScreen";
+const { height, width } = Dimensions.get("window");
 
-const RiceProductDetails = () => {
-  const { params } = useRoute();
-  const [isFav, setIsFav] = useState(false);
-  const { goBack } = useNavigation();
-  // console.log("params:", params.data.id);
-		const { navigate } = useNavigation();
-	const [products,setProducts] = useState();
-  const data = params?.data;
+const RiceProductDetails = ({ route, navigation }) => {
+  const [items, setItems] = useState([]);
+  const [cartItems, setCartItems] = useState({});
+  const [cartCount,setCartCount] = useState(0);
+  const accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzMxMTM1MTQ2LCJleHAiOjE3MzE5OTkxNDZ9.L5ifXxdF9bzuG5tgtK-AAS-DWNKoZ1sXNLl_OydCgC5m9ApGzXKCEIUjdET5mMXhhwmqFbY_nip-KPLjLoaZbQ"; 
 
-const renderItem = ({ item, index }) => {
-	return (
-		<TouchableOpacity onPress={()=>{
-			navigate("Product View",{ name: item.title,data:item })
-		}}>
-				<Animated.View
-						entering={FadeInDown.delay(index * 100)
-								.duration(600)
-								.springify()
-								.damping(12)}
-				>
-						{/* <TouchableOpacity
-								onPress={() => {
-										navigate("GroceryProductDetail", { name: item.title,data: item });
-								}}
-						> */}
-								<SingleProductCard item={item} />
-						{/* </TouchableOpacity> */}
-				</Animated.View>
-			</TouchableOpacity>
-	);
-};
+  useEffect(() => {
+    setItems(route.params.details.itemsResponseDtoList);
+    
+  }, []);
 
+  useEffect(() => {
+    // Fetch cart items for the user
+    const fetchCartItems = async () => {
+      try {
+        const response = await axios.get(
+          "https://meta.oxyloans.com/api/erice-service/cart/customersCartItems?customerId=4",
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+        
+        const cartData = response.data;
+        const cartItemsMap = cartData.reduce((acc, item) => {
+          acc[item.itemId] = item.cartQuantity;
+          // console.log({acc});
+          
+          return acc;
+        }, {});
+        // console.log(cartItemsMap);
+        setCartItems(cartItemsMap);
+        setCartCount(cartData.length);
+        console.log("cart count",cartCount);
+        
+      } catch (error) {
+        console.error("Error fetching cart items:", error.response);
+      }
+    };
 
-return (
-  <View style={styles.container}>
-    <ScrollView>
-      {/* header */}
-      <View style={styles.greyBackground}>
-          <SafeAreaView />
-          {/* Header Icons */}
-          <View style={styles.iconsContainer}>
-              <Animated.View entering={FadeInLeft.delay(100).duration(400)}>
-                  {/* <TouchableOpacity onPress={() => goBack()} style={styles.iconBox}>
-                      <BackIcon />
-                  </TouchableOpacity> */}
-              </Animated.View>
-              <Animated.View entering={FadeInRight.delay(100).duration(400)} style={{alignSelf:"flex-end",marginRight:15}}>
-                  <TouchableOpacity
-                      onPress={() => setIsFav(!isFav)}
-                      style={styles.iconBox}
-                  >
-                      <HeartIcon isFav={isFav} />
-                  </TouchableOpacity>
-              </Animated.View>
-          </View>
-          {/* Image */}
-          <Animated.Image
-              sharedTransitionTag={`${data.id}`}
-              style={styles.image}
-              source={data.thumbnail}
+    fetchCartItems();
+  }, []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={{ marginRight: 15 }}>
+          <Pressable onPress={() => navigation.navigate("My Cart")}>
+            <View style={styles.cartIconContainer}>
+              <Icon name="cart-outline" size={30} color="#FFF" />
+              {cartCount > 0 && (
+                <View style={{position: "absolute",
+                  right: -8,
+                  top: -5,
+                  backgroundColor: "#FF6F00",
+                  borderRadius: 10,
+                  paddingHorizontal: 5,
+                  paddingVertical: 1,}}>
+                  <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "bold",}}>{cartCount}</Text>
+                </View>
+              )}
+            </View>
+          </Pressable>
+        </View>
+      ),
+    });
+  }, [navigation,cartCount]);
+  
+  const UpdateCartCount = (newCount)=>setCartCount(newCount);
+  const handleAddToCart = async (item) => {
+    const data = { customerId: 4, itemId: item.itemId, quantity: 1 };
+    try {
+      const response = await axios.post(
+        "https://meta.oxyloans.com/api/erice-service/cart/add_Items_ToCart",
+        data,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      Alert.alert("Success", "Item added to cart successfully");
+
+      setCartItems((prevCartItems) => ({
+        ...prevCartItems,
+        [item.itemId]: 1, // Item is added with a quantity of 1
+      }));
+      UpdateCartCount(cartCount+1);
+    } catch (error) {
+      console.error("Error adding item to cart:", error.response);
+    }
+  };
+
+  const incrementQuantity = async (item) => {
+    const newQuantity = cartItems[item.itemId] + 1;
+
+    const data = { customerId: 4, itemId: item.itemId, quantity: newQuantity };
+    try {
+      await axios.patch(
+        "https://meta.oxyloans.com/api/erice-service/cart/incrementCartData",
+        data,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      setCartItems((prevCartItems) => ({
+        ...prevCartItems,
+        [item.itemId]: newQuantity,
+      }));
+      console.log("increment data");
+      // UpdateCartCount(cartCount+1);
+      // console.log(response.data);
+      
+    } catch (error) {
+      console.error("Error incrementing item quantity:", error.response);
+    }
+  };
+
+  const decrementQuantity = async (item) => {
+    const newQuantity = cartItems[item.itemId] - 1;
+    if (newQuantity === 0) {
+      // Optionally, remove the item from the cart
+      setCartItems((prevCartItems) => {
+        const updatedCartItems = { ...prevCartItems };
+        delete updatedCartItems[item.itemId];
+        return updatedCartItems;
+      });
+      Alert.alert("Item removed", "Item removed from the cart");
+    } else {
+      const data = { customerId: 4, itemId: item.itemId, quantity: newQuantity };
+      try {
+        await axios.patch(
+          "https://meta.oxyloans.com/api/erice-service/cart/decrementCartData",
+          data,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+        setCartItems((prevCartItems) => ({
+          ...prevCartItems,
+          [item.itemId]: newQuantity,
+        }));
+        console.log("decremented cart data");
+        UpdateCartCount(cartCount - 1);
+      } catch (error) {
+        console.error("Error decrementing item quantity:", error.response);
+      }
+    }
+  };
+
+  const renderItem = ({ item }) => {
+    const itemQuantity1 = cartItems[item.itemId] || 0;
+    
+    return (
+      <Animated.View key={item.itemId}>
+        <View style={styles.productContainer}>
+          <Image
+            source={{ uri: item.itemImage }}
+            style={styles.productImage}
           />
-      </View>
-      {/* body */}
-      <View style={styles.bodyContainer}>
-          {/* <View style={styles.box}>
-              <Animated.Text
-                  entering={FadeInLeft.delay(200).duration(500)}
-                  style={styles.title}
-              >
-                  {data.title}
-              </Animated.Text>
-              <View style={styles.innerBox}>
-                  <Animated.Text
-                      entering={FadeInRight.delay(200).duration(500)}
-                      style={styles.price}
-                  >
-                      <Text style={styles.currency}>$</Text>
-                      {data.price}
-                  </Animated.Text>
-                  <Animated.Text
-                      entering={FadeInRight.delay(200).duration(500)}
-                      style={styles.rating}
-                  >
-                      ⭐️{data.rating}{" "}
-                  </Animated.Text>
+          <View>
+            <Text>{item.priceMrp}</Text>
+            <Text style={styles.productName}>{item.itemName}</Text>
+            <Text style={styles.productPrice}>MRP: Rs.{item.itemMrp}/-</Text>
+            <Text style={styles.productWeight}>
+              {item.quantity} {item.units}
+            </Text>
+            {itemQuantity1 > 0 ? (
+              <View style={styles.quantityContainer}>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => decrementQuantity(item)}
+                >
+                  <Text style={styles.quantityButtonText}>-</Text>
+                </TouchableOpacity>
+                <Text style={styles.quantityText}>{itemQuantity1}</Text>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => incrementQuantity(item)}
+                >
+                  <Text style={styles.quantityButtonText}>+</Text>
+                </TouchableOpacity>
               </View>
-          </View> */}
-
-          {/* Description */}
-          <Animated.Text
-              entering={FadeInLeft.delay(200).duration(500)}
-              style={styles.description}
-          >
-              {data.description}
-          </Animated.Text>
-
-        <Animated.Text
-              entering={FadeInLeft.delay(200).duration(500)}
-              style={styles.suggestedTitle}
-          >
-              Suggested Products
-          </Animated.Text>
-          {/* Products */}
-    <FlatList
-        data={riceData}
-        keyExtractor={(item) => `${item.id}`}
-        renderItem={renderItem}
-        contentContainerStyle={styles.contentContainerStyle}
-        showsVerticalScrollIndicator={false}
-    />
-
-          {/* <Animated.View entering={FadeInLeft.delay(200).duration(500)}>
-              <TouchableOpacity style={styles.btn}>
-                  <Text style={styles.btnTitle}>Shop Now</Text>
+            ) : (
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => handleAddToCart(item)}
+              >
+                <Text style={styles.addButtonText}>Add to Cart</Text>
               </TouchableOpacity>
-          </Animated.View> */}
-
-          {/* Suggested Products */}
-          <Animated.Text
-              entering={FadeInLeft.delay(200).duration(500)}
-              style={styles.suggestedTitle}
-          >
-              Suggested Products
-          </Animated.Text>
-          <View style={styles.suggestedProductContainer}>
-              {RiceSuggestedProducts.map((value, index) => {
-                  return (
-                      <Animated.View
-                          entering={FadeInDown.delay(200).duration(600)}
-                          key={value.id.toString()}
-                      >
-                          <Image source={value.thumbnail} style={styles.suggestedImg} />
-                          <Text style={styles.suggestedProductTitle}>{value.title}</Text>
-                      </Animated.View>
-                  );
-              })}
+            )}
           </View>
-      </View>
-    </ScrollView>
-  </View>
-);
+        </View>
+      </Animated.View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <ScrollView>
+        <Image
+          source={require("../../assets/Images/1.jpg")}
+          style={styles.banner}
+        />
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.itemId.toString()}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+        />
+      </ScrollView>
+    </View>
+  );
 };
 
 export default RiceProductDetails;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-				// marginTop:10
+  container: { flex: 1 },
+  banner: {
+    width: width,
+    height: 250,
+    resizeMode: "cover",
+    marginVertical: 10,
   },
-  greyBackground: {
-    height: 350,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
-    backgroundColor: "lightgrey",
+  cartIconContainer: {
+    position: "relative",
   },
-  iconsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    // paddingHorizontal: 20,
-				marginTop:-15
-  },
-  iconBox: {
-    backgroundColor: "#fff",
-    height: 35,
-    width: 35,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 25,
+  productContainer: {
+    backgroundColor: "#FFF",
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 8,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+    flexDirection: "row",
   },
-  image: {
-    height: 200,
-    width: 350,
-    resizeMode: "contain",
+  productImage: {
+    height: height / 8,
+    width: width * 0.25,
     alignSelf: "center",
+    margin: 5,
+    marginRight: 30,
   },
-  bodyContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-				marginBottom:30
+  productName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
   },
-  box: {
+  productPrice: {
+    fontSize: 16,
+    color: "#388E3C",
+    fontWeight: "bold",
+    marginTop: 4,
+  },
+  productWeight: {
+    fontSize: 14,
+    color: "#777",
+    marginTop: 4,
+  },
+  addButton: {
+    backgroundColor: "#FF6F00",
+    paddingVertical: 8,
+    borderRadius: 4,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  addButtonText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  quantityContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    marginTop: 10,
   },
-  title: {
-    fontSize: 24,
-    color: "#000",
-    fontWeight: "bold",
+  quantityButton: {
+    backgroundColor: "#FF6F00",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
   },
-  price: {
-    fontSize: 24,
-    color: "#000",
-    fontWeight: "bold",
-  },
-  currency: {
-    color: "#24a8af",
-  },
-  rating: {
+  quantityButtonText: {
+    color: "#FFF",
     fontSize: 18,
-    color: "#000",
-  },
-  innerBox: {
-    alignItems: "center",
-  },
-  description: {
-    fontSize: 16,
-    color: "#000",
-    marginVertical: 30,
-  },
-  btn: {
-    backgroundColor: "#24a8af",
-    width: "30%",
-    padding: 10,
-    alignItems: "center",
-    borderRadius: 25,
-  },
-  btnTitle: {
-    fontSize: 18,
-    color: "#fff",
-  },
-  suggestedTitle: {
-    fontSize: 24,
-    color: "#000",
     fontWeight: "bold",
-    marginTop: 20,
   },
-  suggestedImg: {
-    width: 100,
-    height: 100,
-    resizeMode: "contain",
-    alignSelf: "center",
-  },
-  suggestedProductTitle: {
+  quantityText: {
     fontSize: 16,
-    color: "#000",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  suggestedProductContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    marginHorizontal: 15,
   },
 });
+
+
+
+

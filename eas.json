@@ -1,16 +1,21 @@
 {
   "cli": {
-    "version": ">= 11.0.2"
+    "version": ">= 11.0.2",
+    "appVersionSource": "local" 
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal"
+    
     },
     "preview": {
       "distribution": "internal"
+     
     },
-    "production": {}
+    "production": {
+      
+    }
   },
   "submit": {
     "production": {}

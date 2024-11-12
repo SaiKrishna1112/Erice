@@ -1,235 +1,293 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, KeyboardAvoidingView ,ScrollView} from 'react-native';
-import MapView, { Marker } from 'react-native-maps'; // Importing MapView and Marker from react-native-maps
-import * as Location from 'expo-location'; // Importing Location module from expo for geolocation services
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, KeyboardAvoidingView, ScrollView } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { TextInput } from 'react-native';
 import { Platform } from 'react-native';
 
 const AddAddress = () => {
-  // State variables to hold different pieces of data
-  const [location, setLocation] = useState(null); // Holds the current location of the user
-  const [errorMsg, setErrorMsg] = useState(null); // Holds any error message related to location permissions
-  const [lat, setLat] = useState(null); // Holds latitude for the marker
-  const [lng, setLng] = useState(null); // Holds longitude for the marker
+
+  const [location, setLocation] = useState(null); 
+  const [errorMsg, setErrorMsg] = useState(null); 
+  const [lat, setLat] = useState(null); 
+  const [lng, setLng] = useState(null);
   const [flatNo, setFlatNo] = useState('');
   const [landMark, setLandMark] = useState('');
   const [pincode, setPincode] = useState('');
   const [selectedType, setSelectedType] = useState(null);
+  const [errors, setErrors] = useState({
+    flatNo: '',
+    landMark: '',
+    pincode: '',
+  });
 
-  // Reference to the MapView, so we can manipulate it (like zooming or centering)
   const mapRef = useRef(null);
 
-  // useEffect to request location permissions and get the user's current location when the component mounts
   useEffect(() => {
     (async () => {
-      // Request location permissions from the user
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        // If permission is not granted, update the error message and return
         setErrorMsg('Permission to access location was denied');
         return;
       }
 
       // Get the user's current position
       let loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc); // Update the location state with the user's current position
-      setLat(loc.coords.latitude); // Set the latitude based on user's current position
-      setLng(loc.coords.longitude); // Set the longitude based on user's current position
+      setLocation(loc); 
+      setLat(loc.coords.latitude); 
+      setLng(loc.coords.longitude); 
     })();
-  }, []); // Empty dependency array means this effect runs once, when the component mounts
+  }, []); 
 
-  // Function to handle location confirmation (triggered by the "Confirm Location" button)
-  const confirmLocation = () => {
-    Alert.alert('Location Confirmed', `Lat: ${lat}, Lng: ${lng}`);
+  const validateFields = () => {
+    let isValid = true;
+    const newErrors = {};
+
+    if (!flatNo) {
+      newErrors.flatNo = 'Flat No is required';
+      isValid = false;
+    }
+    if (!landMark) {
+      newErrors.landMark = 'Land Mark is required';
+      isValid = false;
+    }
+    if (!pincode) {
+      newErrors.pincode = 'Pincode is required';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
+
+  const confirmLocation = async () => {
+    if (!validateFields()) {
+      return;
+    }
+
+    // Prepare the data to be sent in the API request
+    const addressData = {
+      address: `${flatNo}, ${landMark}, ${pincode}`,
+      customerEmail: '', 
+      customerId: 4, 
+      customerName: '', 
+      flatNo,
+      landMark,
+      latitude: lat.toString(),
+      longitude: lng.toString(),
+      pinCode: pincode,
+    };
+
+    try {
+      const response = await fetch('https://meta.oxyloans.com/api/erice-service/user/profileUpdate', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTczMTMwODYwNiwiZXhwIjoxNzMyMTcyNjA2fQ.5edNAnfhlAPuAtDLvfxBHeR6XKsmiGtWMiVJHlY6LKvH3hCRSQEghodAph0sN_ID8EMcd0Hkn8pijcmRQH0iZw', // Replace with actual token
+        },
+        body: JSON.stringify(addressData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', 'Address saved successfully');
+        console.log("address data ", response);
+      } else {
+        Alert.alert('Error', result.message || 'Failed to update address');
+      }
+    } catch (error) {
+      console.error('Error updating address:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    }
+  };
+
   const handleTypePress = (type) => {
     setSelectedType(type);
   };
 
-  // Function to move the map to a specific latitude and longitude (e.g., when searching or placing a marker)
   const moveToLocation = (lat, lng) => {
     mapRef.current.animateToRegion({
       latitude: lat,
       longitude: lng,
-      latitudeDelta: 0.01, // Smaller delta means a more zoomed-in map
+      latitudeDelta: 0.01, 
       longitudeDelta: 0.01,
     });
   };
 
-  // Function to handle marker dragging, updating lat/lng when the user drags the marker
   const onMarkerDragEnd = (e) => {
-    setLat(e.nativeEvent.coordinate.latitude); // Update latitude when marker is dragged
-    setLng(e.nativeEvent.coordinate.longitude); // Update longitude when marker is dragged
+    setLat(e.nativeEvent.coordinate.latitude); 
+    setLng(e.nativeEvent.coordinate.longitude); 
   };
 
-  // If location hasn't been fetched yet, display a loading message
+ 
   if (!location) {
     return <Text>Loading...</Text>;
   }
 
-  // Render the map and the confirm button
+ 
+  const isSaveDisabled = !flatNo || !landMark || !pincode;
+
   return (
-    
     <View style={styles.container}>
       <MapView
-        // ref={mapRef} // Attach the ref to the MapView
-        style={styles.map} // Apply styles to the MapView
+        style={styles.map} 
         initialRegion={{
           latitude: 17.416212058100765, 
           longitude: 78.47188534522536,
-          latitudeDelta: 0.0922, // Initial zoom level for the map (latitude)
-          longitudeDelta: 0.0421, // Initial zoom level for the map (longitude)
+          latitudeDelta: 0.0922, 
+          longitudeDelta: 0.0421, 
         }}
-        showsUserLocation={true} // Show the user's current location on the map
-        // onUserLocationChange={(e) => {
-        //   const { latitude, longitude } = e.nativeEvent.coordinate;
-        //   setLat(latitude); // Update latitude when the user's location changes
-        //   setLng(longitude); // Update longitude when the user's location changes
-        // }}
+        showsUserLocation={true} 
       >
         {lat && lng && (
-          // If latitude and longitude are available, display a draggable marker at that position
           <Marker
-            coordinate={{ latitude: lat, longitude: lng }} // Marker position
-            draggable // Allow marker dragging
-            onDragEnd={onMarkerDragEnd} // Handle drag event to update lat/lng
+            coordinate={{ latitude: lat, longitude: lng }} 
+            draggable 
+            onDragEnd={onMarkerDragEnd} 
           />
         )}
       </MapView>
 
-      {/* Button to confirm location */}
       <KeyboardAvoidingView
-      style={{justifyContent:"center",flex:1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-     <ScrollView>
-      <View style={{borderColor:"black",borderWidth:2,height:400,borderRadius:25}}>
-       
-        <Text style={{textAlign:"center" ,fontSize:18,color:"green",fontWeight:"700",marginTop:10}}>Set Your Delivery Location</Text>
-        <View style={styles.inputContainer}>
-        <Text style={styles.label}>Flat No</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Flat No"
-          value={flatNo}
-          onChangeText={setFlatNo}
-        />
-      </View>
+        style={{ justifyContent: "center", flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView>
+          <View style={{ borderColor: "black", borderWidth: 2, height: 400, borderRadius: 25 }}>
+            <Text style={{ textAlign: "center", fontSize: 18, color: "green", fontWeight: "700", marginTop: 10 }}>
+              Add your Address
+            </Text>
 
-      {/* Land Mark Input */}
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Land Mark</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Land Mark"
-          value={landMark}
-          onChangeText={setLandMark}
-        />
-      </View>
+            {/* Flat No Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Flat No</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Flat No"
+                value={flatNo}
+                onChangeText={setFlatNo}
+              />
+              {errors.flatNo && <Text style={styles.error}>{errors.flatNo}</Text>}
+            </View>
 
-      {/* Pincode Input */}
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Pincode</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Pincode"
-          value={pincode}
-          onChangeText={setPincode}
-          keyboardType="numeric"
-        />
-        </View>
-         {/* Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, selectedType === 'Home' && styles.buttonSelected]}
-          onPress={() => handleTypePress('Home')}
-        >
-          <Text style={styles.buttonText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, selectedType === 'Work' && styles.buttonSelected]}
-          onPress={() => handleTypePress('Work')}
-        >
-          <Text style={styles.buttonText}>Work</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, selectedType === 'Others' && styles.buttonSelected]}
-          onPress={() => handleTypePress('Others')}
-        >
-        <Text style={styles.buttonText}>Others</Text>
-        </TouchableOpacity>
-        </View>
-      <TouchableOpacity style={styles.button1} onPress={confirmLocation}>
-        <Text style={styles.buttonText}>Save</Text>
-      </TouchableOpacity>
-     
-      </View>
-      </ScrollView>
+            {/* Land Mark Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Land Mark</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Land Mark"
+                value={landMark}
+                onChangeText={setLandMark}
+              />
+              {errors.landMark && <Text style={styles.error}>{errors.landMark}</Text>}
+            </View>
+
+            {/* Pincode Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Pincode</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Pincode"
+                value={pincode}
+                onChangeText={setPincode}
+                keyboardType="numeric"
+                maxLength={6}
+              />
+              {errors.pincode && <Text style={styles.error}>{errors.pincode}</Text>}
+            </View>
+
+            {/* Type Selection Buttons */}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.button, selectedType === 'Home' && styles.buttonSelected]}
+                onPress={() => handleTypePress('Home')}
+              >
+                <Text style={styles.buttonText}>Home</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, selectedType === 'Work' && styles.buttonSelected]}
+                onPress={() => handleTypePress('Work')}
+              >
+                <Text style={styles.buttonText}>Work</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, selectedType === 'Others' && styles.buttonSelected]}
+                onPress={() => handleTypePress('Others')}
+              >
+                <Text style={styles.buttonText}>Others</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Save Button */}
+            <TouchableOpacity 
+              style={[styles.button1, isSaveDisabled && { backgroundColor: '#ccc' }]} 
+              onPress={confirmLocation}
+              disabled={isSaveDisabled}
+            >
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
-    
-   
   );
 };
 
-// Styles for the component
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Take up the entire screen
+    flex: 1,
   },
   map: {
-    width: Dimensions.get('window').width, // Map width should match the screen width
-    height: Dimensions.get('window').height * 0.6, // Map height should be 80% of the screen height
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.5,
   },
   button1: {
-    backgroundColor: '#f7941e', // Button color
-    height: 50, // Button height
-    justifyContent: 'center', // Center content vertically
-    alignItems: 'center', // Center content horizontally
-   
-    marginTop:10// Margin around the button
+    backgroundColor: '#f7941e',
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 5,
   },
- 
   inputContainer: {
-    marginTop:5,
-    marginBottom: 20,
-    marginLeft:20
+    marginTop: 5,
+    marginBottom: 5,
+    marginLeft: 20,
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
-    
   },
   input: {
-    height: 30,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    height: 40,
+    paddingLeft: 10,
+  },
+  error: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
   },
   buttonContainer: {
+    marginTop:10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
-    alignItems:"center",
-    paddingLeft:15,
-    paddingRight:15
+    justifyContent: 'space-around',
+    marginBottom: 10,
   },
   button: {
-    flex: 1,
-    padding: 2,
-    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#007bff',
     borderRadius: 5,
-    backgroundColor: 'grey',
-    justifyContent:"space-between",
-    marginLeft:5
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
   },
   buttonSelected: {
-    backgroundColor: '#f77f00',
+    backgroundColor: '#0056b3',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
   },
 });
 

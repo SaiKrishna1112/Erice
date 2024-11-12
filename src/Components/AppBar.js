@@ -33,8 +33,8 @@ export default function CustomNavigationBar({
       <Appbar.Content title={title} />
       {!back ? (
 							<>
-							<Appbar.Action icon="magnify" onPress={() => {}} />
-        <Menu
+							{/* <Appbar.Action icon="magnify" onPress={() => {}} /> */}
+        {/* <Menu
           visible={visible}
           onDismiss={closeMenu}
           anchor={
@@ -52,12 +52,12 @@ export default function CustomNavigationBar({
           />
           <Menu.Item
             onPress={() => {
-              
+              navigation.navigate('Login')
               closeMenu();
             }}
             title="Logout"
           />
-        </Menu>
+        </Menu> */}
 								</>
       ) : null}
     </Appbar.Header>
