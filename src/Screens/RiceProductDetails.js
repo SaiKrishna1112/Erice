@@ -17,12 +17,19 @@ import axios from "axios";
 import Icon from "react-native-vector-icons/Ionicons";
 import CartScreen from "./View/CartScreen";
 const { height, width } = Dimensions.get("window");
+import { useSelector } from 'react-redux';
+
 
 const RiceProductDetails = ({ route, navigation }) => {
+
+      
+  const userData = useSelector(state => state.counter);
+  const token=userData.accessToken
+  const customerId=userData.userId
+
   const [items, setItems] = useState([]);
   const [cartItems, setCartItems] = useState({});
   const [cartCount,setCartCount] = useState(0);
-  const accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzMxMTM1MTQ2LCJleHAiOjE3MzE5OTkxNDZ9.L5ifXxdF9bzuG5tgtK-AAS-DWNKoZ1sXNLl_OydCgC5m9ApGzXKCEIUjdET5mMXhhwmqFbY_nip-KPLjLoaZbQ"; 
 
   useEffect(() => {
     setItems(route.params.details.itemsResponseDtoList);
@@ -34,9 +41,11 @@ const RiceProductDetails = ({ route, navigation }) => {
     const fetchCartItems = async () => {
       try {
         const response = await axios.get(
-          "https://meta.oxyloans.com/api/erice-service/cart/customersCartItems?customerId=4",
+          `https://meta.oxyloans.com/api/erice-service/cart/customersCartItems?customerId=${customerId}`,
           {
-            headers: { Authorization: `Bearer ${accessToken}` },
+            headers: { 
+              Authorization: `Bearer ${token}` 
+            },
           }
         );
         
@@ -87,13 +96,13 @@ const RiceProductDetails = ({ route, navigation }) => {
   
   const UpdateCartCount = (newCount)=>setCartCount(newCount);
   const handleAddToCart = async (item) => {
-    const data = { customerId: 4, itemId: item.itemId, quantity: 1 };
+    const data = { customerId: customerId, itemId: item.itemId, quantity: 1 };
     try {
       const response = await axios.post(
         "https://meta.oxyloans.com/api/erice-service/cart/add_Items_ToCart",
         data,
         {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       Alert.alert("Success", "Item added to cart successfully");
@@ -111,13 +120,13 @@ const RiceProductDetails = ({ route, navigation }) => {
   const incrementQuantity = async (item) => {
     const newQuantity = cartItems[item.itemId] + 1;
 
-    const data = { customerId: 4, itemId: item.itemId, quantity: newQuantity };
+    const data = { customerId: customerId, itemId: item.itemId, quantity: newQuantity };
     try {
       await axios.patch(
         "https://meta.oxyloans.com/api/erice-service/cart/incrementCartData",
         data,
         {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setCartItems((prevCartItems) => ({
@@ -144,13 +153,13 @@ const RiceProductDetails = ({ route, navigation }) => {
       });
       Alert.alert("Item removed", "Item removed from the cart");
     } else {
-      const data = { customerId: 4, itemId: item.itemId, quantity: newQuantity };
+      const data = { customerId: customerId, itemId: item.itemId, quantity: newQuantity };
       try {
         await axios.patch(
           "https://meta.oxyloans.com/api/erice-service/cart/decrementCartData",
           data,
           {
-            headers: { Authorization: `Bearer ${accessToken}` },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         setCartItems((prevCartItems) => ({

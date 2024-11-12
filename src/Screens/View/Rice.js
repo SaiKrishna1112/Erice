@@ -3,14 +3,20 @@ import React, { useState, useEffect } from 'react';
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 const { height, width } = Dimensions.get('window');
 
 const Rice = () => {
+    
+  const userData = useSelector(state => state.counter);
+  const token=userData.accessToken
+  const customerId=userData.userId
+//   console.log({accessToken})
     const navigation = useNavigation();
     const [categories, setCategories] = useState([]);
 
-    const accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzMxMDYwNTkxLCJleHAiOjE3MzE5MjQ1OTF9.AZiC8RauTx8NWloTcI6CzGKHVhXTJOyvGW6OhnrrSfCVoCH7Aw1bOupBCHTxstNLgoeDnk4j401IYjJOVnvn2w"; 
+    // const accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzMxMDYwNTkxLCJleHAiOjE3MzE5MjQ1OTF9.AZiC8RauTx8NWloTcI6CzGKHVhXTJOyvGW6OhnrrSfCVoCH7Aw1bOupBCHTxstNLgoeDnk4j401IYjJOVnvn2w"; 
 
     // useEffect(() => {
     //     getAllCategories();
@@ -18,7 +24,7 @@ const Rice = () => {
    useEffect (()=>{
     const getAllCategories = () => {
         axios.get('https://meta.oxyloans.com/api/erice-service/user/showItemsForCustomrs',{
-            headers: { Authorization: `Bearer ${accessToken}` },
+            headers: { Authorization: `Bearer ${token}` },
           })
             .then(response => {
                 console.log("showItemsForCustomrs", response.data[0].categoryName);

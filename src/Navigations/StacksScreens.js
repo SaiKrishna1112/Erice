@@ -26,7 +26,7 @@ export default function StacksScreens() {
   const Stack = createStackNavigator();
   return (
     <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName="Login"
       screenOptions={{
         headerTintColor: "white",
         headerTitleStyle: styles.headerTitleStyle,

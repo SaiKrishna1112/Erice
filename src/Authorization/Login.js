@@ -239,6 +239,9 @@ import axios from 'axios';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { useDispatch } from 'react-redux';
+import { AccessToken, UserID } from '../../Redux/action/index';
+
 const LoginPage = () => {
   const [mobileNumber, setMobileNumber] = useState('');
   const [isLogin, setIsLogin] = useState(false);
@@ -247,6 +250,7 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({ mobileNumber: '', otp: '' });
   const [mobileOtpSession, setMobileOtpSession] = useState('');
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -298,6 +302,7 @@ const LoginPage = () => {
         const response = await axios.post('http://65.0.147.157:8282/api/erice-service/user/login-or-register', {
           mobileNumber: mobileNumber,
         });
+        console.log("handleSendOtp",response.data)
         if (response.data.mobileOtpSession) {
           setResponseMessage('OTP sent successfully');
           setMobileOtpSession(response.data.mobileOtpSession);
@@ -318,8 +323,11 @@ const LoginPage = () => {
           mobileOtpSession: mobileOtpSession,
           mobileOtpValue: otp,
         });
-        if (response.data.mobileVerified) {
-          await AsyncStorage.setItem("accessToken", response.data.accessToken);
+        console.log("handleVerifyOtp",response.data)
+        if (response.data.accessToken!=null) {
+          // await AsyncStorage.setItem("accessToken", response.data.accessToken);
+          dispatch(AccessToken(response.data));
+
           Alert.alert('Success', 'Login successful!');
           navigation.navigate('Home');
         } else {

@@ -42,17 +42,32 @@
 
 import axios from 'axios';
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Button, ScrollView, StyleSheet, TouchableOpacity, Image, TextInput, Alert } from 'react-native';
+import { View, Text, Button, ScrollView, StyleSheet, TouchableOpacity, Image, TextInput, Alert,Linking } from 'react-native';
 import { RadioButton, Checkbox } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSelector } from 'react-redux';
+import encryptEas from "../Payments/components/encryptEas"
+import decryptEas from "../Payments/components/decryptEas"
+
 
 
 const CheckOut = ({ navigation,route }) => {
    
     //  const {locationdata} = route.params
     //  console.log("location data",locationdata);
+        
+  const userData = useSelector(state => state.counter);
+  const token=userData.accessToken
+  const customerId=userData.userId
      
+
+
+  const [profileForm, setProfileForm] = useState({
+    customer_name: '',
+    customer_email: '',
+    customer_mobile: '',
+});
     const [addressList, setAddressList] = useState([]);
     const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [paymentType, setPaymentType] = useState('');
@@ -64,12 +79,15 @@ const CheckOut = ({ navigation,route }) => {
     const [discount, setDiscount] = useState(0);  
     const [deliveryFee, setDeliveryFee] = useState(0);  
     const [grandTotal, setGrandTotal] = useState(0);
+    // const[loading1,setLoading]
+  const [paymentID, setPaymentId] = useState(null)
+  const [paymentStatus, setPaymentStatus] = useState(null);
     const [waitingLoader, setWaitingLoader] = useState(false);
     const [addressData,setAddressData] = useState();
     const [status,setStatus] = useState(false)
-    const accessToken =  AsyncStorage.getItem("accessToken");
+    const[transactionId,setTransactionId]=useState('')
     const [locationData, setLocationData] = useState({
-        customerId:4,
+        // customerId:4,
         flatNo: '',
         landMark: '',
         pincode: '',
@@ -80,8 +98,43 @@ const CheckOut = ({ navigation,route }) => {
      
       });
 
+
+
+
+      const getProfile = async () => {
+        try {
+            const response = await axios({ 
+                method: 'GET' ,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                url:`https://meta.oxyloans.com/api/erice-service/user/customerProfileDetails?customerId=${customerId}`
+
+            })
+            console.log(response.data);
+            
+            if (response.status===200) {
+                console.log(response.data);
+                // setUser(response.data);
+                setProfileForm({
+                    customer_name: response.data.name,
+                    customer_email: response.data.email,
+                    customer_mobile: response.data.mobileNumber,
+                });
+
+            }
+            // showToast(response.data.msg || 'Profile loaded successfully');
+        } catch (error) {
+            console.error(error);
+            // showToast('Error loading profile');
+        }
+    };
+
+
       useFocusEffect(
         useCallback(() => {
+            getProfile();
             calculateTotal();
             totalCart();
             fetchOrderAddress();
@@ -111,10 +164,10 @@ const CheckOut = ({ navigation,route }) => {
     const fetchOrderAddress = async () => {
         try {
           const response = await axios({
-            url: 'https://meta.oxyloans.com/api/erice-service/checkout/orderAddress?customerId=4',
+            url: `https://meta.oxyloans.com/api/erice-service/checkout/orderAddress?customerId=${customerId}`,
             method: 'GET',
             headers: {
-              'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzMxMTM1MTQ2LCJleHAiOjE3MzE5OTkxNDZ9.L5ifXxdF9bzuG5tgtK-AAS-DWNKoZ1sXNLl_OydCgC5m9ApGzXKCEIUjdET5mMXhhwmqFbY_nip-KPLjLoaZbQ'
+              'Authorization': `Bearer ${token}`
             }
           });
       
@@ -134,10 +187,10 @@ const CheckOut = ({ navigation,route }) => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTczMTA0MzA2NiwiZXhwIjoxNzMxOTA3MDY2fQ.eqxdiGoFWqPvPaVVDnxOS3mM9XWDSo0YylZ6gQt7kz0gduQREPq2202OyhmYRCOfXK_GW8xMbsLmEOKe9rHdtg'
+              'Authorization': `Bearer ${token}`
             },
             data: {
-              customerId: 4
+              customerId: customerId
             }
           });
     
@@ -176,7 +229,7 @@ const CheckOut = ({ navigation,route }) => {
         // console.log(address);
         
         setLocationData({
-            customerId:4,
+            customerId:customerId,
             flatNo:address.flatNo,
             landMark:address.landMark,
             pincode:address.pinCode,
@@ -216,7 +269,7 @@ const CheckOut = ({ navigation,route }) => {
         // Ensure that locationData contains the necessary data
         const postData = {
             address: locationData.address,
-            amount: subTotal,                       
+            amount: grandTotal,                       
             customerId: locationData.customerId,
             flatNo: locationData.flatNo,
             landMark: locationData.landMark,
@@ -227,49 +280,236 @@ const CheckOut = ({ navigation,route }) => {
     
         console.log("Post Data:", postData);
     
-        // axios({
-        //     method: 'POST',
-        //     url: 'http://65.0.147.157:8282/api/erice-service/checkout/orderPlacedPaymet',
-        //     data: postData,
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'Authorization': `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTczMTMwODYwNiwiZXhwIjoxNzMyMTcyNjA2fQ.5edNAnfhlAPuAtDLvfxBHeR6XKsmiGtWMiVJHlY6LKvH3hCRSQEghodAph0sN_ID8EMcd0Hkn8pijcmRQH0iZw`
-        //     }
-        // })
-        // .then((response) => {
-        //     console.log("Order Placed Response:", response.data);
+        axios({
+            method: 'POST',
+            url: 'http://65.0.147.157:8282/api/erice-service/checkout/orderPlacedPaymet',
+            data: postData,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then((response) => {
+            console.log("Order Placed Response:", response.data);
     
-        //     // Handle COD or other payment types here
-        //     if (paymentType === null || paymentType === 'COD') {
-        //         Alert.alert("Order Placed!");
-        //     } else {
-        //         axios({
-        //             method: 'POST',
-        //             url: 'http://65.0.147.157:8282/api/erice-service/checkout/orderPlacedPaymet',
-        //             data: {
-        //                 ...postData,
-        //                 paymentId: response.data.paymentId,
-        //                 paymentStatus: "SUCCESS"
-        //             },
-        //             headers: {
-        //                 'Content-Type': 'application/json',
-        //                 'Authorization': `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTczMTMwODYwNiwiZXhwIjoxNzMyMTcyNjA2fQ.5edNAnfhlAPuAtDLvfxBHeR6XKsmiGtWMiVJHlY6LKvH3hCRSQEghodAph0sN_ID8EMcd0Hkn8pijcmRQH0iZw`
-        //             }
-        //         })
-        //         .then((secondResponse) => {
-        //             console.log("Order Placed with Payment API:", secondResponse.data);
-        //             Alert.alert("Order Placed!");
-        //         })
-        //         .catch((error) => {
-        //             console.error("Error in payment confirmation:", error);
-        //         });
-        //     }
-        // })
-        // .catch((error) => {
-        //     console.error("Order Placement Error:", error);
-        // });
+            // Handle COD or other payment types here
+            if (paymentType === null || paymentType === 'COD') {
+                Alert.alert("Order Placed!");
+                totalCart()
+            } else {
+                setTransactionId(response.data.paymentId)
+                // onlinePaymentFunc()
+                const data = {
+                    mid: "786437",
+                    amount: 1,
+                    merchantTransactionId: response.data.paymentId,
+                    transactionDate: new Date(),
+                    terminalId: "Getepay.merchant129014@icici",
+                    udf1: profileForm.customer_mobile,
+                    udf2: profileForm.customer_name,
+                    udf3: profileForm.customer_email,
+                    udf4: "",
+                    udf5: "",
+                    udf6: "",
+                    udf7: "",
+                    udf8: "",
+                    udf9: "",
+                    udf10: "",
+                    ru: "https://app.oxybricks.world/interact/paymentreturn",
+                    callbackUrl: "https://fintech.oxyloans.com/oxyloans/v1/user/getepay",
+                    currency: "INR",
+                    paymentMode: "ALL",
+                    bankId: "",
+                    txnType: "single",
+                    productType: "IPG",
+                    txnNote: "Live Txn",
+                    vpa: "Getepay.merchant129014@icici",
+          
+                  }
+                  console.log({ data })
+                  getepayPortal(data);
+            }
+        })
+        .catch((error) => {
+            console.error("Order Placement Error:", error);
+        });
     };
+
+
+
+    const getepayPortal = async (data) => {
+        console.log("getepayPortal",data);
+        const JsonData = JSON.stringify(data);
+        console.log("ytfddd")
+
+        var ciphertext = encryptEas(JsonData);
+        var newCipher = ciphertext.toUpperCase();
+
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
     
+        var raw = JSON.stringify({
+          mid: data.mid,
+          terminalId: data.terminalId,
+          req: newCipher,
+        });
+    console.log("========")
+        var requestOptions = {
+          method: "POST",
+          headers: myHeaders,
+          body: raw,
+          redirect: "follow",
+        };
+        await fetch(
+          "https://portal.getepay.in:8443/getepayPortal/pg/generateInvoice",
+          requestOptions
+        )
+          .then((response) => response.text())
+          .then((result) => {
+            //  console.log("===getepayPortal result======")
+            //  console.log("result",result);
+            var resultobj = JSON.parse(result);
+            // console.log(resultobj);
+            var responseurl = resultobj.response;
+            var data = decryptEas(responseurl);
+            console.log("===getepayPortal data======");
+            console.log(data);
+            data = JSON.parse(data);
+            // console.log("Payment process",data);
+            // localStorage.setItem("paymentId",data.paymentId)
+            // console.log(data.paymentId);
+            // console.log(data.qrIntent)
+            // window.location.href = data.qrIntent;
+            setPaymentId(data.paymentId);
+            // paymentID = data.paymentId
+            Alert.alert(
+              "Total Amount",
+              "Amount of cart details: INR " +
+              grandTotal,
+              [
+                {
+                  text: "yes",
+                  onPress: () => {
+                    Linking.openURL(data.qrIntent);
+                    // Requery(data.paymentId)
+                  },
+                },
+                {
+                  text: "No",
+                  onPress: () => {  }
+                },
+              ]
+            );
+          })
+          .catch((error) => console.log("getepayPortal", error.response));
+      };
+    
+      function Requery(paymentId) {
+        if (paymentStatus === "PENDING" || paymentStatus === "" || paymentStatus === null) {
+          // console.log("Before.....",paymentId)
+    
+          const Config = {
+            "Getepay Mid": 786437,
+            "Getepay Terminal Id": "Getepay.merchant129014@icici",
+            "Getepay Key": "h9OfpK2eT1L8kU6PQaHK/w==",
+            "Getepay IV": "PaLE/C1iL1IX/o4nmerh5g==",
+          };
+    
+          const JsonData = {
+            mid: Config["Getepay Mid"],
+            paymentId: parseInt(paymentId),
+            referenceNo: "",
+            status: "",
+            terminalId: Config["Getepay Terminal Id"],
+            vpa: "",
+          };
+          // console.log(JsonData);
+    
+          var ciphertext = encryptEas(
+            JSON.stringify(JsonData),
+            Config["Getepay Key"],
+            Config["Getepay IV"]
+          );
+    
+          var newCipher = ciphertext.toUpperCase();
+    
+          var myHeaders = new Headers();
+          myHeaders.append("Content-Type", "application/json");
+          myHeaders.append(
+            "Cookie",
+            "AWSALBAPP-0=remove; AWSALBAPP-1=remove; AWSALBAPP-2=remove; AWSALBAPP-3=remove"
+          );
+    
+          var raw = JSON.stringify({
+            mid: Config["Getepay Mid"],
+            terminalId: Config["Getepay Terminal Id"],
+            req: newCipher,
+          });
+    
+          var requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            body: raw,
+            redirect: "follow",
+          };
+    
+          fetch(
+            "https://portal.getepay.in:8443/getepayPortal/pg/invoiceStatus",
+            requestOptions
+          )
+            .then((response) => response.text())
+            .then((result) => {
+              // console.log("PaymentResult : ", result);
+              var resultobj = JSON.parse(result);
+              // console.log(resultobj);
+              // setStatus(resultobj);
+              if (resultobj.response != null) {
+                console.log("Requery ID result", paymentId)
+                var responseurl = resultobj.response
+                console.log({ responseurl })
+                var data = decryptEas(responseurl);
+                data = JSON.parse(data);
+                console.log("Payment Result", data);
+                setPaymentStatus(data.paymentStatus);
+                console.log(data.paymentStatus);
+                if (
+                  data.paymentStatus == "SUCCESS" ||
+                  data.paymentStatus == "FAILURE"
+                ) {
+                  // clearInterval(intervalId); 294182409
+                  axios({
+                    method: 'POST',
+                    url: 'http://65.0.147.157:8282/api/erice-service/checkout/orderPlacedPaymet',
+                    data: {
+                        ...postData,
+                        paymentId:transactionId ,
+                        paymentStatus: data.paymentStatus
+                    },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then((secondResponse) => {
+                    console.log("Order Placed with Payment API:", secondResponse.data);
+                    Alert.alert("Order Placed!");
+                })
+                .catch((error) => {
+                    console.error("Error in payment confirmation:", error);
+                });
+                } else {
+    
+                }
+              }
+            })
+            .catch((error) => console.log("Payment Status", error));
+        }
+        // else{
+        //   clearInterval(intervalId)
+        // }
+      }
+
+
 
     return (
         <ScrollView style={styles.container}>

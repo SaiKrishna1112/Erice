@@ -4,26 +4,42 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 // import Footer from './Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSelector } from 'react-redux';
+
 
 const OrderScreen = () => {
+
+      
+  const userData = useSelector(state => state.counter);
+  const token=userData.accessToken
+  const customerId=userData.userId
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   // const [accessToken, setAccessToken] = useState(null);
   const navigation = useNavigation();
-   const accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTczMTMwODYwNiwiZXhwIjoxNzMyMTcyNjA2fQ.5edNAnfhlAPuAtDLvfxBHeR6XKsmiGtWMiVJHlY6LKvH3hCRSQEghodAph0sN_ID8EMcd0Hkn8pijcmRQH0iZw"
-  const customerId=4
+  //  const accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTczMTMwODYwNiwiZXhwIjoxNzMyMTcyNjA2fQ.5edNAnfhlAPuAtDLvfxBHeR6XKsmiGtWMiVJHlY6LKvH3hCRSQEghodAph0sN_ID8EMcd0Hkn8pijcmRQH0iZw"
+  // const customerId=4
   const getOrders = async () => {
+    const data = {
+      customerId: 9,
+    };
     setLoading(true);
     try {
-      const response = await axios.post(`https://meta.oxyloans.com/api/erice-service/order/getAllOrders/${customerId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      console.log(response.data);
-      
-      if (response.data.status) {
-        setOrders(response.data.data);
+      const response = await axios.post(
+        'https://meta.oxyloans.com/api/erice-service/order/getAllOrders_customerId',
+        data,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Order data",response.data);
+
+      if (response.data) {
+        setOrders(response.data);
       } else {
         alert('No orders found!');
       }
@@ -35,6 +51,27 @@ const OrderScreen = () => {
     }
   };
 
+  const getOrderStatusText = (orderStatus) => {
+    console.log("order status",orderStatus);
+    const statusNumber = Number(orderStatus);
+    console.log("Converted order status:", statusNumber);
+    switch (statusNumber) {
+      case 1:
+        return 'Placed';
+      case 2:
+        return 'Accepted';
+      case 3:
+        return 'Assigned';
+      case 4:
+        return 'Delivered';
+      case 5:
+        return 'Cancelled';
+      case 6:
+        return 'Rejected';
+      default:
+        return 'Unknown'; 
+    }
+  };
   
   useEffect(() => {
     
@@ -53,14 +90,14 @@ const OrderScreen = () => {
         <Image source={require('../../../assets/tick.png')} style={styles.tickImage} />
       </View>
       <View style={styles.orderInfo}>
-        <Text style={styles.date}>{item.ordered_date}</Text>
-        <Text style={styles.orderId}>Order Id: <Text>{item.order_id}</Text></Text>
-        <Text style={styles.orderAmount}>Amount: Rs. {parseFloat(item.grand_total).toFixed(2)}</Text>
+        <Text style={styles.date}>{item.orderDate}</Text>
+        <Text style={styles.orderId}>Order Id: <Text>{item.orderId}</Text></Text>
+        <Text style={styles.orderAmount}>Amount: Rs. {parseFloat(item.grandTotal).toFixed(2)}</Text>
         <Text style={styles.paymentType}>
           Payment: {item.payment_type === 1 ? 'COD' : 'ONLINE'} 
           {item.payment_type === 2 && item.payment_status === 0 && <Text style={styles.paymentPending}> (Pending)</Text>}
         </Text>
-        <Text style={styles.status}>Status: {item.orders_status}</Text>
+        <Text style={styles.status}>Status: {getOrderStatusText(item.orderStatus)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -82,7 +119,7 @@ const OrderScreen = () => {
         <FlatList
           data={orders}
           renderItem={renderOrder}
-          keyExtractor={(item) => item.order_id.toString()}
+          keyExtractor={(item) => item.orderId.toString()}
         />
       )}
       {/* <Footer navigation={navigation} /> */}

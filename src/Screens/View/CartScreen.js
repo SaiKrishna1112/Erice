@@ -14,7 +14,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {COLORS} from '../../../assets/theme/theme'
 import {Alert} from 'react-native'
+import { useSelector } from 'react-redux';
+
 const CartScreen = () => {
+      
+  const userData = useSelector(state => state.counter);
+  const token=userData.accessToken
+  const customerId=userData.userId
+
   const navigation = useNavigation();
   const [cartData, setCartData] = useState([]);
   const [error, setError] = useState(null);
@@ -22,7 +29,7 @@ const CartScreen = () => {
   const [grandTotal,setGrandTotal] = useState(null)
  
   const locationdata = {
-    customerId: 4,
+    // customerId: 4,
     flatNo:'',
     landMark:'',
     pincode:'',
@@ -38,10 +45,10 @@ const CartScreen = () => {
 
     axios
       .get(
-        `https://meta.oxyloans.com/api/erice-service/cart/customersCartItems?customerId=4`,
+        `https://meta.oxyloans.com/api/erice-service/cart/customersCartItems?customerId=${customerId}`,
         {
           headers: {
-            Authorization: `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzMxMTM1MTQ2LCJleHAiOjE3MzE5OTkxNDZ9.L5ifXxdF9bzuG5tgtK-AAS-DWNKoZ1sXNLl_OydCgC5m9ApGzXKCEIUjdET5mMXhhwmqFbY_nip-KPLjLoaZbQ`,
+            Authorization: `Bearer ${token}`,
           },
         }
       )
@@ -73,10 +80,10 @@ const CartScreen = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzMxMTM1MTQ2LCJleHAiOjE3MzE5OTkxNDZ9.L5ifXxdF9bzuG5tgtK-AAS-DWNKoZ1sXNLl_OydCgC5m9ApGzXKCEIUjdET5mMXhhwmqFbY_nip-KPLjLoaZbQ'
+          Authorization: `Bearer ${token}`,
         },
         data: {
-          customerId: 4
+          customerId: customerId
         }
       });
   
@@ -107,7 +114,7 @@ const CartScreen = () => {
         `https://meta.oxyloans.com/api/erice-service/cart/incrementCartData`,
         {
           cartQuantity: 1,
-          customerId: 4,
+          customerId: customerId,
           itemId: item.itemId,
         },
         {
@@ -139,12 +146,12 @@ const CartScreen = () => {
           `https://meta.oxyloans.com/api/erice-service/cart/decrementCartData`,
           {
             cartQuantity: 1,
-            customerId: 4,
+            customerId: customerId,
             itemId: item.itemId,
           },
           {
             headers: {
-              Authorization: `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzMxMTM1MTQ2LCJleHAiOjE3MzE5OTkxNDZ9.L5ifXxdF9bzuG5tgtK-AAS-DWNKoZ1sXNLl_OydCgC5m9ApGzXKCEIUjdET5mMXhhwmqFbY_nip-KPLjLoaZbQ`,
+              'Authorization': `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
@@ -196,11 +203,11 @@ const removeCartItem = async (item) => {
               console.log("Removing cart item with ID:", item.cartId);
     
               // Retrieve the access token dynamically
-              const accessToken = await AsyncStorage.getItem("accessToken");
-              if (!accessToken) {
-                console.error("No access token found");
-                return;
-              }
+              // const accessToken = await AsyncStorage.getItem("accessToken");
+              // if (!accessToken) {
+              //   console.error("No access token found");
+              //   return;
+              // }
     
               // Make the DELETE request
               const response = await axios.delete("https://meta.oxyloans.com/api/erice-service/cart/remove", {
@@ -208,7 +215,7 @@ const removeCartItem = async (item) => {
                   id: item.cartId,
                 },
                 headers: {
-                  Authorization: `Bearer ${accessToken}`,
+                  Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
                 },
               });

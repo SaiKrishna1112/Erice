@@ -6,8 +6,17 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
+
 import { useFocusEffect } from '@react-navigation/native';
+
 const ProfilePage = () => {
+
+        
+  const userData = useSelector(state => state.counter);
+  const token=userData.accessToken
+  const customerId=userData.userId
+
     const [profileForm, setProfileForm] = useState({
         customer_name: '',
         customer_email: '',
@@ -22,20 +31,28 @@ const ProfilePage = () => {
     const [oldPassword, setOldPassword] = useState('');
     const navigation = useNavigation();
     const [isProfileSaved, setIsProfileSaved] = useState(false); 
+    const [isInitiallySaved, setIsInitiallySaved] = useState(false); 
     const scaleAnim = useState(new Animated.Value(1))[0];
+    const [profileData,setProfileData] = useState();
 
     useFocusEffect(
         useCallback(() => {
            
             animateProfile();
             getProfile();
-            if(profileForm.customer_mobile){
-            setIsProfileSaved(true);
-            }else{
-                setIsProfileSaved(false);
-            }
+            
         }, []) 
     );
+
+    useEffect(() => {
+        if ( profileForm.customer_mobile) {
+            setIsProfileSaved(true);
+            setIsInitiallySaved(true); 
+        } else if (!isInitiallySaved) {
+           
+            setIsProfileSaved(false);
+        }
+    }, [profileForm]);
 
     const animateProfile = () => {
         Animated.loop(
@@ -63,9 +80,9 @@ const ProfilePage = () => {
                 method: 'GET' ,
                 headers: {
                     'Content-Type': 'application/json',
-                'Authorization': `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTczMTMwODYwNiwiZXhwIjoxNzMyMTcyNjA2fQ.5edNAnfhlAPuAtDLvfxBHeR6XKsmiGtWMiVJHlY6LKvH3hCRSQEghodAph0sN_ID8EMcd0Hkn8pijcmRQH0iZw`
+                    'Authorization': `Bearer ${token}`
                 },
-                url:`https://meta.oxyloans.com/api/erice-service/user/customerProfileDetails?customerId=4`
+                url:`https://meta.oxyloans.com/api/erice-service/user/customerProfileDetails?customerId=${customerId}`
 
             })
             console.log(response.data);
@@ -121,13 +138,16 @@ const ProfilePage = () => {
             // Handle response status
             if (response.status === 200) {
                 console.log("profile call ",response);
+                setProfileData(response.data);
+                console.log("profile data",profileData);
+                
                 if (isProfileSaved) {
                     Alert.alert("Success", "Profile updated successfully");
                 } else {
                     Alert.alert("Success", "Profile saved successfully");
                 }
                 setIsProfileSaved(true); 
-               
+                // setIsInitiallySaved(true);
                 setProfileForm({
                     ...profileForm,
                     customer_name: response.data.customerName,
@@ -233,15 +253,16 @@ const ProfilePage = () => {
                 <TextInput
                 style={[
                     styles.input,
-                    // {
-                    //     backgroundColor: isProfileSaved ? '#e0e0e0' : '#fff', 
-                    //     // color: isProfileSaved ? 'gray' : 'black', 
-                    // }
+                    {
+                        backgroundColor: isProfileSaved ? '#e0e0e0' : '#fff', 
+                        // color: isProfileSaved ? 'gray' : 'black', 
+                    }
                 ]}
                 placeholder="Your mobile number"
                 value={profileForm?.customer_mobile || ''}
                 onChangeText={(text) => setProfileForm({ ...profileForm, customer_mobile: text })}
-                editable={!isProfileSaved} 
+                editable={!isProfileSaved } 
+               
             />
 
             
@@ -256,7 +277,7 @@ const ProfilePage = () => {
                 onPress={handleProfileSubmit}
             >
                 <Text style={{ color: 'white', fontSize: 16 }}>
-                    {isProfileSaved ? 'Update Profile' : 'Save Profile'}
+                {isProfileSaved || isInitiallySaved ? 'Update Profile' : 'Save Profile'}
                 </Text>
             </TouchableOpacity>
                 <View style={styles.optionContainer}>
@@ -267,10 +288,11 @@ const ProfilePage = () => {
                     {/* <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Subscription History')}>
                         <Text style={styles.optionText}>Subscription History</Text>
                     </TouchableOpacity> */}
-
-                    {/* <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Address Book')}>
+                    {/* {isProfileSaved? */}
+                    <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Address Book',{profile:profileForm })}>
                         <Text style={styles.optionText}>Address Book</Text>
-                    </TouchableOpacity> */}
+                    </TouchableOpacity>
+                    {/* :null} */}
 
                     {/* <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Wallet')}>
                         <Text style={styles.optionText}>Wallet</Text>
