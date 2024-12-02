@@ -4,7 +4,7 @@ import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { TextInput } from 'react-native';
 import { Platform } from 'react-native';
-
+import BASE_URL from '../../../Config';
 const AddAddress = () => {
 
   const [location, setLocation] = useState(null); 
@@ -79,7 +79,7 @@ const AddAddress = () => {
     };
 
     try {
-      const response = await fetch('https://meta.oxyloans.com/api/erice-service/user/profileUpdate', {
+      const response = await fetch(BASE_URL+'erice-service/user/profileUpdate', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -20,7 +20,7 @@ const SplashScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Animated.Image
-        source={require('../../assets/Oxyrice logo.png')} // Replace with your logo path
+        source={require('../../assets/Oxyricelogo.png')} // Replace with your logo path
         style={[styles.logo, { opacity: fadeAnim }]} // Apply animated opacity
         resizeMode="contain"
       />

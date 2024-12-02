@@ -7,8 +7,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { FormData } from "formdata-node";
 import { useSelector } from 'react-redux';
-import {BASE_URL_9002,BASE_URL_9001,BASE_URL_9004,BASE_URL_9007, BASE_URL_9009} from "../../config"
-import BASE_URL from "../../config"
+import {BASE_URL_9002,BASE_URL_9001,BASE_URL_9004,BASE_URL_9007, BASE_URL_9009} from "../../Config"
+import BASE_URL from "../../Config"
 import axios from 'axios';
 
 

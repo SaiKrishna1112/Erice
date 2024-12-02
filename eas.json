@@ -18,6 +18,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios":{
+        "appleId":"ericehyd@gmail.com",
+        "ascAppId":"6738732000",
+        "appleTeamId":"SG87SA5V2Q"
+      }}
   }
 }

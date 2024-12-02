@@ -1,4 +1,4 @@
-import React, { useEffect, useState ,useCallback} from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,46 +6,74 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import axios from "axios";
 import { StyleSheet } from "react-native";
-import { useNavigation ,useFocusEffect} from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {COLORS} from '../../../assets/theme/theme'
-import {Alert} from 'react-native'
-import { useSelector } from 'react-redux';
-
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { COLORS } from "../../../assets/theme/theme";
+import { Alert } from "react-native";
+import { useSelector } from "react-redux";
+const { width, height } = Dimensions.get("window");
+import BASE_URL from "../../../Config";
 const CartScreen = () => {
-      
-  const userData = useSelector(state => state.counter);
-  const token=userData.accessToken
-  const customerId=userData.userId
+  const userData = useSelector((state) => state.counter);
+  const token = userData.accessToken;
+  const customerId = userData.userId;
+  // console.log({userData})
 
+  const [dats, setData] = useState();
   const navigation = useNavigation();
   const [cartData, setCartData] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [grandTotal,setGrandTotal] = useState(null)
- 
+  const [grandTotal, setGrandTotal] = useState(null);
+  const [cartId, setCartId] = useState();
+  const [loadingItems, setLoadingItems] = useState({});
+  const [removalLoading, setRemovalLoading] = useState({});
   const locationdata = {
-    // customerId: 4,
-    flatNo:'',
-    landMark:'',
-    pincode:'',
-    address:'',
-    addressType:'',
-    latitude:'',
-    longitude:'',
-    status:false,
+    // customerId: 4,data
+    flatNo: "",
+    landMark: "",
+    pincode: "",
+    address: "",
+    addressType: "",
+    latitude: "",
+    longitude: "",
+    status: false,
   };
- 
+  // const cartIds="";
 
+  const addressdata = {
+    addressId: "",
+    hasId: false,
+  };
+
+  const handleIncrease = async (item) => {
+    setLoadingItems((prevState) => ({ ...prevState, [item.cartId]: true }));
+    await increaseCartItem(item);
+    setLoadingItems((prevState) => ({ ...prevState, [item.cartId]: false }));
+  };
+
+  const handleDecrease = async (item) => {
+    setLoadingItems((prevState) => ({ ...prevState, [item.cartId]: true }));
+    await decreaseCartItem(item);
+    setLoadingItems((prevState) => ({ ...prevState, [item.cartId]: false }));
+  };
+
+  const handleRemove = async (item) => {
+    setRemovalLoading((prevState) => ({ ...prevState, [item.cartId]: true }));
+    await removeCartItem(item);
+    setRemovalLoading((prevState) => ({ ...prevState, [item.cartId]: false }));
+  };
   const fetchCartData = async () => {
-
+    setLoading(true);
     axios
       .get(
-        `https://meta.oxyloans.com/api/erice-service/cart/customersCartItems?customerId=${customerId}`,
+        BASE_URL +
+          `erice-service/cart/customersCartItems?customerId=${customerId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -54,17 +82,26 @@ const CartScreen = () => {
       )
 
       .then((response) => {
-        // console.log(response);
+        console.log("cart items", response.data);
+        setLoading(false);
+        setData(response.data);
         setCartData(response.data);
+        console.log("cart length", cartData.length);
+
+        // setCartId(response.data);
+        // console.log("cartId",cartData);
+        // cartIds = response.data.map(item => item.cartId);
+        // console.log("cartids",cartIds);
         setError(null);
         setLoading(false);
       })
       .catch((error) => {
+        console.log(error.response);
+
         setError("Failed to load cart data");
         setLoading(false);
       });
   };
-
 
   useFocusEffect(
     useCallback(() => {
@@ -76,29 +113,31 @@ const CartScreen = () => {
   const totalCart = async () => {
     try {
       const response = await axios({
-        url: 'https://meta.oxyloans.com/api/erice-service/cart/cartItemData',
-        method: 'POST',
+        url: BASE_URL+"erice-service/cart/cartItemData",
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         data: {
-          customerId: customerId
-        }
+          customerId: customerId,
+        },
       });
-  
-      console.log('Cart data:', response.data);
-      setGrandTotal(response.data.totalSum)
-      console.log("grand total",grandTotal);
-      
+
+      console.log("Cart data:", response);
+      setGrandTotal(response.data.totalSum);
+      // setCartData(response.data.cartResponseList);
+      console.log("cart data1", cartData);
+
+      // console.log("grand total",grandTotal);
     } catch (error) {
-      console.error('Error fetching cart data:', error.response);
-      setError('Failed to fetch cart data');
+      console.error("Error fetching cart data:", error.response);
+      setError("Failed to fetch cart data");
     }
-  }
+  };
   useEffect(() => {
     fetchCartData();
-    totalCart();
+    // totalCart();
   }, []);
 
   const handleImagePress = (item) => {
@@ -106,87 +145,96 @@ const CartScreen = () => {
   };
 
   const increaseCartItem = async (item) => {
-    const accessToken = await AsyncStorage.getItem("accessToken");
-    console.log(item.itemId);
+    // const accessToken = await AsyncStorage.getItem("accessToken");
+    // setLoading(true)
+    console.log("Item to increase", item);
+    console.log("Item ID", item.itemId);
+    console.log("Current Cart Quantity", item.cartQuantity);
 
-    axios
-      .patch(
-        `https://meta.oxyloans.com/api/erice-service/cart/incrementCartData`,
+    const currentQuantity = item.cartQuantity;
+    const newQuantity = currentQuantity + 1;
+
+    try {
+      const response = await axios.patch(
+        BASE_URL + `erice-service/cart/incrementCartData`,
         {
-          cartQuantity: 1,
+          cartQuantity: newQuantity,
           customerId: customerId,
           itemId: item.itemId,
         },
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${token}`,
           },
         }
-      )
-      .then(() => {
-        fetchCartData();
-        totalCart();
-        console.log("hello");
-        console.log(response.data);
-      })
-      .catch((err) => {
-        // console.error("Failed to increase cart item:", err);
-      });
+      );
+
+      fetchCartData();
+      totalCart();
+      setLoading(false);
+      console.log("Cart item quantity updated successfully:", response.data);
+    } catch (err) {
+      console.error("Error updating cart item quantity:", err.response);
+    }
   };
 
   const decreaseCartItem = async (item) => {
+    // setLoading(true)
     try {
-      console.log(item.itemId);
-  
-      const accessToken = await AsyncStorage.getItem("accessToken");
-  
-      // Check if cartQuantity is greater than 1 before making the API call
+      console.log("Decreasing item ID:", item.itemId);
+
       if (item.cartQuantity > 1) {
+        const newQuantity = item.cartQuantity - 1;
+
         const response = await axios.patch(
-          `https://meta.oxyloans.com/api/erice-service/cart/decrementCartData`,
+          BASE_URL + `erice-service/cart/decrementCartData`,
           {
-            cartQuantity: 1,
+            cartQuantity: newQuantity,
             customerId: customerId,
             itemId: item.itemId,
           },
           {
             headers: {
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
         );
-  
+
         console.log("Item decremented successfully");
+
         fetchCartData();
         totalCart();
+        setLoading(false);
         console.log("Response data:", response.data);
       } else {
+        // If cartQuantity is 1 or less, prompt user to remove item
         Alert.alert(
-          
-        "Remove Item",
-        "Cart quantity is at the minimum. Do you want to remove this item from the cart?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-          },
-          {
-            text: "Yes, Remove",
-            onPress: () => removeCartItem(item),
-          },
-        ],
-        { cancelable: false }
-      )
+          "Remove Item",
+          "Cart quantity is at the minimum. Do you want to remove this item from the cart?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+            {
+              text: "Yes, Remove",
+              onPress: () => removeCartItem(item),
+            },
+          ],
+          { cancelable: false }
+        );
       }
     } catch (error) {
       console.error("Failed to decrease cart item:", error);
     }
   };
-  
 
-const removeCartItem = async (item) => {
+  const removeCartItem = async (item) => {
+    // setLoading(true)
     // Show confirmation dialog before deleting the item
+    console.log("removed items from cart", item);
+
     Alert.alert(
       "Remove Item",
       "Are you sure you want to remove this item from your cart?",
@@ -201,32 +249,31 @@ const removeCartItem = async (item) => {
           onPress: async () => {
             try {
               console.log("Removing cart item with ID:", item.cartId);
-    
-              // Retrieve the access token dynamically
-              // const accessToken = await AsyncStorage.getItem("accessToken");
-              // if (!accessToken) {
-              //   console.error("No access token found");
-              //   return;
-              // }
-    
-              // Make the DELETE request
-              const response = await axios.delete("https://meta.oxyloans.com/api/erice-service/cart/remove", {
-                data: {
-                  id: item.cartId,
-                },
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              });
-    
+
+              const response = await axios.delete(
+                BASE_URL+"erice-service/cart/remove",
+                {
+                  data: {
+                    id: item.cartId,
+                  },
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
+
               console.log("Item removed successfully", response.data);
-              
+
               // Fetch updated cart data and total after item removal
               fetchCartData();
               totalCart();
+              setLoading(false);
             } catch (error) {
-              console.error("Failed to remove cart item:", error.response || error.message);
+              console.error(
+                "Failed to remove cart item:",
+                error.response || error.message
+              );
             }
           },
         },
@@ -247,87 +294,126 @@ const removeCartItem = async (item) => {
           keyExtractor={(item) => item.itemId.toString()}
           renderItem={({ item }) => (
             <View style={styles.cartItem}>
-              <TouchableOpacity onPress={() => handleImagePress(item)}>
-                <Image
-                  source={{ uri: item.image }}
-                  style={styles.itemImage}
-                  onError={() => console.log("Failed to load image")}
-                />
-              </TouchableOpacity>
-              <View style={styles.itemDetails}>
-                <Text style={styles.itemName}>{item.itemName}</Text>
-                <Text style={styles.itemPrice}>Price: ₹{item.priceMrp}</Text>
-                <Text style={styles.itemWeight}>
-                  Weight: {item.itemQuantity} {item.units}
-                </Text>
-                <View style={styles.quantityContainer}>
-                  <TouchableOpacity
-                    style={styles.quantityButton}
-                    onPress={() => decreaseCartItem(item)}
-                  >
-                    <Text style={styles.buttonText}>-</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.quantityText}>{item.cartQuantity}</Text>
-                  <TouchableOpacity
-                    style={styles.quantityButton}
-                    onPress={() => increaseCartItem(item)}
-                  >
-                    <Text style={styles.buttonText}>+</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.itemTotal}>Total: ₹{(item.priceMrp * item.cartQuantity).toFixed(2)}</Text>
+              {removalLoading[item.cartId] ? (
+                <View style={styles.loaderContainer}>
+                  <ActivityIndicator size="large" color="#000" />
                 </View>
-                <TouchableOpacity
-                  style={{marginLeft:230}}
-                  onPress={() => removeCartItem(item)}
-                >
-                  {/* <Text style={styles.removeButtonText}>Remove</Text> */}
-                  <MaterialIcons name="delete" size={23} color="#FF0000"/>
-                </TouchableOpacity>
-                
-              </View>
+              ) : (
+                <>
+                  <TouchableOpacity>
+                    <Image
+                      source={{ uri: item.image }}
+                      style={styles.itemImage}
+                      onError={() => console.log("Failed to load image")}
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.itemDetails}>
+                    <Text style={styles.itemName}>{item.itemName}</Text>
+                    <Text style={styles.itemPrice}>
+                      Price: ₹{item.priceMrp}
+                    </Text>
+                    <Text style={styles.itemWeight}>
+                      Weight: {item.itemQuantity} {item.units}
+                    </Text>
+                    <View style={styles.quantityContainer}>
+                      <TouchableOpacity
+                        style={styles.quantityButton}
+                        onPress={() => handleDecrease(item)}
+                        disabled={loadingItems[item.cartId]}
+                      >
+                        <Text style={styles.buttonText}>-</Text>
+                      </TouchableOpacity>
+                      {/* Show loader in the middle when loading */}
+                      {loadingItems[item.cartId] ? (
+                        <ActivityIndicator
+                          size="small"
+                          color="#000"
+                          style={styles.loader}
+                        />
+                      ) : (
+                        <Text style={styles.quantityText}>
+                          {item.cartQuantity}
+                        </Text>
+                      )}
+                      <TouchableOpacity
+                        style={styles.quantityButton}
+                        onPress={() => handleIncrease(item)}
+                        disabled={loadingItems[item.cartId]}
+                      >
+                        <Text style={styles.buttonText}>+</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.itemTotal}>
+                        Total: ₹{(item.priceMrp * item.cartQuantity).toFixed(2)}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={{ marginLeft: 230 }}
+                      onPress={() => handleRemove(item)}
+                    >
+                      {/* <Text style={styles.removeButtonText}>Remove</Text> */}
+                      <MaterialIcons name="delete" size={23} color="#FF0000" />
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
             </View>
           )}
           contentContainerStyle={styles.flatListContent}
         />
       ) : (
         <View style={styles.card}>
-      <MaterialIcons name="shopping-cart" size={80} color="#A9A9A9" style={styles.icon} />
-       <Text style={{fontSize: 18,color: '#333', marginBottom: 20,}}>Your cart is empty</Text>
-        <TouchableOpacity style={{ backgroundColor: COLORS.primary, paddingVertical: 10,paddingHorizontal: 20, borderRadius: 5,}} onPress={()=>navigation.navigate("Rice")}>
-          <Text style={{color: '#fff', fontSize: 16,}}>Browse Products</Text>
-        </TouchableOpacity>
-      </View>
-      )}
-      {/* {cartData && cartData.length > 0 && ( */}
-        <>
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>Grand Total:₹{grandTotal}</Text>
-        </View>
-        <View style={styles.actionButtonsContainer}>
+          <MaterialIcons
+            name="shopping-cart"
+            size={80}
+            color="#A9A9A9"
+            style={styles.icon}
+          />
+          <Text style={{ fontSize: 18, color: "#333", marginBottom: 20 }}>
+            Your cart is empty
+          </Text>
           <TouchableOpacity
-            style={styles.addButton}
+            style={{
+              backgroundColor: COLORS.primary,
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              borderRadius: 5,
+            }}
             onPress={() => navigation.navigate("Home")}
           >
-            <Text style={styles.actionButtonText}>Add More</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.checkoutButton}
-            onPress={() =>
-              navigation.navigate("Checkout", {
-                subtotal: cartData.reduce(
-                  (acc, item) => acc + item.priceMrp * item.cartQuantity,
-                  0
-                ),
-               locationdata
-
-              })
-            }
-          >
-            <Text style={styles.actionButtonText}>Checkout</Text>
+            <Text style={{ color: "#fff", fontSize: 16 }}>Browse Products</Text>
           </TouchableOpacity>
         </View>
+      )}
+      {cartData && cartData.length > 0 && (
+        <>
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalText}>Grand Total : ₹{grandTotal}</Text>
+          </View>
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate("Home")}
+            >
+              <Text style={styles.actionButtonText}>Add More</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.checkoutButton}
+              onPress={() =>
+                navigation.navigate("Checkout", {
+                  subtotal: cartData.reduce(
+                    (acc, item) => acc + item.priceMrp * item.cartQuantity,
+                    0
+                  ),
+                  locationdata,
+                  addressdata,
+                })
+              }
+            >
+              <Text style={styles.actionButtonText}>Checkout</Text>
+            </TouchableOpacity>
+          </View>
         </>
-      {/* )} */}
+      )}
     </View>
   );
 };
@@ -356,8 +442,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   itemImage: {
-    width: 80,
-    height: 80,
+    width: width * 0.2,
+    height: height / 8,
     marginRight: 16,
     borderRadius: 8,
   },
@@ -419,19 +505,19 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   addButton: {
-   backgroundColor: "#16A34A",
+    backgroundColor: "#16A34A",
     padding: 12,
     borderRadius: 8,
     flex: 1,
     marginRight: 8,
-    marginBottom:70
+    marginBottom: 70,
   },
   checkoutButton: {
     backgroundColor: "#F97316",
     padding: 12,
     borderRadius: 8,
     flex: 1,
-    marginBottom:70
+    marginBottom: 70,
   },
   actionButtonText: {
     color: "#FFFFFF",
@@ -439,41 +525,58 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   totalContainer: {
-    fontWeight:"bold",
+    fontWeight: "bold",
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderColor: '#D1D5DB',
-    marginBottom: 20,
-   paddingLeft:250
+    borderColor: "#D1D5DB",
+    // marginBottom: 10,
+    // paddingLeft: 0,
+    //  marginTop:100
+    marginLeft:0,
   },
   itemTotal: {
-   
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     // marginVertical: 4,
-    marginLeft:40,
-    marginBottom:20
-  },totalText: {
+    marginLeft: 40,
+    marginBottom: 20,
+  },
+  totalText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#374151',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#374151",
+    textAlign: "center",
   },
   card: {
-    width: '80%',
-    alignItems: 'center',
+    width: "80%",
+    alignItems: "center",
     padding: 20,
-    marginLeft:35,
-    backgroundColor: '#fff',
+    marginLeft: 35,
+    backgroundColor: "#fff",
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5, // For Android shadow
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
+  },
+  loader: {
+    marginHorizontal: 10,
+    alignSelf: "center",
+  },
+  loaderContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.7)", // Optional semi-transparent background
+    zIndex: 1,
   },
 });
 

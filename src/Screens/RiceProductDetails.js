@@ -9,6 +9,7 @@ import {
   FlatList,
   Dimensions,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState, useEffect, useLayoutEffect } from "react";
 import Animated from "react-native-reanimated";
@@ -17,57 +18,77 @@ import axios from "axios";
 import Icon from "react-native-vector-icons/Ionicons";
 import CartScreen from "./View/CartScreen";
 const { height, width } = Dimensions.get("window");
-import { useSelector } from 'react-redux';
-
+import { useSelector } from "react-redux";
+import BASE_URL from "../../Config";
 
 const RiceProductDetails = ({ route, navigation }) => {
-
-      
-  const userData = useSelector(state => state.counter);
-  const token=userData.accessToken
-  const customerId=userData.userId
+  const userData = useSelector((state) => state.counter);
+  const token = userData.accessToken;
+  const customerId = userData.userId;
 
   const [items, setItems] = useState([]);
   const [cartItems, setCartItems] = useState({});
-  const [cartCount,setCartCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
+  const [categoryImage, setCategoryIamge] = useState();
+  const [loadingItems, setLoadingItems] = useState({});
+  const [cartData, setCartData] = useState([]);
 
+  const [error, setError] = useState();
+  // console.log("form rice",route.params.details.itemsResponseDtoList);
+  // console.log("from rice image",route.params.image);
+
+  // setCategoryIamge(route.params)
   useEffect(() => {
     setItems(route.params.details.itemsResponseDtoList);
-    
+    setCategoryIamge(route.params.image);
   }, []);
+
+  const handleIncrease = async (item) => {
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
+    await incrementQuantity(item);
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
+  };
+
+  const handleDecrease = async (item) => {
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
+    await decrementQuantity(item);
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
+  };
 
   useEffect(() => {
-    // Fetch cart items for the user
-    const fetchCartItems = async () => {
-      try {
-        const response = await axios.get(
-          `https://meta.oxyloans.com/api/erice-service/cart/customersCartItems?customerId=${customerId}`,
-          {
-            headers: { 
-              Authorization: `Bearer ${token}` 
-            },
-          }
-        );
-        
-        const cartData = response.data;
-        const cartItemsMap = cartData.reduce((acc, item) => {
-          acc[item.itemId] = item.cartQuantity;
-          // console.log({acc});
-          
-          return acc;
-        }, {});
-        // console.log(cartItemsMap);
-        setCartItems(cartItemsMap);
-        setCartCount(cartData.length);
-        console.log("cart count",cartCount);
-        
-      } catch (error) {
-        console.error("Error fetching cart items:", error.response);
-      }
-    };
-
     fetchCartItems();
   }, []);
+
+  // Fetch cart items for the user
+  const fetchCartItems = async () => {
+    try {
+      const response = await axios.get(
+        BASE_URL +`erice-service/cart/customersCartItems?customerId=${customerId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("response form cart", response.data);
+
+      const cartData = response.data;
+      const cartItemsMap = cartData.reduce((acc, item) => {
+        acc[item.itemId] = item.cartQuantity;
+        // console.log({acc});
+
+        return acc;
+      }, {});
+      // console.log(cartItemsMap);
+      setCartItems(cartItemsMap);
+      setCartCount(cartData.length);
+      setCartData(response.data);
+      // console.log("cart count",cartCount);
+    } catch (error) {
+      setError(error.response);
+      console.error("Error fetching cart items:", error.response);
+    }
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -77,14 +98,22 @@ const RiceProductDetails = ({ route, navigation }) => {
             <View style={styles.cartIconContainer}>
               <Icon name="cart-outline" size={30} color="#FFF" />
               {cartCount > 0 && (
-                <View style={{position: "absolute",
-                  right: -8,
-                  top: -5,
-                  backgroundColor: "#FF6F00",
-                  borderRadius: 10,
-                  paddingHorizontal: 5,
-                  paddingVertical: 1,}}>
-                  <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "bold",}}>{cartCount}</Text>
+                <View
+                  style={{
+                    position: "absolute",
+                    right: -8,
+                    top: -5,
+                    backgroundColor: "#FF6F00",
+                    borderRadius: 10,
+                    paddingHorizontal: 5,
+                    paddingVertical: 1,
+                  }}
+                >
+                  <Text
+                    style={{ color: "#FFF", fontSize: 12, fontWeight: "bold" }}
+                  >
+                    {cartCount}
+                  </Text>
                 </View>
               )}
             </View>
@@ -92,26 +121,28 @@ const RiceProductDetails = ({ route, navigation }) => {
         </View>
       ),
     });
-  }, [navigation,cartCount]);
-  
-  const UpdateCartCount = (newCount)=>setCartCount(newCount);
+  }, [navigation, cartCount]);
+
+  const UpdateCartCount = (newCount) => setCartCount(newCount);
   const handleAddToCart = async (item) => {
     const data = { customerId: customerId, itemId: item.itemId, quantity: 1 };
     try {
       const response = await axios.post(
-        "https://meta.oxyloans.com/api/erice-service/cart/add_Items_ToCart",
+        BASE_URL + "erice-service/cart/add_Items_ToCart",
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       Alert.alert("Success", "Item added to cart successfully");
+      console.log("added items to cart", response.data);
 
       setCartItems((prevCartItems) => ({
         ...prevCartItems,
-        [item.itemId]: 1, // Item is added with a quantity of 1
+        [item.itemId]: 1,
       }));
-      UpdateCartCount(cartCount+1);
+      UpdateCartCount(cartCount + 1);
+      fetchCartItems();
     } catch (error) {
       console.error("Error adding item to cart:", error.response);
     }
@@ -119,31 +150,50 @@ const RiceProductDetails = ({ route, navigation }) => {
 
   const incrementQuantity = async (item) => {
     const newQuantity = cartItems[item.itemId] + 1;
-
-    const data = { customerId: customerId, itemId: item.itemId, quantity: newQuantity };
+    // cartItems[item.itemId] will return the cartQuantity value and then increased the cart quantity by 1
+    //cartItems = { 101: 2, 102: 3 };
+    //If item.itemId is 101, then cartItems[item.itemId] would return 2 (the quantity of item 101).
+    //The + 1 increments the item’s current quantity by one.
+    const data = {
+      customerId: customerId,
+      itemId: item.itemId,
+      quantity: newQuantity,
+    };
     try {
       await axios.patch(
-        "https://meta.oxyloans.com/api/erice-service/cart/incrementCartData",
+        BASE_URL + "erice-service/cart/incrementCartData",
         data,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
+      fetchCartItems();
       setCartItems((prevCartItems) => ({
         ...prevCartItems,
         [item.itemId]: newQuantity,
       }));
-      console.log("increment data");
+      
+      // console.log("increment data");
       // UpdateCartCount(cartCount+1);
       // console.log(response.data);
-      
     } catch (error) {
       console.error("Error incrementing item quantity:", error.response);
     }
   };
 
   const decrementQuantity = async (item) => {
+    console.log("for removing items have to be printed", item);
+    
+
     const newQuantity = cartItems[item.itemId] - 1;
+    console.log({ newQuantity });
+
+    const cartItem = cartData.find(
+      (cartData) => cartData.itemId === item.itemId
+    );
+    console.log("Removing cart item with ID:", cartItem);
+
     if (newQuantity === 0) {
       // Optionally, remove the item from the cart
       setCartItems((prevCartItems) => {
@@ -151,12 +201,44 @@ const RiceProductDetails = ({ route, navigation }) => {
         delete updatedCartItems[item.itemId];
         return updatedCartItems;
       });
-      Alert.alert("Item removed", "Item removed from the cart");
+      try {
+        // console.log("Removing cart item with ID:", item.cartId);
+
+    
+
+        const response = await axios.delete(
+          BASE_URL + "erice-service/cart/remove",
+          {
+            data: {
+              id: cartItem.cartId,
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("Item removed successfully", response.data);
+        Alert.alert("Item removed", "Item removed from the cart");
+        // Fetch updated cart data and total after item removal
+        fetchCartItems();
+        // setLoading(false)
+      } catch (error) {
+        console.error(
+          "Failed to remove cart item:",
+          error.response || error.message
+        );
+      }
     } else {
-      const data = { customerId: customerId, itemId: item.itemId, quantity: newQuantity };
+      const data = {
+        customerId: customerId,
+        itemId: item.itemId,
+        quantity: newQuantity,
+      };
       try {
         await axios.patch(
-          "https://meta.oxyloans.com/api/erice-service/cart/decrementCartData",
+          BASE_URL + "erice-service/cart/decrementCartData",
           data,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -176,14 +258,11 @@ const RiceProductDetails = ({ route, navigation }) => {
 
   const renderItem = ({ item }) => {
     const itemQuantity1 = cartItems[item.itemId] || 0;
-    
+
     return (
       <Animated.View key={item.itemId}>
         <View style={styles.productContainer}>
-          <Image
-            source={{ uri: item.itemImage }}
-            style={styles.productImage}
-          />
+          <Image source={{ uri: item.itemImage }} style={styles.productImage} />
           <View>
             <Text>{item.priceMrp}</Text>
             <Text style={styles.productName}>{item.itemName}</Text>
@@ -195,14 +274,28 @@ const RiceProductDetails = ({ route, navigation }) => {
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
                   style={styles.quantityButton}
-                  onPress={() => decrementQuantity(item)}
+                  // onPress={() => decrementQuantity(item)}
+                  onPress={() => handleDecrease(item)}
+                  disabled={loadingItems[item.itemId]}
                 >
                   <Text style={styles.quantityButtonText}>-</Text>
                 </TouchableOpacity>
-                <Text style={styles.quantityText}>{itemQuantity1}</Text>
+                {/* Show loader in the middle when loading */}
+                {loadingItems[item.itemId] ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#000"
+                    style={styles.loader}
+                  />
+                ) : (
+                  <Text style={styles.quantityText}>{itemQuantity1}</Text>
+                )}
+                {/* <Text style={styles.quantityText}>{itemQuantity1}</Text> */}
                 <TouchableOpacity
                   style={styles.quantityButton}
-                  onPress={() => incrementQuantity(item)}
+                  // onPress={() => incrementQuantity(item)}
+                  onPress={() => handleIncrease(item)}
+                  disabled={loadingItems[item.itemId]}
                 >
                   <Text style={styles.quantityButtonText}>+</Text>
                 </TouchableOpacity>
@@ -225,7 +318,8 @@ const RiceProductDetails = ({ route, navigation }) => {
     <View style={styles.container}>
       <ScrollView>
         <Image
-          source={require("../../assets/Images/1.jpg")}
+          // source={require("../../assets/Images/1.jpg")}
+          source={{ uri: categoryImage }}
           style={styles.banner}
         />
         <FlatList
@@ -245,7 +339,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   banner: {
     width: width,
-    height: 250,
+    height: 200,
     resizeMode: "cover",
     marginVertical: 10,
   },
@@ -289,6 +383,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: "#FF6F00",
+    width: 90,
     paddingVertical: 8,
     borderRadius: 4,
     marginTop: 10,
@@ -320,7 +415,3 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
 });
-
-
-
-

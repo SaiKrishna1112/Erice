@@ -1,411 +1,342 @@
-
-// import React, { useState } from 'react';
-// import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-// import axios from 'axios';
-// import { useNavigation } from '@react-navigation/native';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// const LoginScreen = () => {
-//   const [mobileNumber, setMobileNumber] = useState('');
-//   const [isLogin, setIsLogin] = useState(false);
-//   const [otp, setOtp] = useState('');
-//   const [responseMessage, setResponseMessage] = useState('');
-//   const [errors, setErrors] = useState({
-//     mobileNumber: '',
-//     otp: '',
-//   });
-//   const [mobileOtpSession, setMobileOtpSession] = useState('');
-//   const [accessToken, setAccessToken] = useState('');
-//   const [buttonsDisplay, setButtonDisplay] = useState(false);
-//   const navigation = useNavigation();
-
-//   const validateMobileNumber = () => {
-//     let isValid = true;
-//     const errorsCopy = { ...errors };
-
-//     if (!mobileNumber) {
-//       errorsCopy.mobileNumber = 'Mobile number is required.';
-//       isValid = false;
-//     } else if (!/^\d{10}$/.test(mobileNumber)) {
-//       errorsCopy.mobileNumber = 'Mobile number must be 10 digits.';
-//       isValid = false;
-//     } else {
-//       errorsCopy.mobileNumber = ''; 
-//     }
-
-//     setErrors(errorsCopy);
-//     return isValid;
-//   };
-
-//   const validateOtp = () => {
-//     let isValid = true;
-//     const errorsCopy = { ...errors };
-
-//     if (!otp) {
-//       errorsCopy.otp = 'OTP is required.';
-//       isValid = false;
-//     } else if (!/^\d{6}$/.test(otp)) {
-//       errorsCopy.otp = 'OTP must be 6 digits.';
-//       isValid = false;
-//     } else {
-//       errorsCopy.otp = ''; 
-//     }
-
-//     setErrors(errorsCopy);
-//     return isValid;
-//   };
-
-//   const handleSendOtp = async () => {
-//     if (validateMobileNumber()) {
-//       try {
-//         const response = await axios.post('http://65.0.147.157:8282/api/erice-service/user/login-or-register', {
-//           mobileNumber: mobileNumber
-//         });
-//         console.log(response.data)
-//         if (response.data.mobileOtpSession) {
-//           setResponseMessage('OTP sent successfully');
-//           setMobileOtpSession(response.data.mobileOtpSession);
-//           setButtonDisplay(response.data.mobileVerified);
-//           setIsLogin(true);
-//           setTimeout(() => setResponseMessage(''), 3000);
-//         }
-//       } catch (error) {
-//         Alert.alert('Error', 'Error during sending OTP');
-//       }
-//     }
-//   };
-
-//   const handleLoginOtp = async () => {
-//     if (validateOtp()) {
-//       try {
-//         const response = await axios.post('http://65.0.147.157:8282/api/erice-service/user/login-or-register', {
-//           mobileNumber: mobileNumber,
-//           mobileOtpSession: mobileOtpSession,
-//           mobileOtpValue: otp
-//         });
-//         console.log("registration",response.data)
-//         if (response.data.accessToken) {
-//           setAccessToken(response.data.accessToken);
-//           setResponseMessage('Login successful!');
-//           await AsyncStorage.setItem("accessToken", response.data.accessToken);
-//           Alert.alert('Success', 'Login successful!');
-//           navigation.navigate('Home');
-//         }
-//       } catch (error) {
-//         Alert.alert('Error', 'Error during verifying OTP');
-//       }
-//     }
-//   };
-
-//   const handleRegisterOtp = async () => {
-//     if (validateOtp()) {
-//       try {
-//         const response = await axios.post('http://65.0.147.157:8282/api/erice-service/user/login-or-register', {
-//           mobileNumber: mobileNumber,
-//           mobileOtpSession: mobileOtpSession,
-//           mobileOtpValue: otp,
-    
-//         });
-//         console.log("Login",response.data)
-//         if (response.data.accessToken) {
-//           setAccessToken(response.data.accessToken);
-//           setResponseMessage('Registration successful!');
-//           Alert.alert('Success', 'Login successful!');
-//           await AsyncStorage.setItem("accessToken", response.data.accessToken);
-//           navigation.navigate('Home');
-//         }
-//       } catch (error) {
-//         Alert.alert('Error', 'Error during registration');
-//       }
-//     }
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <View style={styles.logoContainer}>
-//         {/* <Image source={require('../MyOxyrice/assets/icon.png')} style={styles.logo} /> */}
-//       </View>
-      
-//       <Text style={styles.title}>Login to OxyRice</Text>
-
-//       <TextInput
-//         style={[styles.input, errors.mobileNumber && styles.inputError]}
-//         placeholder="Enter mobile number"
-//         keyboardType="phone-pad"
-//         value={mobileNumber}
-//         onChangeText={setMobileNumber}
-//       />
-//       {errors.mobileNumber ? <Text style={styles.errorText}>{errors.mobileNumber}</Text> : null}
-//       {!isLogin ? (
-//         <TouchableOpacity style={styles.button} onPress={handleSendOtp}>
-//           <Text style={styles.buttonText}>SEND OTP</Text>
-//         </TouchableOpacity>
-//       ) : (
-//         <>
-//           <TextInput
-//             style={[styles.input, errors.otp && styles.inputError]}
-//             placeholder="Enter OTP"
-//             keyboardType="numeric"
-//             value={otp}
-//             onChangeText={setOtp}
-//           />
-//           {errors.otp ? <Text style={styles.errorText}>{errors.otp}</Text> : null}
-
-//           <TouchableOpacity
-//             style={styles.button}
-//             onPress={buttonsDisplay ? handleLoginOtp : handleRegisterOtp}
-//           >
-//             <Text style={styles.buttonText}>{buttonsDisplay ? 'LOGIN' : 'LOGIN'}</Text>
-//           </TouchableOpacity>
-
-//           <Text style={styles.orText}>(OR)</Text>
-
-//           <TouchableOpacity style={styles.button} onPress={handleSendOtp}>
-//             <Text style={styles.buttonText}>RESEND OTP</Text>
-//           </TouchableOpacity>
-//         </>
-//       )}
-
-//       {responseMessage ? <Text style={styles.successText}>{responseMessage}</Text> : null}
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     padding: 20,
-//     backgroundColor: '#F5F5F5',
-//   },
-//   logoContainer: {
-//     alignItems: 'center',
-//     marginBottom: 20,
-//   },
-//   logo: {
-//     width: 100,
-//     height: 100,
-//   },
-//   title: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     marginBottom: 20,
-//     color: '#333',
-//   },
-//   input: {
-//     width: '80%',
-//     padding: 15,
-//     borderWidth: 1,
-//     borderColor: '#CCC',
-//     borderRadius: 10,
-//     backgroundColor: '#FFF',
-//     marginBottom: 10,
-//   },
-//   inputError: {
-//     borderColor: 'red',
-//   },
-//   button: {
-//     width: '80%',
-//     backgroundColor: '#4CAF50',
-//     padding: 15,
-//     borderRadius: 10,
-//     alignItems: 'center',
-//     marginBottom: 10,
-//   },
-//   buttonText: {
-//     color: '#FFF',
-//     fontWeight: 'bold',
-//   },
-//   orText: {
-//     marginVertical: 10,
-//     color: '#333',
-//   },
-//   errorText: {
-//     color: 'red',
-//     marginBottom: 10,
-//   },
-//   successText: {
-//     color: 'green',
-//     marginTop: 10,
-//   },
-// });
-
-// export default LoginScreen;
-
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import axios from 'axios';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { useDispatch } from 'react-redux';
-import { AccessToken, UserID } from '../../Redux/action/index';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ImageBackground,
+} from "react-native";
+import axios from "axios";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
+import { AccessToken } from "../../Redux/action/index";
+import BASE_URL from "../../Config";
 
 const LoginPage = () => {
-  const [mobileNumber, setMobileNumber] = useState('');
+  // State hooks
+  // console.log(route.params);
+ 
+  const [mobileNumber, setMobileNumber] = useState("");
   const [isLogin, setIsLogin] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [responseMessage, setResponseMessage] = useState('');
-  const [errors, setErrors] = useState({ mobileNumber: '', otp: '' });
-  const [mobileOtpSession, setMobileOtpSession] = useState('');
+  const [otp, setOtp] = useState("");
+  const [responseMessage, setResponseMessage] = useState("");
+  const [errors, setErrors] = useState({ mobileNumber: "", otp: "" });
+  const [mobileOtpSession, setMobileOtpSession] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
   useFocusEffect(
     React.useCallback(() => {
-      setMobileNumber('');
-      setOtp('');
+      setMobileNumber("");
+      setOtp("");
       setIsLogin(false);
     }, [])
   );
 
+
+  useFocusEffect(
+    useCallback(() => {
+      const checkLoginData = async () => {
+        try {
+          const loginData = await AsyncStorage.getItem("userData");
+          const storedmobilenumber = await AsyncStorage.getItem('mobileNumber')
+          console.log(storedmobilenumber);
+          
+        setMobileNumber(storedmobilenumber)
+          if (loginData) {
+            const user = JSON.parse(loginData);
+            if (user.accessToken) {
+              dispatch(AccessToken(user));
+              navigation.navigate("Home");
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching login data", error);
+        }
+      };
+
+      checkLoginData();
+    }, [])
+  )
+
+
+
   const validateMobileNumber = () => {
-    let isValid = true;
-    const errorsCopy = { ...errors };
-
     if (!mobileNumber) {
-      errorsCopy.mobileNumber = 'Mobile number is required.';
-      isValid = false;
-    } else if (!/^\d{10}$/.test(mobileNumber)) {
-      errorsCopy.mobileNumber = 'Mobile number must be 10 digits.';
-      isValid = false;
-    } else {
-      errorsCopy.mobileNumber = ''; 
+      setErrors({ ...errors, mobileNumber: "Mobile number is required." });
+      return false;
     }
-
-    setErrors(errorsCopy);
-    return isValid;
+    if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
+      setErrors({
+        ...errors,
+        mobileNumber: "Enter a valid 10-digit mobile number.",
+      });
+      return false;
+    }
+    setErrors({ ...errors, mobileNumber: "" });
+    return true;
   };
 
   const validateOtp = () => {
-    let isValid = true;
-    const errorsCopy = { ...errors };
-
     if (!otp) {
-      errorsCopy.otp = 'OTP is required.';
-      isValid = false;
-    } else if (!/^\d{6}$/.test(otp)) {
-      errorsCopy.otp = 'OTP must be 6 digits.';
-      isValid = false;
-    } else {
-      errorsCopy.otp = ''; 
+      setErrors({ ...errors, otp: "OTP is required." });
+      return false;
     }
-
-    setErrors(errorsCopy);
-    return isValid;
+    if (!/^\d{6}$/.test(otp)) {
+      setErrors({ ...errors, otp: "OTP must be 6 digits." });
+      return false;
+    }
+    setErrors({ ...errors, otp: "" });
+    return true;
   };
 
   const handleSendOtp = async () => {
-    if (validateMobileNumber()) {
-      try {
-        const response = await axios.post('http://65.0.147.157:8282/api/erice-service/user/login-or-register', {
-          mobileNumber: mobileNumber,
-        });
-        console.log("handleSendOtp",response.data)
-        if (response.data.mobileOtpSession) {
-          setResponseMessage('OTP sent successfully');
-          setMobileOtpSession(response.data.mobileOtpSession);
-          setIsLogin(true);
-          setTimeout(() => setResponseMessage(''), 3000);
+    if (!validateMobileNumber()) return;
+    // setMobileNumber(storedmobilenumber);
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        BASE_URL + `erice-service/user/login-or-register`,
+        {
+          mobileNumber,
+          userType: "Login",
         }
-      } catch (error) {
-        Alert.alert('Error', 'Error during sending OTP');
+      );
+
+      if (response.data.mobileOtpSession) {
+        setMobileOtpSession(response.data.mobileOtpSession);
+        setIsLogin(true);
+        setResponseMessage("OTP sent successfully.");
+        setTimeout(() => setResponseMessage(""), 3000);
+      } else {
+        Alert.alert("Error", "Failed to send OTP. Try again.");
       }
+    } catch (error) {
+      Alert.alert("Sorry", "You are not registered. Please sign up.");
+      if (error.response?.status === 400) {
+        navigation.navigate("RegisterScreen");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    if (validateOtp()) {
-      try {
-        const response = await axios.post('http://65.0.147.157:8282/api/erice-service/user/login-or-register', {
-          mobileNumber: mobileNumber,
-          mobileOtpSession: mobileOtpSession,
+    if (!validateOtp()) return;
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        BASE_URL + `erice-service/user/login-or-register`,
+        {
+          mobileNumber,
+          mobileOtpSession,
           mobileOtpValue: otp,
-        });
-        console.log("handleVerifyOtp",response.data)
-        if (response.data.accessToken!=null) {
-          // await AsyncStorage.setItem("accessToken", response.data.accessToken);
-          dispatch(AccessToken(response.data));
-
-          Alert.alert('Success', 'Login successful!');
-          navigation.navigate('Home');
-        } else {
-          navigation.navigate('Registration', {
-            mobileNumber: mobileNumber,
-            mobileOtpSession: mobileOtpSession,
-          });
+          userType: "Login",
         }
-      } catch (error) {
-        Alert.alert('Error', 'Mobile Number not Registered. Please Register Now.');
-        navigation.navigate('RegisterScreen', {
-          mobileNumber: mobileNumber,
-          mobileOtpSession: mobileOtpSession,
-        });
+      );
+      console.log(response.data);
+
+      if (response.data.primaryType === "CUSTOMER") {
+        if (response.data.accessToken) {
+          dispatch(AccessToken(response.data));
+          await AsyncStorage.setItem("userData", JSON.stringify(response.data));
+          await AsyncStorage.setItem('mobileNumber',mobileNumber)
+          Alert.alert("Success", "Login successful!");
+        
+          navigation.navigate("Home"); 
+        } else {
+          Alert.alert("Error", "Invalid credentials.");
+        }
+      } else {
+        Alert.alert("Please login as Customer", "", [
+          {
+            text: "Ok",
+            onPress: () => {
+              setMobileNumber("");
+              setOtp("");
+            },
+          },
+        ]);
       }
+    } catch (error) {
+      Alert.alert("Error", "OTP verification failed.");
+    } finally {
+      setLoading(false);
     }
   };
-
+ 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login to OxyRice</Text>
-
-      <TextInput
-        style={[styles.input, errors.mobileNumber && styles.inputError]}
-        placeholder="Enter mobile number"
-        keyboardType="phone-pad"
-        value={mobileNumber}
-        onChangeText={setMobileNumber}
-      />
-      {errors.mobileNumber ? <Text style={styles.errorText}>{errors.mobileNumber}</Text> : null}
-
-      {/* Show registration prompt until OTP is sent */}
-      
-
-      {!isLogin ? (
-        <TouchableOpacity style={styles.button} onPress={handleSendOtp}>
-          <Text style={styles.buttonText}>SEND OTP</Text>
-        </TouchableOpacity>
-      ) : (
-        <>
-          <TextInput
-            style={[styles.input, errors.otp && styles.inputError]}
-            placeholder="Enter OTP"
-            keyboardType="numeric"
-            value={otp}
-            onChangeText={setOtp}
+    <ImageBackground
+      source={require("../../assets/Images/OXYRICE.png")}
+      style={styles.background}
+    >
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.formContainer}>
+          <Image
+            source={require("../../assets/Oxyricelogo.png")}
+            style={styles.logo}
           />
-          {errors.otp ? <Text style={styles.errorText}>{errors.otp}</Text> : null}
-          <TouchableOpacity style={styles.button} onPress={handleVerifyOtp}>
-            <Text style={styles.buttonText}>VERIFY OTP</Text>
-          </TouchableOpacity>
-        </>
-      )}
-      {!isLogin && (
-        <Text style={styles.registerPrompt}>
-          Please register if you are not already registered.
-          <Text style={styles.registerLink} onPress={() => navigation.navigate('RegisterScreen')}>
-            {' Register here'}
-          </Text>
-        </Text>
-      )}
+          <Text style={styles.title}>Login to OxyRice</Text>
 
-      {responseMessage ? <Text style={styles.successText}>{responseMessage}</Text> : null}
-    </View>
+          <TextInput
+            style={[styles.input, errors.mobileNumber && styles.inputError]}
+            placeholder="Enter Mobile Number"
+            keyboardType="phone-pad"
+            value={mobileNumber}
+            maxLength={10}
+            onChangeText={setMobileNumber}
+          />
+          {errors.mobileNumber && (
+            <Text style={styles.errorText}>{errors.mobileNumber}</Text>
+          )}
+
+          {!isLogin ? (
+            <TouchableOpacity
+              style={[styles.button, loading && styles.disabledButton]}
+              onPress={handleSendOtp}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Send OTP</Text>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TextInput
+                style={[styles.input, errors.otp && styles.inputError]}
+                placeholder="Enter OTP"
+                keyboardType="numeric"
+                autoFocus
+                value={otp}
+                maxLength={6}
+                onChangeText={setOtp}
+              />
+              {errors.otp && <Text style={styles.errorText}>{errors.otp}</Text>}
+
+              <TouchableOpacity
+                style={[styles.button, loading && styles.disabledButton]}
+                onPress={handleVerifyOtp}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Verify OTP</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
+          {!isLogin && (
+            <Text style={styles.registerPrompt}>
+              Don't have an account?
+              <Text
+                style={styles.registerLink}
+                onPress={() => navigation.navigate("RegisterScreen")}
+              >
+                {" Sign up here"}
+              </Text>
+            </Text>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#F5F5F5' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#333' },
-  input: { width: '80%', padding: 15, borderWidth: 1, borderColor: '#CCC', borderRadius: 10, backgroundColor: '#FFF', marginBottom: 10 },
-  inputError: { borderColor: 'red' },
-  button: { width: '80%', backgroundColor: '#4CAF50', padding: 15, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
-  buttonText: { color: '#FFF', fontWeight: 'bold' },
-  errorText: { color: 'red', marginBottom: 10 },
-  successText: { color: 'green', marginTop: 10 },
-  registerPrompt: { fontSize: 14, color: '#666', marginBottom: 10 },
-  registerLink: { color: '#1E90FF', fontWeight: 'bold' },
+  background: {
+    flex: 1,
+    // alignSelf:"center",
+    justifyContent: "center",
+    resizeMode: "cover", 
+  },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  formContainer: {
+    width: "100%",
+    maxWidth: 400,
+    padding: 20,
+    backgroundColor: "#fff", 
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  logo: {
+    alignSelf:"center",
+    width: 200,
+    height: 80,
+    marginBottom: 20,
+    resizeMode: "contain",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: {
+    width: "100%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#CCC",
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    backgroundColor: "#FFF",
+    marginBottom: 10,
+  },
+  inputError: {
+    borderColor: "red",
+  },
+  button: {
+    width: "100%",
+    backgroundColor: "#4CAF50",
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  disabledButton: {
+    backgroundColor: "#A5D6A7",
+  },
+  buttonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 5,
+    alignSelf: "flex-start",
+  },
+  registerPrompt: {
+    marginTop: 20,
+    fontSize: 14,
+    textAlign: "center",
+  },
+  registerLink: {
+    color: "#4CAF50",
+    fontWeight: "bold",
+  },
 });
 
 export default LoginPage;
+

@@ -3,38 +3,31 @@ import { View, Text, FlatList, ActivityIndicator, StyleSheet, ScrollView } from 
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSelector } from "react-redux";
+import BASE_URL from "../../Config";
 
-const WalletPage = () => {
+const WalletPage = ({route}) => {
+  const userData = useSelector((state) => state.counter);
+  const token = userData.accessToken;
+  console.log("wallet",route.params)
+  const customerId = userData.userId;
   const [walletTxs, setWalletTxs] = useState([]);
   const [walletAmount, setWalletAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    fetchWalletData();
-  }, []);
 
-  const fetchWalletData = async () => {
-    try {
-      const response = await axios.get('customer/get_wallet_data');
-      if (response.data.status) {
-        setWalletTxs(response.data.wallet_txs);
-        setWalletAmount(response.data.wallet_amount);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // if (loading) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <ActivityIndicator size="large" color="#0000ff" />
+  //     </View>
+  //   );
+  // }
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
+
+
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -43,7 +36,7 @@ const WalletPage = () => {
         <Text style={styles.title}>WALLET BALANCE: ₹ {walletAmount}</Text>
       </View>
 
-      {walletTxs.length > 0 ? (
+      {/* {walletTxs.length > 0 ? (
         <FlatList
           data={walletTxs}
           keyExtractor={(item) => item.wallet_tx_id.toString()}
@@ -66,7 +59,7 @@ const WalletPage = () => {
         />
       ) : (
         <Text style={styles.noTransactions}>No transactions found!</Text>
-      )}
+      )} */}
     </ScrollView>
   );
 };

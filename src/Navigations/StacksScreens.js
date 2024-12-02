@@ -11,17 +11,21 @@ import Tabs from "./BottomTabs";
 import RiceProductDetails from "../Screens/RiceProductDetails";
 import ProductView from "../Components/productsDesign/ProductView";
 import WalletPage from "../Screens/WalletScreen";
-import SubscriptionHistory from "../Screens/Subscription/SubscriptionHistroy";
 import AddressBook from "../Screens/Address/AddressBook";
 import Subscription from "../Screens/Subscription/Subscription";
+import SubscriptionHistory from "../Screens/Subscription/SubscriptionHistory";
 import CheckOut from "../Screens/CheckOut";
-import AddAddress from "../Screens/Address/AddAddress";
 import Rice from "../Screens/View/Rice";
 import MainErice from "../Screens/MainErice";
 import MyLocationPage from "../Screens/Address/MyLocationPage";
 import SplashScreen from "../Authorization/SplashScreen";
-// import AddAddress from "../Screens/Address/AddAddress";
-// import CartScreen from "../Screens/View/CartScreen";
+import AddAddress from "../Screens/Address/AddAddress";
+import CartScreen from "../Screens/View/CartScreen";
+import OrderSummary from "../Screens/View/OrderSummary";
+import PaymentDetails from "../Screens/View/PaymentScreen";
+import OrderDetails from "../Screens/View/OrderDetails";
+import WriteToUs from '../Screens/View/WriteToUs';
+import TicketHistory from '../Screens/View/TicketHistory';
 export default function StacksScreens() {
   const Stack = createStackNavigator();
   return (
@@ -33,7 +37,7 @@ export default function StacksScreens() {
         headerMode: "float",
         headerShown: true,
         headerStyle: {
-          backgroundColor: "green",
+          backgroundColor: "#03843b",
         },
       }}
     >
@@ -50,11 +54,14 @@ export default function StacksScreens() {
       <Stack.Screen
         name="Home"
         component={Tabs}
-        options={{ headerShown: false }}
+        options={{ headerShown:false,  }}
       />
       <Stack.Screen
         name="Rice Product Detail"
         component={RiceProductDetails}
+        // component={() => (
+        //   <Tabs initialRouteName="RiceProductDetails" /> // Define initial screen for Tabs
+        // )}
         options={({ route }) => ({
           title: route.params.name,
           headerShown: true,
@@ -63,10 +70,7 @@ export default function StacksScreens() {
       <Stack.Screen name="Product View" component={ProductView} />
       <Stack.Screen name="Wallet" component={WalletPage} />
       <Stack.Screen name="Subscription" component={Subscription} />
-      <Stack.Screen
-        name="Subscription History"
-        component={SubscriptionHistory}
-      />
+      <Stack.Screen name="Subscription History"component={SubscriptionHistory}/>
       <Stack.Screen name="Address Book" component={AddressBook} />
       <Stack.Screen name="MyLocationPage" component={MyLocationPage} />
       <Stack.Screen name="Checkout" component={CheckOut} />
@@ -74,6 +78,11 @@ export default function StacksScreens() {
       <Stack.Screen name="Main Erice" component={MainErice} />
       <Stack.Screen name="Add Address" component={AddAddress}/>
       <Stack.Screen name="Splash Screen" component={SplashScreen} />
+      <Stack.Screen name="Order Summary" component={OrderSummary}/>
+      <Stack.Screen name="Payment Details" component={PaymentDetails}/>
+      <Stack.Screen name="Order Details" component={OrderDetails}/>
+      <Stack.Screen name="Write To Us" component={WriteToUs}/>
+      <Stack.Screen name="Ticket History" component={TicketHistory}/>
     </Stack.Navigator>
   );
 }

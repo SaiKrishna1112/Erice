@@ -2,8 +2,8 @@ import { AES, enc, format, mode, pad } from "crypto-js";
 import Base64 from "crypto-js/enc-base64";
 
 function decryptEas(data, key, iv) {
-  const keys = Base64.parse("h9OfpK2eT1L8kU6PQaHK/w==");
-  const ivs = Base64.parse("PaLE/C1iL1IX/o4nmerh5g==");
+  const keys = Base64.parse("kNnyys8WnsuOXgBlB9/onBZQ0jiYNhh4Wmj2HsrV/wY=");
+  const ivs = Base64.parse("L8Q+DeKb+IL65ghKXP1spg==");
   return AES.decrypt(data, keys, {
     iv: ivs,
     mode: mode.CBC,

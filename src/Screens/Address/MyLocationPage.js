@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import BASE_URL from '../../../Config';
 const MyLocationPage = () => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -100,7 +101,7 @@ const MyLocationPage = () => {
   return (
     <View style={styles.container}>
       <MapView
-        provider={MapView.PROVIDER_GOOGLE}
+        // provider={MapView.PROVIDER_GOOGLE}
         style={styles.map}
         ref={mapRef}
         region={region}
