@@ -3,7 +3,7 @@ import { View, Text, FlatList, ScrollView, ActivityIndicator, StyleSheet, Alert 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import { useSelector } from "react-redux";
-import BASE_URL from "../../../Config";
+import BASE_URL from "../../../Erice/Config";
 
 const OrderDetails = () => {
   const userData = useSelector((state) => state.counter);
@@ -98,8 +98,7 @@ const OrderDetails = () => {
         <Text style={styles.detailText}>Customer Name: <Text style={styles.detailValue}>{customerName}</Text></Text>
         <Text style={styles.detailText}>Mobile: <Text style={styles.detailValue}>{customerMobile}</Text></Text>
         <Text style={styles.detailText}>Address:</Text>
-        <Text style={styles.detailValue}>
-          {orderAddress.flatNo}, {orderAddress.landMark}, {orderAddress.address}
+        <Text style={styles.detailValue}> {orderAddress.flatNo}, {orderAddress.landMark}, {orderAddress.address}
         </Text>
       </View>
 
@@ -288,6 +287,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#ff3b30', 
+  },
+  flatNo: {
+    fontSize: 16,
+    color: '#000',
+   fontWeight: 'bold',
+  },
+  landMark: {
+    fontSize: 16,
+    color: '#000',
+ fontStyle: 'italic',
+  },
+  address: {
+    fontSize: 16,
+    color: '#000',
+    textDecorationLine: 'underline',
   },
 });
 

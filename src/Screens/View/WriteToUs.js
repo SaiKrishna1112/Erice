@@ -31,11 +31,11 @@ const WriteToUs = ({navigation,route}) => {
     useEffect(()=>{
       console.log("route",route.params);
       
-       if(route.params!="" || route.params!=undefined || route.params!=null){
-         setTicketId(route.params.ticketId)
+       if(route.params=="" || route.params==undefined || route.params==null){
+         setTicketId("")
       }
       else{
-        setTicketId('')
+        setTicketId(route.params)
       }
     },[])
 
@@ -47,7 +47,9 @@ const WriteToUs = ({navigation,route}) => {
     query: "",
     fileName: "",
     documentId: "",
-    uploadStatus:''
+    uploadStatus:'',
+    uploadLoader:false,
+    loading:false
   });
 
   // Validation and Submit Handler
@@ -56,6 +58,7 @@ const WriteToUs = ({navigation,route}) => {
   useEffect(() => {
     getProfileDetails()
   },[])
+
   function getProfileDetails() {
     axios.get(BASE_URL + `erice-service/user/customerProfileDetails?customerId=${accessToken.userId}`, {
       headers: {
@@ -103,37 +106,67 @@ const WriteToUs = ({navigation,route}) => {
       // Success
       // Alert.alert("Success", "Your query has been submitted!");
       // console.log(formData);
+      let data
+if(ticketId==""){
+   data =
+  {
+    "adminDocumentId": "",
+    "comments": "",
+    "email": formData.email,
+    "id": "",
+    "mobileNumber": formData.mobileNumber,
+    "projectType": "OXYRICE",
+    "query": formData.query,
+    "queryStatus": "PENDING",
+    "resolvedBy": "",
+    "resolvedOn": "",
+    "status": "",
+    "userDocumentId": formData.documentId || "",
+    "userId": accessToken.userId
+  }
+}
+else{
+ data =
+  {
+    "adminDocumentId": "",
+    "comments": formData.query,
+    "email": formData.email,
+    "id": ticketId.ticketId,
+    "mobileNumber": formData.mobileNumber,
+    "projectType": "OXYRICE",
+    "query": route.params.query,
+    "queryStatus": "PENDING",
+    "resolvedBy": "customer",
+    "resolvedOn": "",
+    "status": "",
+    "userDocumentId": formData.documentId || "",
+    "userId": accessToken.userId
+  }
 
-      let data =
-      {
-        "adminDocumentId": "",
-        "comments": "",
-        "email": formData.email,
-        "id": '',
-        "mobileNumber": formData.mobileNumber,
-        "projectType": "OXYRICE",
-        "query": formData.query,
-        "queryStatus": "PENDING",
-        "resolvedBy": "",
-        "resolvedOn": "",
-        "status": "",
-        "userDocumentId": "",
-        "userId": accessToken.userId
-      }
- console.log({data})
-      // axios.post(BASE_URL + `erice-service/writetous/saveData`, data, {
-      //   headers: {
-      //     Authorization: `Bearer ${accessToken.accessToken}`,
-      //   },
-      // })
-      //   .then(function (response) {
-      //     console.log(response.data)
-      //     Alert.alert("Success", "Your query has been submitted!");
-      //   })
-      //   .catch(function (error) {
-      //     console.log(error.response)
-      //     Alert.alert("Failed", error.response.data.message)
-      //   })
+}
+      console.log({data})
+      console.log("form data query",formData.query);
+      
+      setFormData({...formData,loading:true})
+      axios.post(BASE_URL + `erice-service/writetous/saveData`, data, {
+        headers: {
+          Authorization: `Bearer ${accessToken.accessToken}`,
+        },
+      })
+        .then(function (response) {
+          console.log(response.data)
+          Alert.alert("Success", "Your query has been submitted!");
+          console.log("formdataquery",formData.query);
+          
+          setFormData({...formData,loading:false})
+
+        })
+        .catch(function (error) {
+          console.log(error.response)
+          Alert.alert("Failed", error.response.data.message)
+          setFormData({...formData,loading:false})
+
+        })
 
 
     }
@@ -143,6 +176,7 @@ const WriteToUs = ({navigation,route}) => {
 
 
   const handleFileChange = async () => {
+    
     // console.log("Pan");
     let result = await DocumentPicker.getDocumentAsync({
       type: "*/*",
@@ -179,19 +213,20 @@ const WriteToUs = ({navigation,route}) => {
           console.log(fileToUpload);
 
           console.log(fd);
-          // setLoading(trrue);
+          setFormData({...formData,uploadLoader:true})
           axios({
             method: "post",
-            url:`https://meta.oxyloans.com/api/common-upload-service/uploadQueryScreenShot?userId=${accessToken.userId}`,
+            url:BASE_URL+`erice-service/writetous/uploadQueryScreenShot?userId=${accessToken.userId}`,
             data: fd,
             headers: {
-              accessToken: `Bearer ${accessToken.accessToken}`,
+              Authorization: `Bearer ${accessToken.accessToken}`,
               "Content-Type": "multipart/form-data",
             },
           })
             .then(function (response) {
-               console.log(response.data);
+               console.log("uploadQueryScreenShot",response.data);
                Alert.alert("Successfully Uploaded")
+               setFormData({...formData,fileName:fileToUpload.name,documentId:response.data.id,uploadLoader:false})
               // setLoading(false);
               // setmodal1(true);
               // getpan();
@@ -200,6 +235,7 @@ const WriteToUs = ({navigation,route}) => {
               // setLoading(false);
               console.log(error.response.data);
               Alert.alert(error.response.data.error);
+              setFormData({...formData,uploadLoader:false})
           //     if (error.response.data.errorCode == 100) {
           //       setmodal3(true);
           //     } else {
@@ -215,8 +251,8 @@ const WriteToUs = ({navigation,route}) => {
   return (
     <View style={{ flex: 1, padding: 20 }}>
 
-<TouchableOpacity onPress={()=>navigation.navigate('Ticket History')}>
-  <Text>Ticket History</Text>
+<TouchableOpacity onPress={()=>navigation.navigate('Ticket History')} style={styles.btn}>
+  <Text style={{color:"white"}}>Ticket History</Text>
 </TouchableOpacity>
 
 
@@ -226,6 +262,7 @@ const WriteToUs = ({navigation,route}) => {
         placeholder="Enter Name"
         value={formData.name}
         onChangeText={(text) => setFormData({ ...formData, name: text })}
+        editable={false}
       />
       <TextInput
         style={styles.input}
@@ -233,6 +270,8 @@ const WriteToUs = ({navigation,route}) => {
         keyboardType="email-address"
         value={formData.email}
         onChangeText={(text) => setFormData({ ...formData, email: text })}
+        editable={false}
+
       />
       <TextInput
         style={styles.input}
@@ -241,7 +280,9 @@ const WriteToUs = ({navigation,route}) => {
         value={formData.mobileNumber}
         onChangeText={(text) =>
           setFormData({ ...formData, mobileNumber: text })
-        }
+          }
+          editable={false}
+
       />
       <TextInput
         style={[styles.input, { height: 80 }]}
@@ -251,17 +292,36 @@ const WriteToUs = ({navigation,route}) => {
         onChangeText={(text) => setFormData({ ...formData, query: text })}
       />
 
+    {ticketId==""?
+    <>
+    {formData.uploadLoader==false?
       <TouchableOpacity style={styles.box} onPress={handleFileChange}>
         <View style={{ alignItems: "center", justifyContent: "center" }}>
           <Icon name="cloud-upload" size={50} color="gray" />
           <Text>Upload a file</Text>
           {formData.fileName != null ? (
-            <Text>{formData.documentId}</Text>
+            <Text style={{color:"green",marginBottom:5}}>{formData.fileName}</Text>
           ) : null}
         </View>
       </TouchableOpacity>
+      :
+      <View style={styles.box}>
+        <ActivityIndicator size={30} color="green"/>
+      </View>
+      }
+      </>
+    :null}
 
-      <Button title="Submit" onPress={handleSubmit} />
+{formData.loading==false?
+<TouchableOpacity onPress={()=>handleSubmit()} style={styles.submitbtn}>
+  <Text style={{color:"white",fontWeight:"bold"}}>Submit</Text>
+</TouchableOpacity>
+:
+<View style={styles.submitbtn}>
+  <ActivityIndicator size={30} color="white"/>
+</View>
+}
+      {/* <Button title="Submit"  style={{color:"green"}} /> */}
 
       {/* <View style={{ padding: 20 }}>
         <Text>Upload a file</Text>
@@ -311,5 +371,21 @@ const styles = StyleSheet.create({
     height: 100,
     alignSelf:"center"
     
+  },
+  submitbtn:{
+    backgroundColor:"green",
+    width:width*0.8,
+    alignSelf:"center",
+    padding:10,
+    alignItems:"center",
+    borderRadius:10
+  },
+  btn:{
+    backgroundColor:"green",
+    width:"auto",
+    padding:5,
+    alignSelf:"flex-end",
+    alignItems:"center",
+    marginHorizontal:15
   }
 });

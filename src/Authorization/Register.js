@@ -177,7 +177,10 @@ const Register = () => {
 
         {!isOtpSent && (
           <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-            <Text style={styles.linkText}>Already registered? Log in here</Text>
+            <View style={{flexDirection:'row'}}>
+            <Text style={styles.linkText}>Already registered ? </Text>
+            <Text style={styles.linkTextLog}>Log in here</Text>
+            </View> 
           </TouchableOpacity>
         )}
       </View>
@@ -242,7 +245,14 @@ const styles = StyleSheet.create({
   linkText: {
     color: "#4CAF50",
     marginVertical: 10,
-    textDecorationLine: "underline",
+    
+    fontSize: 14,
+  },
+  linkTextLog: {
+    color: "#fd7e14",
+    marginVertical: 10,
+    fontWeight:"bold",
+    textDecorationLine:"underline",
     fontSize: 14,
   },
   buttonContainer: {

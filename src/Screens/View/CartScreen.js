@@ -350,9 +350,9 @@ const CartScreen = () => {
                       style={{ marginLeft: 230 }}
                       onPress={() => handleRemove(item)}
                     >
-                      {/* <Text style={styles.removeButtonText}>Remove</Text> */}
-                      <MaterialIcons name="delete" size={23} color="#FF0000" />
+                    <MaterialIcons name="delete" size={23} color="#FF0000" />
                     </TouchableOpacity>
+                   
                   </View>
                 </>
               )}

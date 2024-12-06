@@ -8,7 +8,7 @@ import CustomNavigationBar from "../Components/AppBar";
 import Rice from "../Screens/View/Rice";
 import ProfilePage from "../Screens/Profile";
 import CartScreen from "../Screens/View/CartScreen";
-import OrderScreen from "../Screens/View/OrderScreen";
+import OrderScreen from "../../src/Orders/OrderScreen";
 import { COLORS } from "../../assets/theme/theme";
 import BASE_URL from "../../Config"
 import OfferScreen from "../Screens/View/OfferScreen";
@@ -33,7 +33,6 @@ const Tabs = () => {
   const fetchCartCount = () => {
     const token = userData.accessToken;
     const customerId = userData.userId;
-
     axios
       .get(
         BASE_URL +
@@ -51,6 +50,15 @@ const Tabs = () => {
         console.error("Failed to fetch cart count:", error);
       });
   };
+
+const cartCountValue = (focused) => {
+     if(focused){
+       fetchCartCount()
+
+     }else{
+        fetchCartCount()
+     }
+}
 
   const getIconColor = (focused) => ({
     tintColor: focused ? COLORS.white : "#205b0b",
@@ -134,6 +142,7 @@ const Tabs = () => {
                 resizeMode="contain"
                 style={[styles.tabIcon, getIconColor(focused)]}
               />
+              {fetchCartCount()}
               {cartCount > 0 && (
                 <View style={styles.cartBadge}>
                   <Text style={styles.cartBadgeText}>{cartCount}</Text>

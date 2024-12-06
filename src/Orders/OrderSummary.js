@@ -10,15 +10,12 @@ import {
   Alert,
 } from "react-native";
 import { useSelector } from "react-redux";
+import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import BASE_URL from "../../../Config";
+import BASE_URL from "../../../Erice/Config";
 const OrderSummaryScreen = ({ navigation, route }) => {
-  // const address = {
-  //   name: "John Doe",
-  //   fullAddress: "123, Main Street, Springfield, USA",
-  //   mobile: "9876543210",
-  // };
+ 
 
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
@@ -27,11 +24,13 @@ const OrderSummaryScreen = ({ navigation, route }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [address, setAddress] = useState([]);
+  const [user,setUser] = useState();
+  const[totalAmount,setTotalAmount]=useState('')
 
   useFocusEffect(
     useCallback(() => {
       fetchCartItems();
-
+      getProfile ();
       console.log("from checkout screen", route.params.addressData);
       setAddress(route.params.addressData);
     }, [])
@@ -52,6 +51,7 @@ const OrderSummaryScreen = ({ navigation, route }) => {
       );
       const data = await response.json();
       setCartItems(data);
+      
     } catch (error) {
       console.error("Error fetching cart items:", error);
     } finally {
@@ -60,6 +60,33 @@ const OrderSummaryScreen = ({ navigation, route }) => {
   };
 
 
+  const getProfile = async () => {
+    // const mobile_No = AsyncStorage.getItem('mobileNumber');
+   
+    try {
+      const response = await axios({
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        url:
+          BASE_URL +
+          `erice-service/user/customerProfileDetails?customerId=${customerId}`,
+      });
+      // console.log(response.data);
+
+      if (response.status === 200) {
+        console.log("customerProfileDetails",response.data);
+        setUser(response.data);
+       
+      }
+      // showToast(response.data.msg || 'Profile loaded successfully');
+    } catch (error) {
+      console.error(error);
+      showToast("Error loading profile");
+    }
+  };
   
  
   const formatOrderDetails = () => {
@@ -93,36 +120,95 @@ const OrderSummaryScreen = ({ navigation, route }) => {
     orderDetails += `${"-".repeat(45)}\n`;
     orderDetails += `🔢 Total Items: ${cartItems.length.toString().padStart(29)}\n`;
     orderDetails += `💸 Total Price: ₹${totalAmount.toFixed(2).padStart(10)}\n`;
-  
+    // console.log(totalAmount)
     return orderDetails;
   };
   
 
   // Function to handle continue button press
+  // const handleContinuePress = () => {
+  //   const orderDetails = formatOrderDetails();
+  //   console.log("user",user);
+    
+  //      if(user.email && user.name && user.mobileNumber != null){
+   
+  //   Alert.alert(
+  //     "Confirm Order",
+  //     orderDetails,
+  //     [
+  //       {
+  //         text: "Cancel",
+  //         style: "cancel",
+  //       },
+  //       {
+  //         text: "Confirm",
+  //         onPress: () =>
+  //           navigation.navigate("Payment Details", {
+  //             items: cartItems,
+  //             address: address,
+  //           }),
+  //       },
+  //     ],
+     
+  //   );
+  // } else{
+  //    Alert.alert(
+  //     "please fill the profile",
+  //     [
+  //       {
+  //         text: "OK",
+  //         onPress: () => navigation.navigate("Profile"), 
+  //       },
+  //     ]
+  //    )
+  // }
+  // };
+
+
   const handleContinuePress = () => {
     const orderDetails = formatOrderDetails();
-
-    // Show confirmation alert with order details
-    Alert.alert(
-      "Confirm Order",
-      orderDetails,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Confirm",
-          onPress: () =>
-            navigation.navigate("Payment Details", {
-              items: cartItems,
-              address: address,
-            }),
-        },
-      ],
-      { cancelable: false }
-    );
+    console.log("user", user);
+  
+    if (
+      user.email?.trim() &&
+      user.name?.trim() &&
+      user.mobileNumber?.trim()
+    ) {
+      Alert.alert(
+        "Confirm Order",
+        orderDetails,
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Confirm",
+            onPress: () =>
+              navigation.navigate("Payment Details", {
+                items: cartItems,
+                address: address,
+              }),
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        "Incomplete Profile",
+        "Please fill in your profile before proceeding.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              console.log("Navigating to profile");
+              navigation.navigate("Profile"); 
+            },
+          },
+        ]
+      );
+    }
   };
+  
 
   return (
     <View style={styles.container}>

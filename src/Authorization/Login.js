@@ -196,6 +196,7 @@ const LoginPage = () => {
             value={mobileNumber}
             maxLength={10}
             onChangeText={setMobileNumber}
+            
           />
           {errors.mobileNumber && (
             <Text style={styles.errorText}>{errors.mobileNumber}</Text>
@@ -241,7 +242,7 @@ const LoginPage = () => {
           )}
           {!isLogin && (
             <Text style={styles.registerPrompt}>
-              Don't have an account?
+              Don't have an account ?
               <Text
                 style={styles.registerLink}
                 onPress={() => navigation.navigate("RegisterScreen")}
@@ -331,10 +332,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 14,
     textAlign: "center",
+    color:"#4CAF50"
   },
   registerLink: {
-    color: "#4CAF50",
+    color: "#fd7e14",
     fontWeight: "bold",
+    textDecorationLine:"underline"
   },
 });
 

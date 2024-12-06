@@ -93,8 +93,8 @@ const Subscription = () => {
     
     setLoader(true)
     Alert.alert(
-      'Confirm Subscription',
-      `Would you like to subscribe to this plan?plan Amount${plan.amount} get Amount${plan.getAmount}`,
+       'Confirm Subscription',
+  `Subscribe to this plan for ₹${plan.amount} and get benefits worth ₹${plan.getAmount}. Would you like to proceed?`,
       [
         {
           text: 'Cancel',
@@ -171,7 +171,7 @@ function SubscriptionConfirmation(details){
 }
 
 const getepayPortal = async (data) => {
-  console.log("getepayPortal", data);
+  // console.log("getepayPortal", data);
   const totalAmount=data.amount
   const JsonData = JSON.stringify(data);
 
@@ -182,7 +182,7 @@ const getepayPortal = async (data) => {
 
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
-  console.log("ytfddd");
+  // console.log("ytfddd");
 
   var raw = JSON.stringify({
     mid: data.mid,
@@ -213,20 +213,22 @@ const getepayPortal = async (data) => {
       data = JSON.parse(data);
       // console.log("Payment process",data);
       // localStorage.setItem("paymentId",data.paymentId)
-      // console.log(data.paymentId);
+      console.log(data.paymentId);
       // console.log(data.qrIntent)
+      Requery(data.paymentId);
       // window.location.href = data.qrIntent;
       setPaymentId(data.paymentId);
+      
       // paymentID = data.paymentId
       Alert.alert(
-        "Total Amount",
-        "Amount of cart details: INR " +totalAmount,
+        "Congratulations!",
+        "You’ve successfully subscribed to the plan ",
         [
           {
             text: "yes",
             onPress: () => {
+             
               Linking.openURL(data.qrIntent);
-              Requery(data.paymentId);
               setLoader(false)
             },
           },
@@ -240,18 +242,16 @@ const getepayPortal = async (data) => {
     .catch((error) => console.log("getepayPortal", error.response));
   setLoader(false);
 };
-
-
+// Requery();
 useEffect(() => {
-  // console.log("djhftghngdxhkjhfghjcvyhds");
   if (
     paymentStatus == "PENDING" ||
     paymentStatus == "" ||
     paymentStatus == null
   ) {
     const data = setInterval(() => {
-      Requery(paymentId);
-    }, 4000);
+      Requery();
+    }, 2000);
     return () => clearInterval(data);
   } else {
     // setLoading(false)
@@ -259,12 +259,14 @@ useEffect(() => {
 }, [paymentStatus, paymentId]);
 
 
-function Requery(paymentId) {
+function Requery() {
+  console.log("requery",paymentId,paymentStatus);
+  
   // setLoading(false);
   if (
     paymentStatus === "PENDING" ||
     paymentStatus === "" ||
-    paymentStatus === null
+    paymentStatus === null || paymentStatus === undefined
   ) {
     // console.log("Before.....",paymentId)
 
@@ -363,13 +365,13 @@ function Requery(paymentId) {
               .then(function(response) {
                 console.log(
                   "Order Placed with Payment API:",
-                  response.data
+                  response
                 );
                 setLoading(false);
                 // Alert.alert("Successfullt g!");
                 Alert.alert(
                   data.paymentStatus,
-                  "Successfully you hve got subscription",
+                  "Successfully you have got subscription",
                   [
                     {
                       text: "yes",
@@ -390,7 +392,7 @@ function Requery(paymentId) {
           }
         }
       })
-      .catch((error) => console.log("Payment Status", error));
+      .catch((error) => console.log("Payment Status", error.response));
   }
   // else{
   //   clearInterval(intervalId)

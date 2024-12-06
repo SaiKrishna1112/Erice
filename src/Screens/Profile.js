@@ -47,26 +47,13 @@ const ProfilePage = () => {
   
   useFocusEffect(
     useCallback(() => {
-      //  const mobileNo = AsyncStorage.getItem("mobileNumber");
-      //  console.log("varammmmm",mobileNo);
-       
-      //  setProfileForm((prevForm) => ({
-      //   ...prevForm, 
-      //   customer_mobile: mobileNo, 
-      // }));
+      
       animateProfile();
       getProfile();
     }, [getProfile])
   );
 
-  // useEffect(() => {
-  //   if (profileForm.customer_mobile) {
-  //     setIsProfileSaved(true);
-  //     setIsInitiallySaved(true);
-  //   } else if (!isInitiallySaved) {
-  //     setIsProfileSaved(false);
-  //   }
-  // }, [profileForm]);
+  
 
   const animateProfile = () => {
     Animated.loop(
@@ -113,7 +100,6 @@ const ProfilePage = () => {
           customer_mobile:response.data.mobileNumber
         });
       }
-      // showToast(response.data.msg || 'Profile loaded successfully');
     } catch (error) {
       console.error(error);
       showToast("Error loading profile");
@@ -121,13 +107,13 @@ const ProfilePage = () => {
   };
 
   const handleProfileSubmit = async () => {
-    if (!profileForm.customer_name || !profileForm.customer_email) {
+    if (!profileForm.customer_name || !profileForm.customer_email|| errors.customer_email) {
       setErrors({
         customer_name: profileForm.customer_name
           ? ""
           : "Name should not be empty",
         customer_email: profileForm.customer_email
-          ? ""
+          ?  errors.customer_email
           : "Email should not be empty",
       });
       return;
@@ -153,9 +139,11 @@ const ProfilePage = () => {
       // Handle response status
       if (response.status === 200) {
         console.log("profile call ", response);
+        setErrors({ ...errors, customer_email: "" });
+        setErrors({...errors, })
         setProfileData(response.data);
         console.log("profile data", profileData);
-       
+         getProfile();
         setIsProfileSaved(true);
         if (isProfileSaved) {
           Alert.alert("Success", "Profile saved successfully");
@@ -276,22 +264,7 @@ const ProfilePage = () => {
           <Text style={styles.errorText}>{errors.customer_email}</Text>
         ) : null}
 
-        {/* <TextInput
-                style={[
-                    styles.input,
-                    {
-                        backgroundColor: isProfileSaved ? '#e0e0e0' : '#fff', 
-                        // color: isProfileSaved ? 'gray' : 'black', 
-                    }
-                ]}
-                placeholder="Your mobile number"
-                value={profileForm?.customer_mobile || ''}
-                onChangeText={(text) => setProfileForm({ ...profileForm, customer_mobile: text })}
-                maxLength={10}
-                editable={!isProfileSaved } 
-              
-               
-            /> */}
+       
 
         <TextInput
           style={[
@@ -334,13 +307,32 @@ const ProfilePage = () => {
           </Text>
         </TouchableOpacity>
         <View style={styles.optionContainer}>
-          <TouchableOpacity style={styles.optionButton} onPress={()=>navigation.navigate('Write To Us')}>
-                        <Text style={styles.optionText}>Write To Us</Text>
-                     </TouchableOpacity>
+        
+                     <TouchableOpacity
+                  style={styles.optionButton}
+                  onPress={() => {
+                if (user.name && user.email && user.mobileNumber) {
+                  navigation.navigate("Write To Us");
+                } else {
+              Alert.alert(
+        "Incomplete Profile",
+        "Please fill in your profile before proceeding.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("Profile"),
+          },
+        ]
+      );
+    }
+  }}
+>
+  <Text style={styles.optionText}>Write To Us</Text>
+</TouchableOpacity>
 
-                     <TouchableOpacity style={styles.optionButton} onPress={()=>navigation.navigate('Ticket History')}>
+               <TouchableOpacity style={styles.optionButton} onPress={()=>navigation.navigate('Ticket History')}>
                         <Text style={styles.optionText}>Ticket History</Text>
-                     </TouchableOpacity>
+                </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Subscription')}>
                         <Text style={styles.optionText}>Subscription</Text>

@@ -13,7 +13,7 @@ import axios from "axios";
 // import Footer from './Footer';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector } from "react-redux";
-import BASE_URL from "../../../Config";
+import BASE_URL from "../../../Erice/Config";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 const OrderScreen = () => {
@@ -24,8 +24,7 @@ const OrderScreen = () => {
   const [loading, setLoading] = useState(false);
   // const [accessToken, setAccessToken] = useState(null);
   const navigation = useNavigation();
-  //  const accessToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMyIsImlhdCI6MTczMTMwODYwNiwiZXhwIjoxNzMyMTcyNjA2fQ.5edNAnfhlAPuAtDLvfxBHeR6XKsmiGtWMiVJHlY6LKvH3hCRSQEghodAph0sN_ID8EMcd0Hkn8pijcmRQH0iZw"
-  // const customerId=4
+  
 
   useFocusEffect(
     useCallback(() => {
@@ -101,7 +100,7 @@ const OrderScreen = () => {
     <TouchableOpacity style={styles.orderList} onPress={()=>orderDetails(item)}>
       <View style={styles.imageContainer}>
         <Image
-          source={require("../../../assets/tick.png")}
+          source={require("../../assets/tick.png")}
           style={styles.tickImage}
         />
       </View>
@@ -114,8 +113,8 @@ const OrderScreen = () => {
           Amount: Rs. {parseFloat(item.grandTotal).toFixed(2)}
         </Text>
         <Text style={styles.paymentType}>
-          Payment: {item.payment_type === 2 ? "ONLINE" : "COD"}
-          {item.payment_type === 2 && item.payment_status === 0 && (
+          Payment: {item.paymentType === 2 ? "ONLINE" : "COD"}
+          {item.paymentType === 2 && item.paymentStatus === 0 && (
             <Text style={styles.paymentPending}> (Pending)</Text>
           )}
         </Text>

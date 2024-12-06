@@ -10,11 +10,12 @@ import {
   Alert,
   TextInput,
   Dimensions,
+ 
 } from "react-native";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { RadioButton, Checkbox, ActivityIndicator } from "react-native-paper";
+import { RadioButton, Checkbox, ActivityIndicator, } from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import encryptEas from "../../Payments/components/encryptEas";
@@ -22,19 +23,24 @@ import decryptEas from "../../Payments/components/decryptEas";
 import { COLORS } from "../../../assets/theme/theme";
 import BASE_URL from "../../../Config";
 import { err } from "react-native-svg";
-const {width,height} = Dimensions.get('window')
-
-
+import Icon from "react-native-vector-icons/Ionicons";
+const { width, height } = Dimensions.get("window");
 
 const PaymentDetails = ({ navigation, route }) => {
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
   const [transactionId, setTransactionId] = useState();
-
   const [couponCode, setCouponCode] = useState("");
   const [paymentId, setPaymentId] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [totalAmount, setTotalAmount] = useState("");
+  const [grandTotal, setGrandTotal] = useState("");
+  const [coupenDetails, setCoupenDetails] = useState("");
+  const [coupenApplied, setCoupenApplied] = useState(false);
+  // wallet states
+  const [useWallet,setUseWallet] = useState(false);
+  const [walletAmount,setWalletAmount] = useState()
   const [profileForm, setProfileForm] = useState({
     customer_name: "",
     customer_email: "",
@@ -45,39 +51,51 @@ const PaymentDetails = ({ navigation, route }) => {
   console.log({ customerId });
   const items = route.params?.items || [];
 
-  console.log("Payment screen items:", items);
+  console.log("Items:", items);
   // console.log(route.params)
   var addressDetails = route.params.address;
 
   const [selectedPaymentMode, setSelectedPaymentMode] = useState(null);
 
-  // Calculate total amount
-  const totalAmount = items.reduce(
-    (total, item) => total + item.cartQuantity * item.priceMrp,
-    0
-  );
+  
+  var calculatedTotal;
+  useEffect(() => {
+    calculatedTotal = items.reduce(
+      (total, item) => total + item.cartQuantity * item.priceMrp,
+      0
+    );
+    console.log(
+      "grand total",
+      items.reduce(
+        (total, item) => total + item.cartQuantity * item.priceMrp,
+        0
+      )
+    );
+    // Alert.alert("calculatedTotal",calculatedTotal)
+    console.log("calculated total", calculatedTotal);
+
+    setTotalAmount(calculatedTotal);
+  }, [items]);
 
   const handlePaymentModeSelect = (mode) => {
     setSelectedPaymentMode(mode);
     console.log({ mode });
   };
 
-  //   const changePaymentType = (type) => {
-  //     console.log({type});
+  const deleteCoupen = () => {
+    setCouponCode("");
+    setCoupenApplied(false)
+    // setTotalAmount(calculatedTotal);
+    console.log("coupen removed");
+    Alert.alert("coupen removed successfully")
+    
+  };
 
-  //     setPaymentType(type);
-  // };
   const confirmPayment = () => {
     if (selectedPaymentMode == null || selectedPaymentMode == "") {
-      // navigation.navigate("OrderConfirmationScreen", {
-      //   paymentMode: selectedPaymentMode,
-      //   items,
-      //   totalAmount,
-      // });
       Alert.alert("Please select payment mode");
     } else {
-      // alert("Please select a payment mode.");
-      placeOrder();
+     placeOrder();
     }
     // Alert.alert("payment have to be done")
   };
@@ -85,7 +103,65 @@ const PaymentDetails = ({ navigation, route }) => {
   useEffect(() => {
     getProfile();
     getOffers();
+    getWalletAmount()
   }, []);
+
+// get wallet amount 
+  const getWalletAmount = async () => {
+    try {
+      const response = await axios.post(
+        BASE_URL+`erice-service/cart/applyWalletAmountToCustomer`,
+        {
+          customerId: customerId,  
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      if (response.data) {
+        console.log("Wallet amount to be used:", response.data);
+        setWalletAmount(response.data.usedWalletAmount)
+        console.log("wallet amount",walletAmount);
+        
+      }
+    } catch (error) {
+      console.error("Error applying wallet amount:", error.response?.data || error.message);
+    }
+  };
+  
+   // handle checkbox taggle
+  // Handle checkbox toggle
+  const handleCheckboxToggle = () => {
+    const newValue = !useWallet; 
+    setUseWallet(newValue);
+
+    if (newValue) {
+      // Show alert when the checkbox is checked
+      Alert.alert(
+        "Wallet Amount Used",
+        `You are using $${walletAmount} from your wallet.`,
+        [
+          {
+            text: "OK",
+          },
+        ]
+      );
+    } else {
+      // Show alert when the checkbox is unchecked
+      Alert.alert(
+        "Wallet Amount Deselected",
+        `You have removed the usage of $${walletAmount} from your wallet.`,
+        [
+          {
+            text: "OK",
+          },
+        ]
+      );
+    }
+  };
 
   const getProfile = async () => {
     try {
@@ -114,12 +190,12 @@ const PaymentDetails = ({ navigation, route }) => {
       console.error(error);
     }
   };
-var postData;
+  var postData;
   const placeOrder = () => {
     // console.log("Location Data:", addressDetails);
 
     // Ensure that locationData contains the necessary data
-     postData = {
+    postData = {
       address: addressDetails.address,
       amount: totalAmount,
       customerId: customerId,
@@ -146,7 +222,15 @@ var postData;
 
         // Handle COD or other payment types here
         if (selectedPaymentMode === null || selectedPaymentMode === "COD") {
-          Alert.alert("Order Placed!");
+          Alert.alert(
+         "Order Confirmed!",
+  "Your order has been placed successfully . Thank you for shopping with us!",
+  [
+    {
+      text: "OK",
+      onPress: () => navigation.navigate('My Orders'), 
+    },
+  ])
           setLoading(false);
           // totalCart()
         } else {
@@ -252,8 +336,8 @@ var postData;
         setPaymentId(data.paymentId);
         // paymentID = data.paymentId
         Alert.alert(
-          "Total Amount",
-          "Amount of cart details: INR " + totalAmount,
+          "Cart Summary",
+  `The total amount for your cart is ₹${totalAmount.toFixed(2)}. Please proceed to checkout to complete your purchase.`,
           [
             {
               text: "yes",
@@ -278,26 +362,49 @@ var postData;
     try {
       // Updated API URL and headers
       const response = await axios.get(
-        BASE_URL+'erice-service/coupons/getallcoupons',
+        BASE_URL + "erice-service/coupons/getallcoupons",
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      if(response.data){
-      console.log("coupen code",response.data);
-      setLoading(false);
+      if (response.data) {
+        console.log("coupen code", response.data);
+        setLoading(false);
       }
-    }catch(error){
+    } catch (error) {
       console.log(error.response);
     }
-  }
-//for applying coupen
-  const handleApplyCoupon = () => {
-    alert(`Coupon "${couponCode}" applied!`);
   };
+  //for applying coupen
+  const handleApplyCoupon = () => {
+    const data = {
+      couponCode: couponCode,
+      customerId: customerId,
+      subTotal: totalAmount,
+    };
+    console.log("Total amount is :", totalAmount);
 
+    const response = axios
+      .post(BASE_URL + "erice-service/coupons/applycoupontocustomer", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("coupen applied", response.data);
+        const { discount, grandTotal } = response.data;
+        setGrandTotal(grandTotal);
+        setCoupenDetails(discount);
+        Alert.alert(response.data.message)
+        setCoupenApplied(response.data.couponApplied);
+        console.log("coupenapplied state", response.data.couponApplied);
+      })
+      .catch((error) => {
+        console.log(error.response);
+      });
+  };
 
   function Requery(paymentId) {
     setLoading(false);
@@ -396,7 +503,15 @@ var postData;
                     secondResponse.data
                   );
                   setLoading(false);
-                  Alert.alert("Order Placed!");
+                  Alert.alert(
+                    "Order Confirmed!",
+             "Your order has been placed successfully . Thank you for shopping with us!",
+             [
+               {
+                 text: "OK",
+                 onPress: () => navigation.navigate('My Orders'), 
+               },
+             ])
                 })
                 .catch((error) => {
                   console.error("Error in payment confirmation:", error);
@@ -413,88 +528,143 @@ var postData;
   }
 
   return (
-    
     <View style={styles.container}>
-    {/* Apply Coupon Section */}
-    <View style={styles.card}>
-      <Text style={styles.cardHeader}>Apply Coupon</Text>
-      <View style={styles.couponRow}>
-        <TextInput
-          style={styles.couponInput}
-          placeholder="Enter coupon code"
-          value={couponCode}
-          onChangeText={setCouponCode}
+      {/* Apply Coupon Section */}
+      <View style={styles.card}>
+        <View style={{ flexDirection: "row" }}>
+          <Text style={styles.cardHeader}>Apply Coupon</Text>
+          
+        </View>
+        <View style={styles.couponRow}>
+          <TextInput
+            style={styles.couponInput}
+            placeholder="Enter coupon code"
+            value={couponCode}
+            onChangeText={setCouponCode}
+            editable={!coupenApplied}
+          />
+          {coupenApplied?(
+         <TouchableOpacity
+            style={styles.delete}
+            onPress={() => deleteCoupen()}
+          >
+          <Text style={{ color:"#fd7e14",fontSize:15,fontStyle:"normal",fontWeight:"bold"}}>Remove</Text>
+          </TouchableOpacity>
+):(
+          <TouchableOpacity
+            style={styles.applyButton}
+            onPress={() => handleApplyCoupon()}>
+            <Text style={styles.applyButtonText}>Apply</Text>
+          </TouchableOpacity>)}
+        </View>
+      </View>
+       {/* from Wllet */}
+       <View style={styles.checkboxContainer}>
+        <Checkbox
+          status={useWallet ? "checked" : "unchecked"} 
+          onPress={handleCheckboxToggle} 
+          color="#00bfff" 
+          uncheckedColor="#ccc" 
         />
-        <TouchableOpacity style={styles.applyButton} onPress={handleApplyCoupon}>
-          <Text style={styles.applyButtonText}>Apply</Text>
+        <Text style={styles.checkboxLabel}>
+          Use Wallet Balance 
+          {/* (${walletAmount}) */}
+        </Text>
+      </View>
+      {/* Payment Methods */}
+      <Text style={styles.paymentHeader}>Choose Payment Method</Text>
+      <View style={styles.paymentOptions}>
+        <TouchableOpacity
+          style={[
+            styles.paymentOption,
+            selectedPaymentMode === "ONLINE" && styles.selectedOption,
+          ]}
+          onPress={() => handlePaymentModeSelect("ONLINE")}
+        >
+          <FontAwesome5
+            name="credit-card"
+            size={24}
+            color={selectedPaymentMode === "ONLINE" ? "blue" : "black"}
+          />
+          <Text style={styles.optionText}>Online Payment</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.paymentOption,
+            selectedPaymentMode === "COD" && styles.selectedOption,
+          ]}
+          onPress={() => handlePaymentModeSelect("COD")}
+        >
+          <MaterialIcons
+            name="delivery-dining"
+            size={24}
+            color={selectedPaymentMode === "COD" ? "blue" : "black"}
+          />
+          <Text style={styles.optionText}>Cash on Delivery</Text>
         </TouchableOpacity>
       </View>
-    </View>
 
-    {/* Payment Methods */}
-    <Text style={styles.paymentHeader}>Choose Payment Method</Text>
-    <View style={styles.paymentOptions}> 
-      <TouchableOpacity
-        style={[
-          styles.paymentOption,
-          selectedPaymentMode === "ONLINE" && styles.selectedOption,
-        ]}
-        onPress={() => handlePaymentModeSelect("ONLINE")}
-      >
-        <FontAwesome5
-          name="credit-card"
-          size={24}
-          color={selectedPaymentMode === "ONLINE" ? "blue" : "black"}
-        />
-        <Text style={styles.optionText}>Online Payment</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[
-          styles.paymentOption,
-          selectedPaymentMode === "COD" && styles.selectedOption,
-        ]}
-        onPress={() => handlePaymentModeSelect("COD")}
-      >
-        <MaterialIcons
-          name="delivery-dining"
-          size={24}
-          color={selectedPaymentMode === "COD" ? "blue" : "black"}
-        />
-        <Text style={styles.optionText}>Cash on Delivery</Text>
-      </TouchableOpacity>
-    </View>
-
-    {/* Payment Details */}
-    <View style={styles.paymentDetails}>
-  <Text style={styles.detailsHeader}>Payment Details</Text>
-  <View style={styles.paymentRow}>
-    <Text style={styles.detailsLabel}>Sub Total</Text>
-    <Text style={styles.detailsValue}>₹{totalAmount.toFixed(2)}</Text>
-  </View>
-  <View style={styles.paymentRow}>
-    <Text style={styles.detailsLabel}>Delivery Fee</Text>
-    <Text style={styles.detailsValue}>₹0.00</Text>
-  </View>
-  <View style={styles.divider} />
-  <View style={styles.paymentRow}>
-    <Text style={styles.detailsLabelBold}>Grand Total</Text>
-    <Text style={styles.detailsValueBold}>₹{totalAmount.toFixed(2)}</Text>
-  </View>
-</View>
-
-
-
-    {/* Confirm Order Button */}
-    {loading ? (
-      <View style={styles.confirmButton}>
-        <ActivityIndicator size="small" color="white" />
+      {/* Payment Details */}
+      <View style={styles.paymentDetails}>
+        <Text style={styles.detailsHeader}>Payment Details</Text>
+        <View style={styles.paymentRow}>
+          <Text style={styles.detailsLabel}>Sub Total</Text>
+          <Text style={styles.detailsValue}>₹{totalAmount}</Text>
+        </View>
+        {coupenApplied && (
+          <View style={styles.paymentRow}>
+            <Text style={styles.detailsLabel}>Coupon Applied</Text>
+            <Text style={styles.detailsValue}>-₹{coupenDetails}</Text>
+          </View>
+        )}
+        <View style={styles.paymentRow}>
+          <Text style={styles.detailsLabel}>Delivery Fee</Text>
+          <Text style={styles.detailsValue}>₹0.00</Text>
+        </View>
+        <View style={styles.divider} />
+        {/* for wallet applied */}
+       
+        {/* {useWallet ? (
+         
+          <View style={styles.paymentRow}>
+            <Text style={styles.detailsLabelBold}>Grand Total</Text>
+            <Text style={styles.detailsValueBold}>₹{grandTotal}</Text>
+          </View>
+        ) : (
+          <View style={styles.paymentRow}>
+            <Text style={styles.detailsLabelBold}>Grand Total</Text>
+            <Text style={styles.detailsValueBold}>₹{totalAmount}</Text>
+          </View>
+         
+        )}
+        */}
+        {/* for coupen applied */}
+        {coupenApplied ? (
+          <View style={styles.paymentRow}>
+            <Text style={styles.detailsLabelBold}>Grand Total</Text>
+            <Text style={styles.detailsValueBold}>₹{grandTotal}</Text>
+          </View>
+        ) : (
+          <View style={styles.paymentRow}>
+            <Text style={styles.detailsLabelBold}>Grand Total</Text>
+            <Text style={styles.detailsValueBold}>₹{totalAmount}</Text>
+          </View>
+        )}
+        {/* Confirm Order Button */}
+        {loading == true ? (
+          <View style={styles.confirmButton}>
+            <ActivityIndicator size="small" color="white" />
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={confirmPayment}
+          >
+            <Text style={styles.confirmText}>Confirm Order</Text>
+          </TouchableOpacity>
+        )}
       </View>
-    ) : (
-      <TouchableOpacity style={styles.confirmButton} onPress={confirmPayment}>
-        <Text style={styles.confirmText}>Confirm Order</Text>
-      </TouchableOpacity>
-    )}
-  </View>
+    </View>
   );
 };
 
@@ -502,7 +672,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#fff" },
   header: { fontSize: 24, fontWeight: "bold", marginBottom: 16 },
   orderDetails: {
-    flex:1,
+    flex: 1,
     padding: 16,
     borderWidth: 1,
     borderColor: "#ccc",
@@ -539,7 +709,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 18, fontWeight: "bold" },
   totalAmount: { fontSize: 18, fontWeight: "bold", color: "green" },
-  paymentHeader: { fontSize: 18, fontWeight: "bold", marginBottom: 16},
+  paymentHeader: { fontSize: 18, fontWeight: "bold", marginBottom: 16 },
   paymentOptions: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -563,14 +733,14 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "white",
-    padding: 20,
+    padding: 10,
     borderRadius: 10,
     marginBottom: 20,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 7,
   },
   cardHeader: {
     fontSize: 18,
@@ -676,12 +846,47 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
+  couponDetails: {
+    flexDirection: "row",
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "#f0f8ff",
+    borderRadius: 8,
+  },
+  couponText: {
+    fontSize: 16,
+    color: "#333",
+  },
   confirmText: {
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
   },
-  confirmText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  delete: {
+    marginLeft: 20,
+    marginRight:30,
+   
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  checkboxLabel: {
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  detailsContainer: {
+    marginBottom: 20,
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
+    elevation: 3,
+  },
 });
 
 export default PaymentDetails;

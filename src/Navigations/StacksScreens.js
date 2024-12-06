@@ -21,9 +21,9 @@ import MyLocationPage from "../Screens/Address/MyLocationPage";
 import SplashScreen from "../Authorization/SplashScreen";
 import AddAddress from "../Screens/Address/AddAddress";
 import CartScreen from "../Screens/View/CartScreen";
-import OrderSummary from "../Screens/View/OrderSummary";
+import OrderSummary from "../../src/Orders/OrderSummary";
 import PaymentDetails from "../Screens/View/PaymentScreen";
-import OrderDetails from "../Screens/View/OrderDetails";
+import OrderDetails from "../../src/Orders/OrderDetails";
 import WriteToUs from '../Screens/View/WriteToUs';
 import TicketHistory from '../Screens/View/TicketHistory';
 export default function StacksScreens() {
