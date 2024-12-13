@@ -13,7 +13,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import BASE_URL from "../../../Erice/Config";
+import BASE_URL from "../../Config";
 const OrderSummaryScreen = ({ navigation, route }) => {
  
 
@@ -30,13 +30,14 @@ const OrderSummaryScreen = ({ navigation, route }) => {
   useFocusEffect(
     useCallback(() => {
       fetchCartItems();
-      getProfile ();
+      getProfile();
       console.log("from checkout screen", route.params.addressData);
       setAddress(route.params.addressData);
     }, [])
   );
 
   const fetchCartItems = async () => {
+    setLoading(true)
     try {
       const response = await fetch(
         BASE_URL +
@@ -51,9 +52,10 @@ const OrderSummaryScreen = ({ navigation, route }) => {
       );
       const data = await response.json();
       setCartItems(data);
-      
+      setLoading(false)
     } catch (error) {
       console.error("Error fetching cart items:", error);
+      setLoading(false)
     } finally {
       setLoading(false);
     }
@@ -125,55 +127,11 @@ const OrderSummaryScreen = ({ navigation, route }) => {
   };
   
 
-  // Function to handle continue button press
-  // const handleContinuePress = () => {
-  //   const orderDetails = formatOrderDetails();
-  //   console.log("user",user);
-    
-  //      if(user.email && user.name && user.mobileNumber != null){
-   
-  //   Alert.alert(
-  //     "Confirm Order",
-  //     orderDetails,
-  //     [
-  //       {
-  //         text: "Cancel",
-  //         style: "cancel",
-  //       },
-  //       {
-  //         text: "Confirm",
-  //         onPress: () =>
-  //           navigation.navigate("Payment Details", {
-  //             items: cartItems,
-  //             address: address,
-  //           }),
-  //       },
-  //     ],
-     
-  //   );
-  // } else{
-  //    Alert.alert(
-  //     "please fill the profile",
-  //     [
-  //       {
-  //         text: "OK",
-  //         onPress: () => navigation.navigate("Profile"), 
-  //       },
-  //     ]
-  //    )
-  // }
-  // };
 
 
   const handleContinuePress = () => {
-    const orderDetails = formatOrderDetails();
     console.log("user", user);
-  
-    if (
-      user.email?.trim() &&
-      user.name?.trim() &&
-      user.mobileNumber?.trim()
-    ) {
+      const orderDetails = formatOrderDetails();
       Alert.alert(
         "Confirm Order",
         orderDetails,
@@ -192,21 +150,7 @@ const OrderSummaryScreen = ({ navigation, route }) => {
           },
         ]
       );
-    } else {
-      Alert.alert(
-        "Incomplete Profile",
-        "Please fill in your profile before proceeding.",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              console.log("Navigating to profile");
-              navigation.navigate("Profile"); 
-            },
-          },
-        ]
-      );
-    }
+   
   };
   
 
@@ -266,7 +210,7 @@ const OrderSummaryScreen = ({ navigation, route }) => {
               <View style={styles.itemDetails}>
                 <Text style={styles.itemName}>{item.itemName}</Text>
                 <Text>
-                  Quantity: {item.cartQuantity} {item.units}
+                  Quantity: {item.itemQuantity * item.cartQuantity + " kgs"}
                 </Text>
                 <Text>Price: ₹{item.priceMrp}</Text>
               </View>

@@ -266,6 +266,7 @@ const RiceProductDetails = ({ route, navigation }) => {
           <View>
             <Text>{item.priceMrp}</Text>
             <Text style={styles.productName}>{item.itemName}</Text>
+            
             <Text style={styles.productPrice}>MRP: Rs.{item.itemMrp}/-</Text>
             <Text style={styles.productWeight}>
               {item.quantity} {item.units}
@@ -366,10 +367,13 @@ const styles = StyleSheet.create({
     marginRight: 30,
   },
   productName: {
+    width:width*0.6,
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
   },
+
+  
   productPrice: {
     fontSize: 16,
     color: "#388E3C",

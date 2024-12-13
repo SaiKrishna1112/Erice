@@ -15,7 +15,7 @@ import { Ionicons } from "react-native-vector-icons";
 import BASE_URL from "../../../Config";
 const AddressBook = ({ route }) => {
   const navigation = useNavigation();
-
+  const [errors, setErrors] = useState({});
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
@@ -24,6 +24,7 @@ const AddressBook = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedType, setSelectedType] = useState("");
   const [newAddress, setNewAddress] = useState({
+    customerId: customerId,
     flatNo: "",
     landMark: "",
     pincode: "",
@@ -39,6 +40,19 @@ const AddressBook = ({ route }) => {
     }, [])
   );
 
+  const validateFields = () => {
+    const newErrors = {};
+    if (!newAddress.flatNo) newErrors.flatNo = "Flat No is required.";
+    if (!newAddress.landMark) newErrors.landMark = "Landmark is required.";
+    if (!newAddress.pincode) newErrors.pincode = "Pincode is required.";
+    else if (newAddress.pincode.length < 6)
+      newErrors.pincode = "Pincode must be 6 digits.";
+    if (!newAddress.address) newErrors.address = "Address is required.";
+    if (!selectedType) newErrors.type = "Please select an address type.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; 
+  };
   const handleSubmitAddress = () => {
     if (
       !newAddress.flatNo ||
@@ -62,7 +76,7 @@ const AddressBook = ({ route }) => {
       landMark: "",
       pincode: "",
       address: "",
-      type: "",
+      addressType: "",
     });
     setSelectedType("");
   };
@@ -79,17 +93,14 @@ const AddressBook = ({ route }) => {
     setLoading(true);
     try {
       const response = await axios({
-        url:
-          BASE_URL +
-          `erice-service/checkout/orderAddress?customerId=${customerId}`,
+        url: BASE_URL + `erice-service/user/getAllAdd?customerId=${customerId}`,
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      // Log the API response to inspect the structure
-      console.log("API Response:", response.data);
+      console.log("All addresss are :", response.data);
 
       if (response && response.data) {
         setAddressList(response.data);
@@ -108,6 +119,7 @@ const AddressBook = ({ route }) => {
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
   };
+  
   // const handleSendAddres =(address)=>{
   //   console.log("addressidconfirmation",address);
 
@@ -119,16 +131,20 @@ const AddressBook = ({ route }) => {
   //      })
   // }
 
-  const handleSendAddress = (selectAddress) => {
-    let locationdata;
+ 
 
-    if (selectedAddress) {
+  const handleSendAddress = async (selectAddress) => {
+    let locationdata;
+console.log("selected type",selectedType);
+    if (selectAddress) {
       // If a radio button address is selected
       locationdata = {
-        ...selectedAddress,
-        // type: selectedAddress.type || "Default Type", 
+        ...selectAddress,
         status: true,
       };
+    } else if (!validateFields()) {
+      // If the fields are not validated, return early
+      return;
     } else if (
       newAddress.flatNo &&
       newAddress.landMark &&
@@ -139,7 +155,7 @@ const AddressBook = ({ route }) => {
       // If a new address is added
       locationdata = {
         ...newAddress,
-        type: selectedType,
+        addressType: selectedType,
         status: true,
       };
     } else {
@@ -148,7 +164,43 @@ const AddressBook = ({ route }) => {
     }
 
     console.log("Location Data:", locationdata);
-    navigation.navigate("Checkout", { locationdata });
+
+    try {
+      console.log(" new Added address ",newAddress)
+      const response = await axios.post(
+      
+        "http://65.0.147.157:8282/api/erice-service/user/addAddress",
+        newAddress,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Handle successful API response
+      if (response.data.status === true) {
+        Alert.alert("Success", "Address added successfully!")
+       
+        //  [
+        //   {
+        //     text: "OK",
+        //     onPress: () => {
+        //       // Navigate to Checkout page with the address data
+        //       navigation.navigate("Checkout", { locationdata });
+        //     },
+        //   },
+        // ]);
+      } else {
+        Alert.alert("Error", "Failed to add address. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error adding address:", error.response);
+      Alert.alert(
+        "Error",
+        "An error occurred while adding the address. Please try again."
+      );
+    }
   };
 
   return (
@@ -171,7 +223,7 @@ const AddressBook = ({ route }) => {
                   style={[
                     styles.addressRow,
                     selectedAddress &&
-                      selectedAddress.addressId === address.addressId &&
+                      selectedAddress.id === address.id &&
                       styles.selectedAddress,
                   ]}
                   onPress={() => handleAddressSelect(address)}
@@ -181,7 +233,7 @@ const AddressBook = ({ route }) => {
                       style={[
                         styles.radioButton,
                         selectedAddress &&
-                          selectedAddress.addressId === address.addressId &&
+                          selectedAddress.addressId === address.id &&
                           styles.radioButtonSelected,
                       ]}
                     />
@@ -229,36 +281,64 @@ const AddressBook = ({ route }) => {
               style={styles.input}
               placeholder="Flat No"
               value={newAddress.flatNo}
-              onChangeText={(text) =>
-                setNewAddress((prev) => ({ ...prev, flatNo: text }))
-              }
+              onChangeText={(text) => {
+                setNewAddress((prev) => ({ ...prev, flatNo: text }));
+                if (errors.flatNo) {
+                  setErrors((prev) => ({ ...prev, flatNo: null })); 
+                }
+              }}
             />
+            {errors.flatNo && (
+              <Text style={styles.errorText}>{errors.flatNo}</Text>
+            )}
+
             <TextInput
               style={styles.input}
               placeholder="Landmark"
               value={newAddress.landMark}
-              onChangeText={(text) =>
-                setNewAddress((prev) => ({ ...prev, landMark: text }))
-              }
+              onChangeText={(text) => {
+                setNewAddress((prev) => ({ ...prev, landMark: text }));
+                if (errors.landMark) {
+                  setErrors((prev) => ({ ...prev, landMark: null }));
+                }
+              }}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Pincode"
-              value={newAddress.pincode}
-              onChangeText={(text) =>
-                setNewAddress((prev) => ({ ...prev, pincode: text }))
-              }
-              keyboardType="numeric"
-              maxLength={6}
-            />
+            {errors.landMark && (
+              <Text style={styles.errorText}>{errors.landMark}</Text>
+            )}
+
             <TextInput
               style={styles.input}
               placeholder="Address"
               value={newAddress.address}
-              onChangeText={(text) =>
-                setNewAddress((prev) => ({ ...prev, address: text }))
-              }
+              onChangeText={(text) => {
+                setNewAddress((prev) => ({ ...prev, address: text }));
+                if (errors.address) {
+                  setErrors((prev) => ({ ...prev, address: null }));
+                }
+              }}
             />
+            {errors.address && (
+              <Text style={styles.errorText}>{errors.address}</Text>
+            )}
+
+            <TextInput
+              style={styles.input}
+              placeholder="Pincode"
+              value={newAddress.pincode}
+              onChangeText={(text) => {
+                setNewAddress((prev) => ({ ...prev, pincode: text }));
+                if (errors.pincode) {
+                  setErrors((prev) => ({ ...prev, pincode: null })); 
+                }
+              }}
+              keyboardType="numeric"
+              maxLength={6}
+            />
+            {errors.pincode && (
+              <Text style={styles.errorText}>{errors.pincode}</Text>
+            )}
+
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[
@@ -288,6 +368,7 @@ const AddressBook = ({ route }) => {
                 <Text style={styles.buttonText}>Others</Text>
               </TouchableOpacity>
             </View>
+            {errors.type && <Text style={styles.errorText}>{errors.type}</Text>}
 
             <TouchableOpacity
               style={styles.submitButton}
@@ -395,7 +476,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 5,
-    marginBottom: 10,
+    marginBottom: 5,
     paddingHorizontal: 10,
     fontSize: 16,
   },
@@ -437,6 +518,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     textAlign: "center",
     alignSelf: "center",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 1,
   },
 });
 

@@ -16,10 +16,13 @@ const Subscription = () => {
   const [loading, setLoading] = useState(false);
   const [subscriptionHistoryData, setSubscriptionHistoryData] = useState([]);
   const[transactionId,setTransactionId]=useState('')
+  const[subscription,setSubscription] = useState();
   const[paymentId,setPaymentId]=useState()
   // const[totalAmount,setTotalAmount]=useState('')
   const[paymentStatus,setPaymentStatus]=useState()
   const[loader,setLoader]=useState(false)
+  const [loadingPlanId, setLoadingPlanId] = useState(null); 
+
   const navigation = useNavigation();
   
   const [profileForm, setProfileForm] = useState({
@@ -78,6 +81,7 @@ const Subscription = () => {
 
       if (response.data) {
         console.log("subscription",response.data);
+        // Alert.alert(response.data.message)
         setLoading(false);
         setSubscriptionHistoryData(response.data);
       }
@@ -89,12 +93,13 @@ const Subscription = () => {
   };
 
   const handleSubscription = (plan) => {
+    
     console.log("varam",plan.amount);
     
     setLoader(true)
     Alert.alert(
        'Confirm Subscription',
-  `Subscribe to this plan for ₹${plan.amount} and get benefits worth ₹${plan.getAmount}. Would you like to proceed?`,
+        `Subscribe to this plan for ₹${plan.amount} and get benefits worth ₹${plan.getAmount}. Would you like to proceed?`,
       [
         {
           text: 'Cancel',
@@ -113,10 +118,10 @@ const Subscription = () => {
 let postData
 
 function SubscriptionConfirmation(details){
+  setSubscription(true)
   console.log({details})
   console.log("amount",details.getAmount)
 
-  // setTotalAmount(details.getAmount)
  postData=
   {
     "customerId": userData.userId,
@@ -130,12 +135,16 @@ function SubscriptionConfirmation(details){
   .then(function(response){
     setLoader(false)
     console.log(response.data)
+    if(response.data.paymentId==null&&response.data.status==false){
+      Alert.alert(response.data.message)
+    }
+    else{
     setTransactionId(response.data.paymentId)
     console.log("==========");
     const data = {
       mid: "1152305",
-      // amount: details.getAmount,
-      amount:1,
+      amount: details.amount,
+      // amount:1,
       merchantTransactionId: response.data.paymentId,
       transactionDate: new Date(),
       terminalId: "getepay.merchant128638@icici",
@@ -162,7 +171,7 @@ function SubscriptionConfirmation(details){
     };
     console.log({ data });
     getepayPortal(data)
-
+  }
   })
   .catch(function(error){
     console.log(error.response)
@@ -221,8 +230,9 @@ const getepayPortal = async (data) => {
       
       // paymentID = data.paymentId
       Alert.alert(
-        "Congratulations!",
-        "You’ve successfully subscribed to the plan ",
+      "Payment Confirmation",
+"Are you sure you want to proceed with the payment of to subscribe to this plan?",
+
         [
           {
             text: "yes",
@@ -438,6 +448,8 @@ function Requery() {
               numColumns={2}
               contentContainerStyle={styles.listContent}
               columnWrapperStyle={styles.row}
+              showsVerticalScrollIndicator={false} 
+              showsHorizontalScrollIndicator={false} 
             />
           ) : (
             <Text style={styles.emptyText}>No subscriptions found!</Text>

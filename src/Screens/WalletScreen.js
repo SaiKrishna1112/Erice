@@ -20,6 +20,7 @@ const WalletPage = ({ route }) => {
   }, []);
 
   const getWallet = async () => {
+    setLoading(true)
     const data = { customerId: customerId};
     try {
       const response = await axios.post(
@@ -34,9 +35,11 @@ const WalletPage = ({ route }) => {
 
       const { walletAmount, walletTransactions } = response.data;
       console.log(response.data);
-      
+      setLoading(false)
       setWalletAmount(walletAmount);
       setWalletTxs(walletTransactions);
+      console.log("wallet transactions",walletTxs);
+      
     } catch (error) {
       console.log(error.response);
     } finally {
@@ -61,30 +64,43 @@ const WalletPage = ({ route }) => {
   </View>
 </View>
 
-      {walletTxs.length > 0 ? (
-        <FlatList
-          data={walletTxs}
-          keyExtractor={(item) => item.wallet_tx_id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.transactionCard}>
-              <Text style={styles.txId}>TX ID: TX-{item.wallet_tx_id}</Text>
-              <Text style={styles.txDesc}>{item.wallet_tx_desc}</Text>
-              <Text style={styles.txDate}>{new Date(item.created_at).toLocaleString()}</Text>
-              <Text
-                style={[
-                  styles.txAmount,
-                  item.wallet_tx_type === 1 ? styles.credit : styles.debit
-                ]}
-              >
-                {item.wallet_tx_type === 1 ? '+' : '-'} ₹ {item.wallet_tx_amount}
-              </Text>
-              <Text style={styles.txBalance}>Balance: ₹ {item.wallet_tx_balance}</Text>
-            </View>
-          )}
-        />
-      ) : (
-        <Text style={styles.noTransactions}>No transactions found!</Text>
-      )}
+{walletTxs.length > 0 ? (
+  <FlatList
+    data={walletTxs}
+    keyExtractor={(item) => item.id.toString()}
+    renderItem={({ item }) => (
+      <View style={styles.transactionCard}>
+        {/* Wallet Transaction Amount */}
+        <Text style={styles.txAmount}>
+          Amount: ₹ {item.walletTxAmount}
+        </Text>
+
+        {/* Order ID */}
+        <Text style={styles.txOrder}>
+          Order ID: {item.orderId}
+        </Text>
+
+        {/* Wallet Transaction Description */}
+        <Text style={styles.txDesc}>
+          Description: {item.walletTxDesc.split('Order ID:')[0].trim()}
+        </Text>
+
+        {/* Transaction Date */}
+        <Text style={styles.txDate}>
+          Date: {new Date(item.createdAt).toLocaleDateString()}
+        </Text>
+
+        {/* Wallet Balance */}
+        <Text style={styles.txBalance}>
+          Balance: ₹ {item.walletTxBalance}
+        </Text>
+      </View>
+    )}
+  />
+) : (
+  <Text style={styles.noTransactions}>No transactions found!</Text>
+)}
+
     </ScrollView>
   );
 };
@@ -151,7 +167,7 @@ const styles = StyleSheet.create({
     marginBottom: 4
   },
   txDesc: {
-    textTransform: 'capitalize',
+    textTransform: 'bold',
     marginBottom: 4,
     color: '#555'
   },
@@ -181,7 +197,52 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#888',
     marginTop: 50
-  }
+  },
+  transactionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 8,
+    marginHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#000',
+  },
+  txAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 8,
+  },
+  txOrder: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 6,
+  },
+  txDesc: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    marginTop: 8,
+  },
+  txDate: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    marginTop: 8,
+  },
+  txBalance: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    marginTop: 8,
+  },
+  noTransactions: {
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+    marginTop: 20,
+  },
 });
 
 export default WalletPage;

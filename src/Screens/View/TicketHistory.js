@@ -9,6 +9,7 @@ import {
   Image,
   ActivityIndicator,
   Button,
+  Dimensions,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -17,6 +18,8 @@ import { Dropdown } from "react-native-element-dropdown";
 import BASE_URL from "../../../Config";
 import { TouchableOpacity, TextInput } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+
+const {height,width}=Dimensions.get('window')
 
 const TicketHistory = ({ navigation }) => {
   const [queryStatus, setQueryStatus] = useState("PENDING");
@@ -28,9 +31,12 @@ const TicketHistory = ({ navigation }) => {
   const [query, setQuery] = useState();
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
+  // console.log({ token });
   const customerId = userData.userId;
   const [removeModal, setRemoveModal] = useState(false);
   const [comments, setComments] = useState();
+  const [comments_error, setComments_error] = useState(false)
+  // const[details,setDetails]=useState('')
   useEffect(() => {
     fetchTickets();
   }, [queryStatus]);
@@ -45,6 +51,7 @@ const TicketHistory = ({ navigation }) => {
       )
 
       .then((response) => {
+        // console.log("getQueries",response.data)
         setTickets(response.data);
 
         setLoading(false);
@@ -63,12 +70,17 @@ const TicketHistory = ({ navigation }) => {
 
   const cancelTicket = (ticketId, query) => {
     setTicketId(ticketId);
-
+    setQuery(query)
+console.log({query})
     setRemoveModal(true);
     console.log("Cancelled id and query:", ticketId, query);
   };
 
   const cancelTicketConfirm = (ticketId, query) => {
+    if(comments=="" || comments==null){
+      setComments_error(true)
+      return false
+    }
     const data = {
       adminDocumentId: "",
       comments: comments,
@@ -143,24 +155,69 @@ const TicketHistory = ({ navigation }) => {
               <Text style={styles.label}>MobileNumber</Text>
               <Text style={styles.value}>{item.mobileNumber}</Text>
             </View> */}
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Query</Text>
-                    <Text style={styles.value}>{item.query}</Text>
+              <View style={styles.row}>
+                    <Text style={styles.label}>Name</Text>
+                    <Text style={styles.value}>{item.name}</Text>
                   </View>
+                 
                   <View style={styles.row}>
                     <Text style={styles.label}>Ticket Id</Text>
                     <Text style={styles.value}>{item.randomTicketId}</Text>
                   </View>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Ticket Id</Text>
-                    <Text style={styles.value}>{item.id}</Text>
-                  </View>
+{/*                 
                   <View style={styles.row}>
                     <Text style={styles.label}>Created On</Text>
                     <Text style={styles.value}>
                       {item.createdAt.split(" ")[0]}
                     </Text>
+                  </View> */}
+
+                  <View style={styles.row}>
+                    <View>
+                      <Text style={styles.label}>Query / </Text>
+                      <Text style={styles.label}>Created On</Text>
+                    </View>
+
+                    <View>
+                      <Text style={styles.value}>{item.query}</Text>
+                      <Text style={styles.value}>{item?.createdAt?.substring(0,10)}</Text>
+                    </View>
                   </View>
+
+
+                  {queryStatus === "COMPLETED"?
+                  <>
+                  <View style={styles.row1}>
+                    <View>
+                      <Text style={styles.label}>Admin Comments  </Text>
+                      {/* <Text style={styles.label}>Resolved</Text> */}
+                    </View>
+                    <View>
+                      <Text style={styles.value}>{item.comments}</Text>
+                      {/* <Text style={styles.value}>{item?.resolvedOn?.substring(0,10)}</Text> */}
+                    </View>
+                  </View>
+                  </>
+                :null}
+
+
+
+
+                {queryStatus === "CANCELLED"?
+                  <>
+                  <View style={styles.row1}>
+                    <View>
+                      <Text style={styles.label}>Reason / </Text>
+                      <Text style={styles.label}>Resolved</Text>
+                    </View>
+                    <View>
+                      <Text style={styles.value}>{item.comments}</Text>
+                      <Text style={styles.value}>{item?.resolvedOn?.substring(0,10)}</Text>
+                    </View>
+                  </View>
+                  </>
+                :null}
+
 
                   {item.userQueryDocumentStatus?.fileName != null ? (
                     <View style={styles.row}>
@@ -170,14 +227,14 @@ const TicketHistory = ({ navigation }) => {
                           openFile(item.userQueryDocumentStatus?.filePath)
                         }
                       >
-                        <Text style={styles.value}>
+                        <Text style={styles.value1}>
                           {item.userQueryDocumentStatus?.fileName}
                         </Text>
                       </TouchableOpacity>
                     </View>
                   ) : null}
 
-                  <View style={styles.row}>
+                  <View style={styles.row1}>
                     {queryStatus === "PENDING" ? (
                       <>
                         <TouchableOpacity
@@ -198,23 +255,23 @@ const TicketHistory = ({ navigation }) => {
                         >
                           <Text style={{ color: "white" }}>Cancel</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.commentsbtn}>
-                      <Text style={{ color: "white" }}>View Comments</Text>
-                    </TouchableOpacity>
-                      </>
-                    ) : null}
-                    {/* <TouchableOpacity style={styles.commentsbtn}>
+                        {/* <TouchableOpacity style={styles.commentsbtn}>
                       <Text style={{ color: "white" }}>View Comments</Text>
                     </TouchableOpacity> */}
+                      </>
+                    ) : null}
+                    <TouchableOpacity style={styles.commentsbtn} onPress={() => { navigation.navigate('View Comments', { details:item })} }>
+                      <Text style={{ color: "white" }}>View Comments</Text>
+                    </TouchableOpacity>
 
                     {queryStatus === "COMPLETED" || queryStatus === "CANCELLED" ? (
                       <>
-                        <TouchableOpacity style={styles.cancelbtn}>
+                        {/* <TouchableOpacity style={styles.cancelbtn}>
                           <Text style={{ color: "white" }}>Inquires Reply</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.commentsbtn}>
                       <Text style={{ color: "white" }}>View Comments</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                       </>
                     ) : null}
                   </View>
@@ -249,6 +306,7 @@ const TicketHistory = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+      
       {removeModal ? (
         <Modal
           animationType="slide"
@@ -261,23 +319,29 @@ const TicketHistory = ({ navigation }) => {
               {/* Optional Close Button */}
               <TouchableOpacity
                 style={styles.closeButton}
-                onPress={() => setRemoveModal(false)}
+                onPress={() => {setRemoveModal(false),setComments('')}}
               >
                 <Text style={{ fontSize: 20, color: "black" }}>X</Text>
               </TouchableOpacity>
-
+{/* <Text>{ticketId} , {query}</Text> */}
               {/* Confirmation Text */}
               <Text style={styles.confirmText}>
-                Are you sure you want to cancel the query? ${ticketId}
+                Are you sure you want to cancel the query? 
+                {/* ${ticketId} */}
               </Text>
 
               {/* Comment Input */}
               <TextInput
                 style={styles.input}
-                placeholder="Add comments (optional)"
+                placeholder="Reason to cancel"
                 value={comments}
-                onChangeText={(text) => setComments(text)}
+                numberOfLines={5}
+                multiline
+                onChangeText={(text) => {setComments(text),setComments_error(false)}}
               />
+          {comments_error==true?
+              <Text style={{color:"red",margin:5}}>Reason is mandatory</Text>
+              :null}
 
               {/* Action Buttons */}
               <View style={styles.buttonContainer}>
@@ -312,7 +376,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#F2F2F2",
   },
   header: {
     fontSize: 24,
@@ -325,6 +389,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     borderColor: "gray",
+    backgroundColor:"white",
     padding: 10,
     width: "50%",
     marginLeft: 190,
@@ -334,26 +399,42 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 8,
     marginBottom: 15,
-    backgroundColor: "#fff",
-    padding: 10,
+    backgroundColor: "#FFF",
+    // padding: 5,
     elevation: 3,
   },
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-    bottomBorderColor: "black",
-    borderBottomWidth: 0.5,
-    margin: 5,
+    justifyContent: "space-around",
+    margin: 8,
+    // bottomBorderColor: "black",
+    // borderBottomWidth: 0.5,
+    // margin: 5,
+  },
+  row1: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    // marginBottom: 8,
+    // bottomBorderColor: "black",
+    // borderBottomWidth: 0.5,
+    margin: 8,
   },
   label: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginLeft:10,
+    width:width*0.25,
+    // alignSelf:"flex-start"
+
+  },
+  label1:{
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
   },
   submitbtn: {
     backgroundColor: "green",
-
     alignSelf: "center",
     padding: 8,
     width: 100,
@@ -362,7 +443,6 @@ const styles = StyleSheet.create({
   },
   submitbtn1: {
     backgroundColor: "red",
-
     alignSelf: "center",
     padding: 8,
     width: 100,
@@ -373,6 +453,19 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 16,
     color: "#555",
+    alignItems:"flex-end",
+    marginLeft:15,
+    width:width*0.4,
+    justifyContent:"flex-end"
+  },
+  value1: {
+    fontSize: 16,
+    color: "#0384d5",
+    alignItems:"flex-end",
+    marginLeft:15,
+    width:width*0.4,
+    justifyContent:"flex-end",
+    // backgroundColor:
   },
   emptyText: {
     // flex:1,
@@ -428,7 +521,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
-    height: 40,
+    height: 50,
     borderColor: "gray",
     borderWidth: 1,
     marginBottom: 20,

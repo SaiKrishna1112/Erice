@@ -2,12 +2,12 @@
   "expo": {
     "name": "OxyRice",
     "slug": "Oxyrice",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
-    "icon": "./assets/Oxyricelogo.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/Oxyricelogo.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,17 +17,18 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/Oxyricelogo.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.oxyrice.customer"
+      "package": "com.oxyrice.oxyrice_customer",
+      "versionCode": 3
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "60dcaac0-47ed-4033-98f9-b1bc7f221ff9"
+        "projectId": "ce226648-f9fe-48e4-b9d1-02f76cf9fcee"
       }
     }
   }

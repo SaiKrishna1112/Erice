@@ -10,6 +10,8 @@ import ProfilePage from "../Screens/Profile";
 import CartScreen from "../Screens/View/CartScreen";
 import OrderScreen from "../../src/Orders/OrderScreen";
 import { COLORS } from "../../assets/theme/theme";
+import WriteToUs from '../Screens/View/WriteToUs';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import BASE_URL from "../../Config"
 import OfferScreen from "../Screens/View/OfferScreen";
 
@@ -92,7 +94,7 @@ const cartCountValue = (focused) => {
           ),
         }}
       />
-    <Tab.Screen
+    {/* <Tab.Screen
     name="Offers"
       component={OfferScreen}
      options={{
@@ -111,25 +113,8 @@ const cartCountValue = (focused) => {
           </View>
        ),
      }}
-     /> 
-      <Tab.Screen
-        name="My Orders"
-        component={OrderScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <View style={styles.tabIconContainer}>
-              <Image
-                source={require("../../assets/BottomTabImages/order.png")}
-                resizeMode="contain"
-                style={[styles.tabIcon, getIconColor(focused)]}
-              />
-              <Text style={[styles.tabLabel, focused && styles.focusedLabel]}>Orders</Text>
-
-            </View>
-          ),
-        }}
-      />
-
+     />  */}
+      
 
       <Tab.Screen
         name="My Cart"
@@ -155,6 +140,23 @@ const cartCountValue = (focused) => {
         }}
       />
       <Tab.Screen
+        name="My Orders"
+        component={OrderScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.tabIconContainer}>
+              <Image
+                source={require("../../assets/BottomTabImages/order.png")}
+                resizeMode="contain"
+                style={[styles.tabIcon, getIconColor(focused)]}
+              />
+              <Text style={[styles.tabLabel, focused && styles.focusedLabel]}>Orders</Text>
+
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Profile"
         component={ProfilePage}
         options={{
@@ -171,6 +173,44 @@ const cartCountValue = (focused) => {
           ),
         }}
       />
+      {/* <Tab.Screen
+        name="Write To Us"
+        component={WriteToUs}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.tabIconContainer}>
+              <Image
+                source={require("../../assets/BottomTabImages/order.png")}
+                resizeMode="contain"
+                style={[styles.tabIcon, getIconColor(focused)]}
+              />
+           <Text style={[styles.tabLabel, focused && styles.focusedLabel]}>Write us</Text>
+
+            </View>
+          ),
+        }}
+      /> */}
+<Tab.Screen
+  name="Write To Us"
+  component={WriteToUs}
+  options={{
+    tabBarIcon: ({ focused }) => (
+      <View style={styles.tabIconContainer}>
+        <MaterialIcons
+          name="support-agent"
+          size={24}
+          color={focused ? "#fff" : "#205b0b"} 
+          style={styles.tabIcon}
+        />
+        <Text style={[styles.tabLabel, focused && styles.focusedLabel]}>
+          Support
+        </Text>
+      </View>
+    ),
+  }}
+/>
+
+
     </Tab.Navigator>
   );
 };

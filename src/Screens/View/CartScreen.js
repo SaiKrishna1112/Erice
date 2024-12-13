@@ -33,6 +33,14 @@ const CartScreen = () => {
   const [cartId, setCartId] = useState();
   const [loadingItems, setLoadingItems] = useState({});
   const [removalLoading, setRemovalLoading] = useState({});
+  const [user, setUser] = useState({});
+
+  const [address, setAddress] = useState({
+    email:"",
+    mobileNumber:"",
+    name :"",
+    alterMobileNumber:""
+  });
   const locationdata = {
     // customerId: 4,data
     flatNo: "",
@@ -107,13 +115,45 @@ const CartScreen = () => {
     useCallback(() => {
       fetchCartData();
       totalCart();
+      getProfile();
     }, [])
   );
 
+  const getProfile = async () => {
+    // const mobile_No = AsyncStorage.getItem('mobileNumber');
+
+    try {
+      const response = await axios({
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        url:
+          BASE_URL +
+          `erice-service/user/customerProfileDetails?customerId=${customerId}`,
+      });
+      // console.log(response.data);
+
+      if (response.status === 200) {
+        console.log("customerProfileDetails", response.data);
+        setUser(response.data);
+        setAddress(response.data);
+        console.log("user", user);
+
+        
+      }
+      console.log("user dress....",address)
+      // showToast(response.data.msg || 'Profile loaded successfully');
+    } catch (error) {
+      console.error(error);
+      showToast("Error loading profile");
+    }
+  };
   const totalCart = async () => {
     try {
       const response = await axios({
-        url: BASE_URL+"erice-service/cart/cartItemData",
+        url: BASE_URL + "erice-service/cart/cartItemData",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -251,7 +291,7 @@ const CartScreen = () => {
               console.log("Removing cart item with ID:", item.cartId);
 
               const response = await axios.delete(
-                BASE_URL+"erice-service/cart/remove",
+                BASE_URL + "erice-service/cart/remove",
                 {
                   data: {
                     id: item.cartId,
@@ -347,18 +387,19 @@ const CartScreen = () => {
                       </Text>
                     </View>
                     <TouchableOpacity
-                      style={{ marginLeft: 230 }}
+                      style={{ marginLeft: 180 }}
                       onPress={() => handleRemove(item)}
                     >
-                    <MaterialIcons name="delete" size={23} color="#FF0000" />
+                      <MaterialIcons name="delete" size={23} color="#FF0000" />
                     </TouchableOpacity>
-                   
                   </View>
                 </>
               )}
             </View>
           )}
           contentContainerStyle={styles.flatListContent}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
         />
       ) : (
         <View style={styles.card}>
@@ -396,20 +437,45 @@ const CartScreen = () => {
             >
               <Text style={styles.actionButtonText}>Add More</Text>
             </TouchableOpacity>
+          
             <TouchableOpacity
               style={styles.checkoutButton}
-              onPress={() =>
-                navigation.navigate("Checkout", {
-                  subtotal: cartData.reduce(
-                    (acc, item) => acc + item.priceMrp * item.cartQuantity,
-                    0
-                  ),
-                  locationdata,
-                  addressdata,
-                })
-              }
+              onPress={() => {
+                if (
+                  (address.email.trim() == null || address.email.trim()== "") &&
+                  (address.name.trim() == null || address.name.trim() == "") &&
+                  (address.mobileNumber.trim() !== null || address.mobileNumber.trim() !== "") && (
+                    address.alterMobileNumber.trim() !== null || address.alterMobileNumber.trim() !== ""
+                  )
+                ) {
+                  // Show alert if user profile is incomplete
+                  Alert.alert(
+                    "Incomplete Profile",
+                    "Please fill out your profile to proceed.",
+                    [
+                      {
+                        text: "OK",
+                        onPress: () => navigation.navigate("Profile"),
+                      },
+                    ]
+                  );
+                } 
+                
+                else {
+                  // Navigate to checkout page if profile is complete
+                  navigation.navigate("Checkout", {
+                    subtotal: cartData.reduce(
+                      (acc, item) => acc + item.priceMrp * item.cartQuantity,
+                      0
+                    ),
+                    locationdata,
+                    addressdata,
+                  });
+                }
+              
+              }}
             >
-              <Text style={styles.actionButtonText}>Checkout</Text>
+              <Text style={styles.actionButtonText}> Checkout</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -430,6 +496,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   cartItem: {
+    // height:"auto",
     flexDirection: "row",
     padding: 16,
     marginBottom: 8,
@@ -532,7 +599,7 @@ const styles = StyleSheet.create({
     // marginBottom: 10,
     // paddingLeft: 0,
     //  marginTop:100
-    marginLeft:0,
+    marginLeft: 0,
   },
   itemTotal: {
     fontSize: 16,

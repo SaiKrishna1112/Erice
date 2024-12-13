@@ -13,7 +13,7 @@ import axios from "axios";
 // import Footer from './Footer';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector } from "react-redux";
-import BASE_URL from "../../../Erice/Config";
+import BASE_URL from "../../Config";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 const OrderScreen = () => {
@@ -76,9 +76,9 @@ const OrderScreen = () => {
       case 4:
         return "Delivered";
       case 5:
-        return "Cancelled";
-      case 6:
         return "Rejected";
+      case 6:
+        return "Cancelled";
       default:
         return "Unknown";
     }
@@ -144,6 +144,8 @@ const OrderScreen = () => {
           renderItem={renderOrder}
           keyExtractor={(item) => item.orderId.toString()}
           contentContainerStyle={styles.orderview}
+          showsVerticalScrollIndicator={false} 
+          showsHorizontalScrollIndicator={false} 
         />
       )}
       {/* <Footer navigation={navigation} /> */}

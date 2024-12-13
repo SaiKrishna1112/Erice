@@ -29,6 +29,7 @@ const LoginPage = () => {
   const [responseMessage, setResponseMessage] = useState("");
   const [errors, setErrors] = useState({ mobileNumber: "", otp: "" });
   const [mobileOtpSession, setMobileOtpSession] = useState("");
+  const [isOtpSent,setIsOtpSent] = useState(false)
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -38,8 +39,50 @@ const LoginPage = () => {
       setMobileNumber("");
       setOtp("");
       setIsLogin(false);
+      // getProfile();
     }, [])
   );
+
+  
+
+  // const getProfile = async () => {
+   
+  //   try {
+  //     const response = await axios({
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       url:
+  //         BASE_URL +
+  //         `erice-service/user/customerProfileDetails?customerId=${customerId}`,
+  //     });
+  //     // console.log(response.data);
+
+  //     if (response.data.email && response.data.name && response.data.mobileNumber == null ) {
+  //       Alert.alert(
+  //         "Incomplete Profile",
+  //         "Please fill out your profile to proceed.",
+  //         [
+  //           {
+  //             text: "OK",
+  //             onPress: () => navigation.navigate("Profile"), 
+  //           },
+  //         ]
+  //       );
+  //       console.log("customerProfileDetails",response.data);
+  //       setUser(response.data);
+
+  //       console.log("user",user);
+        
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     showToast("Error loading profile");
+  //   }
+  // };
+
 
 
   useFocusEffect(
@@ -67,6 +110,32 @@ const LoginPage = () => {
     }, [])
   )
 
+  const handleResendOtp = async () => {
+    if (!isOtpSent) return; // Prevent resend if OTP is not sent yet
+    setLoading(true);
+    setOtp(""); 
+    // setErrors({ ...errors, otp: "" });
+    try {
+      const response = await axios.post(
+        BASE_URL + `erice-service/user/login-or-register`,
+        {
+          mobileNumber,
+          userType: "Login",
+        }
+      );
+      if (response.data.mobileOtpSession) {
+        setMobileOtpSession(response.data.mobileOtpSession);
+        setResponseMessage("OTP resent successfully.");
+        setTimeout(() => setResponseMessage(""), 3000);
+      } else {
+        Alert.alert("Oops!", "Unable to resend OTP. Please try again.");
+      }
+    } catch (error) {
+      Alert.alert("Sorry", "Error resending OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const validateMobileNumber = () => {
@@ -99,6 +168,7 @@ const LoginPage = () => {
   };
 
   const handleSendOtp = async () => {
+    setIsOtpSent(false)
     if (!validateMobileNumber()) return;
     // setMobileNumber(storedmobilenumber);
     setLoading(true);
@@ -112,15 +182,19 @@ const LoginPage = () => {
       );
 
       if (response.data.mobileOtpSession) {
+        setIsOtpSent(true);
         setMobileOtpSession(response.data.mobileOtpSession);
         setIsLogin(true);
         setResponseMessage("OTP sent successfully.");
         setTimeout(() => setResponseMessage(""), 3000);
       } else {
-        Alert.alert("Error", "Failed to send OTP. Try again.");
+        Alert.alert("Oops!", "Unable to send OTP. Please check your details and try again.");
       }
     } catch (error) {
       Alert.alert("Sorry", "You are not registered. Please sign up.");
+      console.log(error.response);
+      setIsOtpSent(false)
+
       if (error.response?.status === 400) {
         navigation.navigate("RegisterScreen");
       }
@@ -146,6 +220,7 @@ const LoginPage = () => {
 
       if (response.data.primaryType === "CUSTOMER") {
         if (response.data.accessToken) {
+          setIsOtpSent(false)
           dispatch(AccessToken(response.data));
           await AsyncStorage.setItem("userData", JSON.stringify(response.data));
           await AsyncStorage.setItem('mobileNumber',mobileNumber)
@@ -167,7 +242,7 @@ const LoginPage = () => {
         ]);
       }
     } catch (error) {
-      Alert.alert("Error", "OTP verification failed.");
+      Alert.alert("Invalid OTP", "OTP verification failed. Please enter a valid OTP.");
     } finally {
       setLoading(false);
     }
@@ -195,7 +270,12 @@ const LoginPage = () => {
             keyboardType="phone-pad"
             value={mobileNumber}
             maxLength={10}
-            onChangeText={setMobileNumber}
+            // onChangeText={setMobileNumber}
+           editable={!isOtpSent}
+            onChangeText={(text) => {
+              setMobileNumber(text); 
+              setErrors((prev) => ({ ...prev, mobileNumber: "" })); 
+            }}
             
           />
           {errors.mobileNumber && (
@@ -227,6 +307,14 @@ const LoginPage = () => {
               />
               {errors.otp && <Text style={styles.errorText}>{errors.otp}</Text>}
 
+              <View style={{alignSelf:"flex-end",paddingRight:5}}>
+              {isOtpSent && !loading && (
+                <TouchableOpacity onPress={handleResendOtp}>
+                  <Text style={styles.resendText}>Resend OTP</Text>
+                </TouchableOpacity>
+              )}
+              </View>
+
               <TouchableOpacity
                 style={[styles.button, loading && styles.disabledButton]}
                 onPress={handleVerifyOtp}
@@ -238,6 +326,8 @@ const LoginPage = () => {
                   <Text style={styles.buttonText}>Verify OTP</Text>
                 )}
               </TouchableOpacity>
+               {/* Only show the Resend OTP button after OTP is sent */}
+              
             </>
           )}
           {!isLogin && (
@@ -339,7 +429,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textDecorationLine:"underline"
   },
+  resendText: {
+    color: "#fd7e14",
+    fontSize: 14,
+    textDecorationLine: "underline",
+    marginTop: 10,
+    marginRight:30
+  },
 });
 
 export default LoginPage;
+
 

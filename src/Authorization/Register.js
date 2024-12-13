@@ -35,7 +35,7 @@ const Register = () => {
       setMobileError("Please enter a valid 10-digit mobile number.");
       return;
     }
-
+    setMobileError(" ");
     try {
       const response = await axios.post(
         `${BASE_URL}erice-service/user/login-or-register`,
@@ -46,8 +46,6 @@ const Register = () => {
       );
       setMobileError("");
       if (response.data.mobileOtpSession == null) {
-
-
         Alert.alert("You are already registered, Please login");
         navigation.navigate("Login");
       } else if (response.data.mobileOtpSession) {
@@ -56,10 +54,10 @@ const Register = () => {
         Alert.alert("Success", "OTP sent successfully!");
       }
     } catch (error) {
-      Alert.alert("Failed", "You are already registered, Please login", [
+      Alert.alert("Notice", "This number is already registered. Log in to continue.", [
         {
           text: "Ok",
-          onPress: () => navigation.navigate("Login",mobileNumber),
+          onPress: () => navigation.navigate("Login", mobileNumber),
           style: "cancel",
         },
       ]);
@@ -70,17 +68,16 @@ const Register = () => {
   };
 
   const handleRegisterOtp = async () => {
-
     // setOtpError("");
     // if (!otp.trim()) {
     //   setOtpError("OTP is required.");
     //   return;
     // }
-    if(otp=="" || otp==null){
+    if (otp == "" || otp == null) {
       setOtpError("OTP is required.");
       return;
     }
-    if(otp.length!=6){
+    if (otp.length != 6) {
       setOtpError("Invalid Otp");
       return;
     }
@@ -100,7 +97,7 @@ const Register = () => {
 
       if (response.status === 200) {
         Alert.alert("Success", "Mobile verified! Please log in.");
-        await AsyncStorage.setItem('mobileNumber',mobileNumber)
+        await AsyncStorage.setItem("mobileNumber", mobileNumber);
         navigation.navigate("Login");
       } else {
         setOtpError("OTP verification failed. Please try again.");
@@ -109,6 +106,16 @@ const Register = () => {
       setOtpError("Invalid OTP. Please enter the correct OTP.");
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const handleMobileNumberChange = (text) => {
+    setMobileNumber(text);
+    if (text.length === 10) {
+      setMobileError("");
+    } else {
+      setMobileError("Please enter a valid 10-digit mobile number.");
     }
   };
 
@@ -125,12 +132,18 @@ const Register = () => {
         <Text style={styles.title}>Register on OxyRice</Text>
 
         <TextInput
-          style={[styles.input, mobileError ? styles.inputError : null]}
+          style={[styles.input,  mobileError ? { borderColor: "red", borderWidth: 1 } : null]}
           placeholder="Enter mobile number"
           keyboardType="phone-pad"
           value={mobileNumber}
-          onChangeText={setMobileNumber}
+          onChangeText={handleMobileNumberChange}
+          // onChangeText={setMobileNumber}
+          // onChangeText={(text) => {
+          //   setMobileNumber(text);
+          //   setMobileError(""); 
+          // }}
           editable={!isOtpSent}
+          maxLength={10}
         />
         {mobileError && <Text style={styles.errorText}>{mobileError}</Text>}
 
@@ -177,10 +190,10 @@ const Register = () => {
 
         {!isOtpSent && (
           <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-            <View style={{flexDirection:'row'}}>
-            <Text style={styles.linkText}>Already registered ? </Text>
-            <Text style={styles.linkTextLog}>Log in here</Text>
-            </View> 
+            <View style={{ flexDirection: "row" }}>
+              <Text style={styles.linkText}>Already registered ? </Text>
+              <Text style={styles.linkTextLog}>Log in here</Text>
+            </View>
           </TouchableOpacity>
         )}
       </View>
@@ -245,14 +258,14 @@ const styles = StyleSheet.create({
   linkText: {
     color: "#4CAF50",
     marginVertical: 10,
-    
+
     fontSize: 14,
   },
   linkTextLog: {
     color: "#fd7e14",
     marginVertical: 10,
-    fontWeight:"bold",
-    textDecorationLine:"underline",
+    fontWeight: "bold",
+    textDecorationLine: "underline",
     fontSize: 14,
   },
   buttonContainer: {

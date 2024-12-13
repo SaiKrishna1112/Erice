@@ -12,7 +12,7 @@ import {
   Touchable,
   TouchableOpacity,
 } from "react-native";
-import React, { useState,useEffect } from "react";
+import React, { useState,useEffect,useCallback } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { useFocusEffect } from "@react-navigation/native";
@@ -55,9 +55,11 @@ const WriteToUs = ({navigation,route}) => {
   // Validation and Submit Handler
 
 
-  useEffect(() => {
-    getProfileDetails()
-  },[])
+  useFocusEffect(
+    useCallback(() => {
+      getProfileDetails();
+    }, [])
+  );
 
   function getProfileDetails() {
     axios.get(BASE_URL + `erice-service/user/customerProfileDetails?customerId=${accessToken.userId}`, {
@@ -66,12 +68,25 @@ const WriteToUs = ({navigation,route}) => {
     }
     })
     .then(function (response) {
-      console.log(response.data);
+      console.log("customer data",response.data);
+      if(response.data.name && response.data.email && response.data.mobileNumber){
       setFormData({
         ...formData, name: response.data.name,
                     email: response.data.email,
                     mobileNumber: response.data.mobileNumber
       });
+    }else{
+      Alert.alert(
+        "Incomplete Profile",
+        "Please fill out your profile to proceed.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("Profile"), 
+          },
+        ]
+      );
+    }
     })
     .catch(function (error) {
       console.log(error.response);
@@ -271,7 +286,7 @@ else{
         value={formData.email}
         onChangeText={(text) => setFormData({ ...formData, email: text })}
         editable={false}
-
+        // disabled={true}
       />
       <TextInput
         style={styles.input}
@@ -282,6 +297,7 @@ else{
           setFormData({ ...formData, mobileNumber: text })
           }
           editable={false}
+          // disabled={true}
 
       />
       <TextInput
@@ -296,7 +312,7 @@ else{
     <>
     {formData.uploadLoader==false?
       <TouchableOpacity style={styles.box} onPress={handleFileChange}>
-        <View style={{ alignItems: "center", justifyContent: "center" }}>
+        <View style={{ alignItems: "center", justifyContent: "center" ,height:"auto",padding:5}}>
           <Icon name="cloud-upload" size={50} color="gray" />
           <Text>Upload a file</Text>
           {formData.fileName != null ? (

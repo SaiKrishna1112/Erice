@@ -38,9 +38,15 @@ const PaymentDetails = ({ navigation, route }) => {
   const [grandTotal, setGrandTotal] = useState("");
   const [coupenDetails, setCoupenDetails] = useState("");
   const [coupenApplied, setCoupenApplied] = useState(false);
+  const [walletTotal,setWalletTotal] = useState("");
   // wallet states
   const [useWallet,setUseWallet] = useState(false);
+  const [totalSum,setTotalSum] = useState("");
   const [walletAmount,setWalletAmount] = useState()
+  const [billAmount,setBillAmount] = useState();
+  const [status,setStatus] = useState()
+  const[grandTotalAmount,setGrandTotalAmount]=useState()
+  const [message,setMessge] =useState();
   const [profileForm, setProfileForm] = useState({
     customer_name: "",
     customer_email: "",
@@ -48,10 +54,10 @@ const PaymentDetails = ({ navigation, route }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  console.log({ customerId });
+  // console.log({ customerId });
   const items = route.params?.items || [];
 
-  console.log("Items:", items);
+  // console.log("Items:", items);
   // console.log(route.params)
   var addressDetails = route.params.address;
 
@@ -75,6 +81,8 @@ const PaymentDetails = ({ navigation, route }) => {
     console.log("calculated total", calculatedTotal);
 
     setTotalAmount(calculatedTotal);
+    setGrandTotal(calculatedTotal)
+    // setBillAmount(coupenDetails+walletAmount);
   }, [items]);
 
   const handlePaymentModeSelect = (mode) => {
@@ -104,6 +112,7 @@ const PaymentDetails = ({ navigation, route }) => {
     getProfile();
     getOffers();
     getWalletAmount()
+    
   }, []);
 
 // get wallet amount 
@@ -122,10 +131,16 @@ const PaymentDetails = ({ navigation, route }) => {
       );
   
       if (response.data) {
-        console.log("Wallet amount to be used:", response.data);
-        setWalletAmount(response.data.usedWalletAmount)
-        console.log("wallet amount",walletAmount);
-        
+        console.log("==========useWallet=============")
+        console.log("getWalletAmount:", response.data);
+        setWalletAmount(response.data.usableWalletAmountForOrder)
+        console.log("wallet amount", walletAmount);
+        setMessge(response.data.message)
+        setTotalSum(response.data.totalSum);
+        setStatus()
+        setWalletTotal(response.data.totalSum-response.data.usableWalletAmountForOrder);
+        console.log("wallet total",walletTotal);
+        console.log("==========useWallet=============")
       }
     } catch (error) {
       console.error("Error applying wallet amount:", error.response?.data || error.message);
@@ -136,13 +151,15 @@ const PaymentDetails = ({ navigation, route }) => {
   // Handle checkbox toggle
   const handleCheckboxToggle = () => {
     const newValue = !useWallet; 
+    console.log({newValue})
     setUseWallet(newValue);
+    getWalletAmount()
 
     if (newValue) {
       // Show alert when the checkbox is checked
       Alert.alert(
         "Wallet Amount Used",
-        `You are using $${walletAmount} from your wallet.`,
+        `You are using ${walletAmount} from your wallet.`,
         [
           {
             text: "OK",
@@ -153,7 +170,7 @@ const PaymentDetails = ({ navigation, route }) => {
       // Show alert when the checkbox is unchecked
       Alert.alert(
         "Wallet Amount Deselected",
-        `You have removed the usage of $${walletAmount} from your wallet.`,
+        `You have removed the usage of ${walletAmount} from your wallet.`,
         [
           {
             text: "OK",
@@ -178,7 +195,7 @@ const PaymentDetails = ({ navigation, route }) => {
       console.log(response.data);
 
       if (response.status === 200) {
-        console.log(response.data);
+        // console.log(response.data);
         // setUser(response.data);
         setProfileForm({
           customer_name: response.data.name,
@@ -195,14 +212,21 @@ const PaymentDetails = ({ navigation, route }) => {
     // console.log("Location Data:", addressDetails);
 
     // Ensure that locationData contains the necessary data
+    let wallet;
+    if(useWallet){
+      wallet = walletAmount
+    }else{
+      wallet = null
+    }
     postData = {
       address: addressDetails.address,
-      amount: totalAmount,
+      amount: grandTotalAmount,
       customerId: customerId,
       flatNo: addressDetails.flatNo,
       landMark: addressDetails.landMark,
       orderStatus: selectedPaymentMode,
       pincode: addressDetails.pincode,
+      walletAmount : wallet
       // paymentStatus:{selectedPaymentMode=="COD" ? "":"ONLINE"}
     };
 
@@ -239,7 +263,7 @@ const PaymentDetails = ({ navigation, route }) => {
           console.log("==========");
           const data = {
             mid: "1152305",
-            amount: 1,
+            amount: grandTotalAmount,
             merchantTransactionId: response.data.paymentId,
             transactionDate: new Date(),
             terminalId: "getepay.merchant128638@icici",
@@ -370,7 +394,7 @@ const PaymentDetails = ({ navigation, route }) => {
         }
       );
       if (response.data) {
-        console.log("coupen code", response.data);
+        // console.log("coupen code", response.data);
         setLoading(false);
       }
     } catch (error) {
@@ -395,14 +419,14 @@ const PaymentDetails = ({ navigation, route }) => {
       .then((response) => {
         console.log("coupen applied", response.data);
         const { discount, grandTotal } = response.data;
-        setGrandTotal(grandTotal);
+        // setGrandTotal(grandTotal);
         setCoupenDetails(discount);
         Alert.alert(response.data.message)
         setCoupenApplied(response.data.couponApplied);
         console.log("coupenapplied state", response.data.couponApplied);
       })
       .catch((error) => {
-        console.log(error.response);
+        console.log("error",error.response);
       });
   };
 
@@ -430,7 +454,6 @@ const PaymentDetails = ({ navigation, route }) => {
         terminalId: Config["Getepay Terminal Id"],
         vpa: "",
       };
-      // console.log(JsonData);
 
       var ciphertext = encryptEas(
         JSON.stringify(JsonData),
@@ -466,10 +489,7 @@ const PaymentDetails = ({ navigation, route }) => {
       )
         .then((response) => response.text())
         .then((result) => {
-          // console.log("PaymentResult : ", result);
           var resultobj = JSON.parse(result);
-          // console.log(resultobj);
-          // setStatus(resultobj);
           if (resultobj.response != null) {
             console.log("Requery ID result", paymentId);
             var responseurl = resultobj.response;
@@ -527,6 +547,45 @@ const PaymentDetails = ({ navigation, route }) => {
     // }
   }
 
+
+
+
+
+  function grandTotalfunc(){
+    if(coupenApplied === true && useWallet === true){
+      // Alert.alert("Coupen and useWallet Applied",(grandTotal-billAmount))
+      setGrandTotalAmount(grandTotal-(coupenDetails+walletAmount))
+      console.log("grans total after wallet and coupen",grandTotal,coupenDetails,walletAmount,(grandTotal-(coupenDetails+walletAmount)));
+      
+    }
+    else if(coupenApplied===true || useWallet===true){
+      if(coupenApplied===true){
+        setGrandTotalAmount(grandTotal-coupenDetails)
+        // Alert.alert("Coupen Applied",grandTotal)
+        console.log({grandTotal});
+        
+        console.log(grandTotal-coupenDetails);
+        
+
+      }
+      if(useWallet===true){
+        setGrandTotalAmount(walletTotal)
+        console.log(walletAmount);
+        
+        // Alert.alert("Wallet Applied",(grandTotal-walletAmount))
+      }
+    }
+    else{
+      setGrandTotalAmount(totalAmount)
+      // Alert.alert("None",totalAmount)
+    }
+
+  }
+
+  useEffect(()=>{
+    grandTotalfunc()
+  },[coupenApplied,useWallet,grandTotalAmount])
+
   return (
     <View style={styles.container}>
       {/* Apply Coupon Section */}
@@ -543,7 +602,7 @@ const PaymentDetails = ({ navigation, route }) => {
             onChangeText={setCouponCode}
             editable={!coupenApplied}
           />
-          {coupenApplied?(
+          {coupenApplied ==true ?(
          <TouchableOpacity
             style={styles.delete}
             onPress={() => deleteCoupen()}
@@ -559,7 +618,7 @@ const PaymentDetails = ({ navigation, route }) => {
         </View>
       </View>
        {/* from Wllet */}
-       <View style={styles.checkboxContainer}>
+       {/* <View style={styles.checkboxContainer}>
         <Checkbox
           status={useWallet ? "checked" : "unchecked"} 
           onPress={handleCheckboxToggle} 
@@ -568,9 +627,31 @@ const PaymentDetails = ({ navigation, route }) => {
         />
         <Text style={styles.checkboxLabel}>
           Use Wallet Balance 
-          {/* (${walletAmount}) */}
+          
         </Text>
-      </View>
+      </View> */}
+
+{walletAmount > 0 ?(
+  <View style={styles.walletContainer}>
+    <View style={styles.checkboxWrapper}>
+      <Checkbox
+        status={useWallet ? "checked" : "unchecked"}
+        onPress={handleCheckboxToggle}
+        color="#00bfff"
+        uncheckedColor="#ccc"
+      />
+      <Text style={styles.checkboxLabel}>Use Wallet Balance</Text>
+    </View>
+    <Text style={styles.walletMessage}>
+      You can use up to <Text style={styles.highlight}>₹{walletAmount}</Text> from your wallet for this order.
+    </Text>
+  </View>
+):(
+  <View style={styles.wallet}>
+  <Text style={styles.label}>Note:</Text>
+  <Text style={styles.message}>{message}</Text>
+</View>
+)}              
       {/* Payment Methods */}
       <Text style={styles.paymentHeader}>Choose Payment Method</Text>
       <View style={styles.paymentOptions}>
@@ -611,10 +692,17 @@ const PaymentDetails = ({ navigation, route }) => {
           <Text style={styles.detailsLabel}>Sub Total</Text>
           <Text style={styles.detailsValue}>₹{totalAmount}</Text>
         </View>
-        {coupenApplied && (
+        
+        {coupenApplied == true &&(
           <View style={styles.paymentRow}>
             <Text style={styles.detailsLabel}>Coupon Applied</Text>
             <Text style={styles.detailsValue}>-₹{coupenDetails}</Text>
+          </View>
+        )}
+        {useWallet ==true &&(
+          <View style={styles.paymentRow}>
+            <Text style={styles.detailsLabel}>from Wallet</Text>
+            <Text style={styles.detailsValue}>-₹{walletAmount}</Text>
           </View>
         )}
         <View style={styles.paymentRow}>
@@ -622,36 +710,86 @@ const PaymentDetails = ({ navigation, route }) => {
           <Text style={styles.detailsValue}>₹0.00</Text>
         </View>
         <View style={styles.divider} />
-        {/* for wallet applied */}
+
+        {/* {useWallet !=  true && coupenApplied != true ? (
+        <View style={styles.paymentRow}>
+          <Text style={styles.totalLabel}>Grand Total1</Text>
+          <Text style={styles.totalAmount}>₹{totalAmount}</Text>
+        </View>
+        ):null}
        
-        {/* {useWallet ? (
+        {useWallet == true &&(
          
           <View style={styles.paymentRow}>
-            <Text style={styles.detailsLabelBold}>Grand Total</Text>
+            <Text style={styles.detailsLabelBold}>Grand Total2</Text>
+            <Text style={styles.detailsValueBold}>₹{walletTotal}</Text>
+          </View>
+        ) }
+       
+        {coupenApplied == true && (
+          <View style={styles.paymentRow}>
+            <Text style={styles.detailsLabelBold}>Grand Total3</Text>
             <Text style={styles.detailsValueBold}>₹{grandTotal}</Text>
           </View>
-        ) : (
+        ) }
+       {coupenApplied == true && useWallet==true && (
           <View style={styles.paymentRow}>
-            <Text style={styles.detailsLabelBold}>Grand Total</Text>
-            <Text style={styles.detailsValueBold}>₹{totalAmount}</Text>
-          </View>
-         
-        )}
-        */}
-        {/* for coupen applied */}
-        {coupenApplied ? (
-          <View style={styles.paymentRow}>
-            <Text style={styles.detailsLabelBold}>Grand Total</Text>
-            <Text style={styles.detailsValueBold}>₹{grandTotal}</Text>
-          </View>
-        ) : (
-          <View style={styles.paymentRow}>
-            <Text style={styles.detailsLabelBold}>Grand Total</Text>
-            <Text style={styles.detailsValueBold}>₹{totalAmount}</Text>
-          </View>
-        )}
-        {/* Confirm Order Button */}
-        {loading == true ? (
+          <Text style={styles.detailsLabelBold}>Grand Total4</Text>
+          <Text style={styles.detailsValueBold}>₹{totalAmount-billAmount}</Text>
+        </View>
+       )} */}
+
+
+{/* <View style={styles.paymentRow}>
+    <Text style={styles.detailsLabelBold}>Grand Total</Text>
+    <Text style={styles.detailsValueBold}>₹ {grandTotalAmount}</Text>
+  </View> */}
+  <View style={styles.paymentRow}>
+          <Text style={styles.detailsLabelBold}>Grand Total</Text>
+          <Text style={styles.detailsValueBold}>₹{grandTotalAmount}</Text>
+        </View>
+  {/* <Text>shgdcf</Text> */}
+
+
+
+ {/* {coupenApplied == true || useWallet==true ?
+<>
+  {coupenApplied==true?
+  <View style={styles.paymentRow}>
+    <Text style={styles.detailsLabelBold}>Grand Total</Text>
+    <Text style={styles.detailsValueBold}>₹{totalAmount-billAmount}</Text>
+  </View>
+  :null}
+
+  {useWallet==true?
+    <View style={styles.paymentRow}>
+      <Text style={styles.detailsLabelBold}>Grand Total</Text>
+      <Text style={styles.detailsValueBold}>₹{totalAmount-billAmount}</Text>
+    </View>
+    :null}
+</>
+:null} 
+
+{coupenApplied == true && useWallet==true ?
+<>
+  {coupenApplied==true?
+  <View style={styles.paymentRow}>
+    <Text style={styles.detailsLabelBold}>Grand Total</Text>
+    <Text style={styles.detailsValueBold}>₹{totalAmount-billAmount}</Text>
+  </View>
+  :null}
+
+  {useWallet==true?
+    <View style={styles.paymentRow}>
+      <Text style={styles.detailsLabelBold}>Grand Total</Text>
+      <Text style={styles.detailsValueBold}>₹{totalAmount-billAmount}</Text>
+    </View>
+    :null}
+</>
+
+:null}  */}
+
+ {loading == true ? (
           <View style={styles.confirmButton}>
             <ActivityIndicator size="small" color="white" />
           </View>
@@ -886,6 +1024,30 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 3,
     elevation: 3,
+  },
+  wallet: {
+    padding: 16,
+    margin: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd', 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3, 
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  message: {
+    fontSize: 14,
+    color: '#555',
+    lineHeight: 20,
   },
 });
 

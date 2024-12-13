@@ -13,6 +13,8 @@ import {
   Image,
   Animated,
   Easing,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,10 +33,20 @@ const ProfilePage = () => {
     customer_name: "",
     customer_email: "",
     customer_mobile: "",
+    user_mobile:"",
+    // customer_address:"",
+    // customer_flatNo:"",
+    // customer_landmark:"",
+    // customer_pincode:""
   });
   const [errors, setErrors] = useState({
     customer_name: "",
     customer_email: "",
+    user_mobile:"",
+    // customer_address:"",
+    // customer_flatNo:"",
+    // customer_landmark:"",
+    // customer_pincode:""
   });
   const [user, setUser] = useState({});
   const [newPassword, setNewPassword] = useState("");
@@ -97,7 +109,12 @@ const ProfilePage = () => {
         setProfileForm({
           customer_name: response.data.name,
           customer_email: response.data.email,
-          customer_mobile:response.data.mobileNumber
+          customer_mobile:response.data.mobileNumber,
+          user_mobile : response.data.alterMobileNumber,
+        //   customer_address: response.data.address,
+        //  customer_flatNo:response.data.flatNo,
+        //  customer_landmark:response.data.landMark,
+        //  customer_pincode:response.data.pinCode
         });
       }
     } catch (error) {
@@ -107,7 +124,7 @@ const ProfilePage = () => {
   };
 
   const handleProfileSubmit = async () => {
-    if (!profileForm.customer_name || !profileForm.customer_email|| errors.customer_email) {
+    if (!profileForm.customer_name || !profileForm.customer_email|| errors.customer_email||!profileForm.user_mobile) {
       setErrors({
         customer_name: profileForm.customer_name
           ? ""
@@ -115,9 +132,22 @@ const ProfilePage = () => {
         customer_email: profileForm.customer_email
           ?  errors.customer_email
           : "Email should not be empty",
+        user_mobile: profileForm.user_mobile? "":"Mobile number should not be empty",
+        // customer_address: profileForm.customer_address?"":"Address should not be empty",
+        // customer_flatNo: profileForm.customer_flatNo? "":"Flatno should not be empty",
+        // customer_landmark: profileForm.customer_landmark? "":"Landmark should not be empty",
+        // customer_pincode: profileForm.customer_pincode? "":"pincode should not be empty",
       });
       return;
     }
+    // if (customer_mobile == user_mobile) {
+    //   Alert.alert(
+    //     "Validation Error",
+    //     "The alternate mobile number must be different from the login mobile number.",
+    //     [{ text: "OK" }]
+    //   );
+    //   return; 
+    // }
 
     try {
       const response = await axios.patch(
@@ -127,6 +157,10 @@ const ProfilePage = () => {
           customerEmail: profileForm.customer_email,
           customerId: customerId,
           customerMobile: profileForm.customer_mobile,
+          alterMobileNumber:profileForm.user_mobile,
+          // address:profileForm.customer_address,
+          // flatNo:profileForm.customer_flatNo,
+          // landMark:profileForm.customer_landmark
         },
         {
           headers: {
@@ -136,35 +170,26 @@ const ProfilePage = () => {
         }
       );
 
-      // Handle response status
-      if (response.status === 200) {
-        console.log("profile call ", response);
+      
+      if (response.data.errorMessage == null) {
+        console.log("Profile call response: ", response);
         setErrors({ ...errors, customer_email: "" });
-        setErrors({...errors, })
         setProfileData(response.data);
-        console.log("profile data", profileData);
-         getProfile();
+        console.log("Profile data:", profileData);
+          getProfile();
+      
+        // Mark profile as saved and show success alert
         setIsProfileSaved(true);
-        if (isProfileSaved) {
-          Alert.alert("Success", "Profile saved successfully");
-          getProfile()
-        } else {
-          Alert.alert("Success", "Profile saved successfully");
-        }
-        // setIsInitiallySaved(true);
-        setProfileForm({
-          ...profileForm,
-          customer_name: response.data.customerName,
-          customer_email: response.data.customerEmail,
-          customer_mobile: response.data.customerMobile,
-        });
-        console.log("profile form", profileForm);
+        Alert.alert("Success", "Profile saved successfully");
+      
+        console.log("Profile form data:", profileForm);
       } else {
-        Alert.alert("Alert", "Something went wrong");
+        // Show error message from the response
+        Alert.alert("Alert", response.data.errorMessage);
       }
-    } catch (error) {
+      } catch (error) {
       console.error(error.response);
-      Alert.alert("Alert", "Error saving profile");
+      Alert.alert("Alert Error saving profile");
     }
   };
 
@@ -227,6 +252,11 @@ const ProfilePage = () => {
   };
 
   return (
+    <KeyboardAvoidingView
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    style={styles.outerContainer}
+  >
+    <View style={styles.mainContainer}> 
     <ScrollView contentContainerStyle={styles.container}>
       <View>
         <TextInput
@@ -242,13 +272,13 @@ const ProfilePage = () => {
           <Text style={styles.errorText}>{errors.customer_name}</Text>
         ) : null}
 
-        <TextInput
+      <TextInput
           style={styles.input}
           placeholder="Enter your e-mail "
           keyboardType="email-address"
           value={profileForm?.customer_email || ""}
           onChangeText={(text) => {
-            if (/^[\w.-]+@gmail\.com$/.test(text)) {
+            if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
               setProfileForm({ ...profileForm, customer_email: text });
               setErrors({ ...errors, customer_email: "" }); 
             } else {
@@ -288,15 +318,83 @@ const ProfilePage = () => {
           editable={
             !isProfileSaved && (profileForm?.customer_mobile?.length || 0) < 10
           }
+          disabled={true}
         />
+       {/* <TextInput
+          style={styles.input}
+          placeholder="Enter your Flatno"
+          value={profileForm?.customer_flatNo|| ""}
+          onChangeText={(text) => {
+            setProfileForm({ ...profileForm, customer_flatNo: text });
+            setErrors({ ...errors, customer_flatNo: "" });
+          }}
+        />
+        {errors.customer_flatNo ? (
+          <Text style={styles.errorText}>{errors.customer_flatNo}</Text>
+        ) : null}
 
+<TextInput
+          style={styles.input}
+          placeholder="Enter your Landmark"
+          value={profileForm?.customer_landmark|| ""}
+          onChangeText={(text) => {
+            setProfileForm({ ...profileForm, customer_landmark: text });
+            setErrors({ ...errors, customer_landmark: "" });
+          }}
+        />
+        {errors.customer_landmark ? (
+          <Text style={styles.errorText}>{errors.customer_landmark}</Text>
+        ) : null}
+
+<TextInput
+          style={styles.input}
+          placeholder="Enter your Address"
+          value={profileForm?.customer_address|| ""}
+          onChangeText={(text) => {
+            setProfileForm({ ...profileForm, customer_address: text });
+            setErrors({ ...errors, customer_address: "" });
+          }}
+        />
+        {errors.customer_address ? (
+          <Text style={styles.errorText}>{errors.customer_address}</Text>
+        ) : null}
+
+<TextInput
+          style={styles.input}
+          placeholder="Enter your Pincode"
+          value={profileForm?.customer_pincode|| ""}
+          onChangeText={(text) => {
+            setProfileForm({ ...profileForm, customer_pincode: text });
+            setErrors({ ...errors, customer_pincode: "" });
+          }}
+          maxLength={6}
+        />
+        {errors.customer_pincode ? (
+          <Text style={styles.errorText}>{errors.customer_pincode}</Text>
+        ) : null} */}
+        <TextInput
+          style={styles.input}
+          placeholder = "Enter your  alternate mobile number"
+          value={profileForm?.user_mobile || ""}
+          maxLength={10}
+          onChangeText={(text) => {
+            setProfileForm({ ...profileForm, user_mobile: text });
+            setErrors({ ...errors, user_mobile: "" });
+          }}
+        />
+          {errors.user_mobile ? (<Text style={styles.errorText}>{errors.user_mobile}</Text> ) : null}
+       <View style={styles.noteContainer}>
+         <Text style={styles.noteText}>
+          Please provide a backup mobile number. We’ll use it only if your registered number can’t be reached.
+          </Text>
+    </View>
         <TouchableOpacity
           style={{
             backgroundColor: "#007bff",
             padding: 10,
             borderRadius: 5,
             alignItems: "center",
-            marginTop: 10,
+            marginTop: 5,
           }}
           onPress={()=>handleProfileSubmit()}
         >
@@ -308,40 +406,12 @@ const ProfilePage = () => {
         </TouchableOpacity>
         <View style={styles.optionContainer}>
         
-                     <TouchableOpacity
-                  style={styles.optionButton}
-                  onPress={() => {
-                if (user.name && user.email && user.mobileNumber) {
-                  navigation.navigate("Write To Us");
-                } else {
-              Alert.alert(
-        "Incomplete Profile",
-        "Please fill in your profile before proceeding.",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.navigate("Profile"),
-          },
-        ]
-      );
-    }
-  }}
->
-  <Text style={styles.optionText}>Write To Us</Text>
-</TouchableOpacity>
-
-               <TouchableOpacity style={styles.optionButton} onPress={()=>navigation.navigate('Ticket History')}>
-                        <Text style={styles.optionText}>Ticket History</Text>
-                </TouchableOpacity>
+                   
 
           <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Subscription')}>
                         <Text style={styles.optionText}>Subscription</Text>
                     </TouchableOpacity> 
-          {/* {isProfileSaved? */}
-          {/* <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Address Book')}>
-                        <Text style={styles.optionText}>Address Book</Text>
-                    </TouchableOpacity> */}
-          {/* :null} */}
+         
 
           <TouchableOpacity
       style={styles.optionButton}
@@ -372,13 +442,25 @@ const ProfilePage = () => {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1, // Ensures it uses the full screen
+    backgroundColor: "#F9F9F9",
+  },
+  mainContainer: {
+    flex: 1, 
+    backgroundColor: "#F9F9F9",
+  },
   container: {
     padding: 20,
     backgroundColor: "#F9F9F9",
+    // height:"auto"
+    flexGrow: 1, 
   },
   input: {
     height: 50,
@@ -465,7 +547,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF5722",
     padding: 15,
     borderRadius: 10,
-    marginTop: 20,
+    marginBottom: 150,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -502,7 +584,36 @@ const styles = StyleSheet.create({
     textAlign:"center"
   },
   icon: {
-    marginRight: 10, 
+    marginLeft:10,
+    
+  },
+  textContainer: {
+    marginHorizontal: 20, 
+    marginVertical: 1, 
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#333', 
+    lineHeight: 20, 
+    padding:8,
+    // textAlign: 'center', 
+    marginHorizontal: 16, 
+    marginVertical:0, 
+    fontWeight: '400', 
+  
+  },
+  noteContainer: {
+    backgroundColor: '#F5F5F5', 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#888',
+    padding: 8, 
+    marginVertical: 12, 
+    borderRadius: 4, 
+  },
+  noteText: {
+    fontSize: 14, 
+    color: '#444', 
+    lineHeight: 18, 
   },
 });
 

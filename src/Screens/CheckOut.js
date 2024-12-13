@@ -163,8 +163,8 @@ const CheckOut = ({ navigation, route }) => {
       )
 
       .then((response) => {
-        console.log("sudheesh",response.data);
-        
+        console.log("sudheesh", response.data);
+
         setCartData(response.data);
         setLoading(false);
       })
@@ -783,7 +783,7 @@ const CheckOut = ({ navigation, route }) => {
                         Price: ₹{item.priceMrp}
                       </Text>
                       <Text style={styles.itemWeight}>
-                        Weight: {item.cartItemQuantity} {item.units}
+                        Weight: {item.itemQuantity} {item.units}
                       </Text>
                       <View style={styles.quantityContainer}>
                         <TouchableOpacity
@@ -826,37 +826,12 @@ const CheckOut = ({ navigation, route }) => {
               </View>
             )}
             contentContainerStyle={styles.flatListContent}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
             style={{ flex: 1 }}
           />
         )}
       </View>
-
-      {/* Payment Mode */}
-      {/* <View>
-                <Text style={styles.paymentTitle}>Payment Mode</Text>
-                <TouchableOpacity onPress={() => changePaymentType('COD')}>
-                    <View style={styles.paymentRow}>
-                        <Image source={require('../../assets/cash.png')} style={styles.paymentImage} />
-                        <Text>Cash on Delivery</Text>
-                        <RadioButton
-                            value="1"
-                            status={paymentType === 'COD' ? 'checked' : 'unchecked'}
-                            onPress={() => changePaymentType('COD')}
-                        />
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => changePaymentType('ONLINE')}>
-                    <View style={styles.paymentRow}>
-                        <Image source={require('../../assets/online.png')} style={styles.paymentImage} />
-                        <Text>Online Payment</Text>
-                        <RadioButton
-                            value="2"
-                            status={paymentType === 'ONLINE' ? 'checked' : 'unchecked'}
-                            onPress={() => changePaymentType('ONLINE')}
-                        />
-                    </View>
-                </TouchableOpacity>
-            </View> */}
 
       {/* Payment Details */}
       {loading ? (
@@ -1059,9 +1034,13 @@ const styles = StyleSheet.create({
     // marginBottom:100
   },
   placeOrderButtonText: {
+    marginBottom:20,
     color: "#fff",
     fontSize: 14,
     fontWeight: "bold",
+    textAlign:"center",
+    alignSelf:"center",
+    justifyContent:"center"
   },
   cartItem: {
     flexDirection: "row",
@@ -1083,7 +1062,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.7)", 
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
     zIndex: 1,
   },
   itemImage: {

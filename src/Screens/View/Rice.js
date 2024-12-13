@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  Alert
 } from "react-native";
 import React, { useState, useEffect, useCallback } from "react";
 import Animated, { FadeInDown, SlideInDown } from "react-native-reanimated";
@@ -25,9 +26,10 @@ const Rice = () => {
 
   const navigation = useNavigation();
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
+  const [user,setUser] = useState();
 
   // Request location permission when the component is focused
   useFocusEffect(
@@ -36,6 +38,9 @@ const Rice = () => {
     }, [])
   );
 
+
+  
+ 
   // Function to request location permission
   const requestLocationPermission = async () => {
     try {
@@ -72,6 +77,7 @@ const Rice = () => {
     useCallback(() => {
       if (hasLocationPermission) {
         getAllCategories();
+        // getProfile()
       }
     }, [hasLocationPermission])
   );
@@ -85,7 +91,9 @@ const Rice = () => {
       })
       .then((response) => {
         setCategories(response.data);
+        
         setLoading(false);
+       
       })
       .catch((error) => {
         console.log(error.response);
@@ -93,7 +101,7 @@ const Rice = () => {
       });
   };
 
-  if (loading == true) {
+  if (loading) {
     return (
       <Animated.View style={styles.loaderContainer}>
         <Animated.View
@@ -219,6 +227,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   image: {
+    marginLeft:10,
     height: 90,
     width: 90,
     borderRadius: 12,
@@ -239,6 +248,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    color: "#3e2723",
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     zIndex: 1,
   },

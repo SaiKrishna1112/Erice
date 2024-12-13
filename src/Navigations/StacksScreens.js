@@ -26,6 +26,7 @@ import PaymentDetails from "../Screens/View/PaymentScreen";
 import OrderDetails from "../../src/Orders/OrderDetails";
 import WriteToUs from '../Screens/View/WriteToUs';
 import TicketHistory from '../Screens/View/TicketHistory';
+import TicketHistoryComments from "../Screens/View/TicketHistoryComments";
 export default function StacksScreens() {
   const Stack = createStackNavigator();
   return (
@@ -81,8 +82,9 @@ export default function StacksScreens() {
       <Stack.Screen name="Order Summary" component={OrderSummary}/>
       <Stack.Screen name="Payment Details" component={PaymentDetails}/>
       <Stack.Screen name="Order Details" component={OrderDetails}/>
-      <Stack.Screen name="Write To Us" component={WriteToUs}/>
+      {/* <Stack.Screen name="Write To Us" component={WriteToUs}/> */}
       <Stack.Screen name="Ticket History" component={TicketHistory}/>
+      <Stack.Screen name="View Comments" component={TicketHistoryComments} />
     </Stack.Navigator>
   );
 }
