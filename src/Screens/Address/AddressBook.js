@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
+  Alert,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
@@ -87,6 +88,9 @@ const AddressBook = ({ route }) => {
 
   const handleTypePress = (type) => {
     setSelectedType(type);
+    if (errors.type) {
+      setErrors((prev) => ({ ...prev, type: null }));
+    }
   };
 
   const fetchOrderAddress = async () => {
@@ -119,88 +123,65 @@ const AddressBook = ({ route }) => {
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
   };
-  
-  // const handleSendAddres =(address)=>{
-  //   console.log("addressidconfirmation",address);
 
-  //      navigation.navigate("Checkout",{
-  //         addressdata:{
-  //         addressId: address.addressId,
-  //          hasId:true
-  //         }
-  //      })
-  // }
+  const saveAddress = async () => {
+    if (!validateFields()) {
+      return; // Exit if validation fails
+    }
+    try {
+      const data = {
+        method: "post",
+        url: BASE_URL + 'erice-service/user/addAddress',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          address: newAddress.address,
+          addressType: selectedType,
+          customerId: customerId,
+          flatNo: newAddress.flatNo,
+          landMark: newAddress.landMark,
+          latitude: "", 
+          longitude: "", 
+          pincode: newAddress.pincode
+        }
+      };
+  
+      const response = await axios(data);  
+      console.log("Added address:", response.data);
+      Alert.alert("Address saved successfully");
+      fetchOrderAddress();
+      setModalVisible(false)
+    } catch (error) {
+      console.error("Error adding address:", error);  
+    }
+  };
+  
 
  
 
   const handleSendAddress = async (selectAddress) => {
+    if(selectAddress==null){
+      Alert.alert("Please select address to proceed")
+    }
     let locationdata;
-console.log("selected type",selectedType);
+   console.log("selected type",selectedType);
     if (selectAddress) {
       // If a radio button address is selected
       locationdata = {
         ...selectAddress,
         status: true,
       };
+
     } else if (!validateFields()) {
-      // If the fields are not validated, return early
-      return;
-    } else if (
-      newAddress.flatNo &&
-      newAddress.landMark &&
-      newAddress.pincode &&
-      newAddress.address &&
-      selectedType
-    ) {
-      // If a new address is added
-      locationdata = {
-        ...newAddress,
-        addressType: selectedType,
-        status: true,
-      };
-    } else {
-      alert("Please select an address or add a new one.");
+     return;
+    } 
+    else {
+      alert("Please select an address");
       return;
     }
-
     console.log("Location Data:", locationdata);
-
-    try {
-      console.log(" new Added address ",newAddress)
-      const response = await axios.post(
-      
-        "http://65.0.147.157:8282/api/erice-service/user/addAddress",
-        newAddress,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      // Handle successful API response
-      if (response.data.status === true) {
-        Alert.alert("Success", "Address added successfully!")
-       
-        //  [
-        //   {
-        //     text: "OK",
-        //     onPress: () => {
-        //       // Navigate to Checkout page with the address data
-        //       navigation.navigate("Checkout", { locationdata });
-        //     },
-        //   },
-        // ]);
-      } else {
-        Alert.alert("Error", "Failed to add address. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error adding address:", error.response);
-      Alert.alert(
-        "Error",
-        "An error occurred while adding the address. Please try again."
-      );
-    }
+    navigation.navigate("Checkout", { locationdata });
   };
 
   return (
@@ -211,12 +192,12 @@ console.log("selected type",selectedType);
         <View>
           <Text style={styles.title}>Your Delivery Addresses</Text>
 
-          <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
+          <TouchableOpacity style={styles.addButton} onPress={()=>handleAddAddress()}>
             <Text style={styles.addButtonText}>Add+</Text>
           </TouchableOpacity>
 
           {addressList.length > 0 ? (
-            addressList.slice(0, 4).map((address, index) => {
+            addressList.slice(-4).reverse().map((address, index) => {
               return (
                 <TouchableOpacity
                   key={index}
@@ -233,13 +214,25 @@ console.log("selected type",selectedType);
                       style={[
                         styles.radioButton,
                         selectedAddress &&
-                          selectedAddress.addressId === address.id &&
+                          selectedAddress.id === address.id &&
                           styles.radioButtonSelected,
                       ]}
                     />
-                    <Text style={styles.addressText}>
-                      {address.flatNo}, {address.landMark}, {address.pinCode}
-                    </Text>
+                     <Text style={styles.addressText}>
+                   <Text style={styles.label}>Flat No: </Text>
+            <Text style={styles.value}>{address.flatNo}</Text>
+           {"\n"}  
+  
+  <Text style={styles.label}>Landmark: </Text>
+  <Text style={styles.value}>{address.landMark}</Text>
+  {"\n"}  
+  
+  <Text style={styles.label}>Pin Code: </Text>
+  <Text style={styles.value}>{address.pincode}</Text>
+  {"\n"}
+  <Text style={styles.label}>Address Type: </Text>
+  <Text style={styles.value}>{address.addressType}</Text>
+</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -372,7 +365,8 @@ console.log("selected type",selectedType);
 
             <TouchableOpacity
               style={styles.submitButton}
-              onPress={() => handleSendAddress()}
+              // onPress={() => handleSendAddress()}
+              onPress={()=>saveAddress()}
             >
               <Text style={styles.submitButtonText}>Submit</Text>
             </TouchableOpacity>
@@ -524,6 +518,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 1,
   },
+  addressText: {
+    fontSize: 16,
+    color: '#333', 
+    lineHeight: 24, 
+  },
+  label: {
+    fontWeight: 'bold',  
+    color: '#555',
+  },
+  value: {
+    color: '#000',  // Dark color for actual address values
+  }
 });
 
 export default AddressBook;

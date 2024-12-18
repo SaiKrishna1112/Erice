@@ -13,8 +13,11 @@ import {
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import BASE_URL from "../../Config";
+import { useDispatch } from "react-redux";
+import { AccessToken } from "../../Redux/action/index";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 const Register = () => {
+  const dispatch = useDispatch();
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -45,6 +48,8 @@ const Register = () => {
         }
       );
       setMobileError("");
+      console.log("register",response.data);
+      
       if (response.data.mobileOtpSession == null) {
         Alert.alert("You are already registered, Please login");
         navigation.navigate("Login");
@@ -54,10 +59,10 @@ const Register = () => {
         Alert.alert("Success", "OTP sent successfully!");
       }
     } catch (error) {
-      Alert.alert("Notice", "This number is already registered. Log in to continue.", [
+      Alert.alert("Notice", "This number is already registered. Welcome to homepage.", [
         {
           text: "Ok",
-          onPress: () => navigation.navigate("Login", mobileNumber),
+          onPress: () => navigation.navigate("Home", mobileNumber),
           style: "cancel",
         },
       ]);
@@ -95,14 +100,23 @@ const Register = () => {
         }
       );
 
-      if (response.status === 200) {
-        Alert.alert("Success", "Mobile verified! Please log in.");
-        await AsyncStorage.setItem("mobileNumber", mobileNumber);
-        navigation.navigate("Login");
-      } else {
-        setOtpError("OTP verification failed. Please try again.");
+      // if (response.status === 200) {
+      //   Alert.alert("Success", "Mobile verified! Please log in.");
+      //   await AsyncStorage.setItem("mobileNumber", mobileNumber);
+      //   navigation.navigate("Login");
+      // } else {
+      //   setOtpError("OTP verification failed. Please try again.");
+      // }
+
+      console.log("register",response.data);
+      
+      if (response.data.accessToken != null) {
+        dispatch(AccessToken(response.data));
+        Alert.alert("Success", "Registration successful!");
+        navigation.navigate("Home");
       }
-    } catch (error) {
+    
+  } catch (error) {
       setOtpError("Invalid OTP. Please enter the correct OTP.");
     } finally {
       setLoading(false);
@@ -132,7 +146,7 @@ const Register = () => {
         <Text style={styles.title}>Register on OxyRice</Text>
 
         <TextInput
-          style={[styles.input,  mobileError ? { borderColor: "red", borderWidth: 1 } : null]}
+          style={[styles.input,  mobileError ? { borderWidth: 1 } : null]}
           placeholder="Enter mobile number"
           keyboardType="phone-pad"
           value={mobileNumber}
@@ -167,6 +181,10 @@ const Register = () => {
           </View>
         )}
 
+
+
+
+
         {isOtpSent && (
           <>
             <TextInput
@@ -177,6 +195,17 @@ const Register = () => {
               onChangeText={setOtp}
             />
             {otpError && <Text style={styles.errorText}>{otpError}</Text>}
+
+
+
+            <View style={{alignSelf:"flex-end",paddingRight:5}}>
+              {isOtpSent && !loading && (
+                <TouchableOpacity onPress={handleSendOtp}>
+                  <Text style={styles.resendText}>Resend OTP</Text>
+                </TouchableOpacity>
+               )}
+              </View>
+
 
             <TouchableOpacity
               style={styles.button}
@@ -282,6 +311,13 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginBottom: 10,
+  },
+  resendText: {
+    color: "#fd7e14",
+    fontSize: 14,
+    textDecorationLine: "underline",
+    margin: 10,
+    // marginRight:30
   },
 });
 

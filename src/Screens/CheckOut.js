@@ -63,8 +63,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector } from "react-redux";
 import encryptEas from "../Payments/components/encryptEas";
 import decryptEas from "../Payments/components/decryptEas";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { COLORS } from "../../assets/theme/theme";
 const { width, height } = Dimensions.get("window");
+import Icon from "react-native-vector-icons/FontAwesome";
 import BASE_URL from "../../Config";
 
 const CheckOut = ({ navigation, route }) => {
@@ -98,6 +100,7 @@ const CheckOut = ({ navigation, route }) => {
   const [removalLoading, setRemovalLoading] = useState({});
   const [loadingItems, setLoadingItems] = useState({});
   const [loading, setLoading] = useState();
+  const [grandStatus, setGrandStatus] = useState(false);
 
   const [locationData, setLocationData] = useState({
     // customerId:4,
@@ -124,7 +127,7 @@ const CheckOut = ({ navigation, route }) => {
         customerId: customerId,
         flatNo: route.params.locationdata.flatNo,
         landMark: route.params.locationdata.landMark,
-        pincode: route.params.locationdata.pinCode,
+        pincode: route.params.locationdata.pincode,
         address: route.params.locationdata.address,
         addressType: route.params.locationdata.type,
         latitude: "",
@@ -163,7 +166,7 @@ const CheckOut = ({ navigation, route }) => {
       )
 
       .then((response) => {
-        console.log("sudheesh", response.data);
+        // console.log("sudheesh", response.data);
 
         setCartData(response.data);
         setLoading(false);
@@ -174,12 +177,21 @@ const CheckOut = ({ navigation, route }) => {
   };
 
   const handlePlaceOrder = () => {
+    console.log({ grandTotal });
+    console.log("locationdata==================================", locationData);
+
     if (locationData.address == "" || locationData.address == null) {
+      // if(locationData!=null){
       Alert.alert(
         "Address is Mandatory",
         "Please select an address / Add new address before proceeding.",
         [{ text: "OK" }]
       );
+    } else if (grandTotal == 0 || grandTotal == null) {
+      //  Alert.alert("Please add items to cart",
+      //   [{text:"OK"}]
+      //  )
+      setGrandStatus(true);
     } else {
       navigation.navigate("Order Summary", { addressData: locationData });
     }
@@ -338,9 +350,7 @@ const CheckOut = ({ navigation, route }) => {
   const fetchOrderAddress = async () => {
     try {
       const response = await axios({
-        url:
-          BASE_URL +
-          `erice-service/checkout/orderAddress?customerId=${customerId}`,
+        url: BASE_URL + `erice-service/user/getAllAdd?customerId=${customerId}`,
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -348,8 +358,9 @@ const CheckOut = ({ navigation, route }) => {
       });
 
       setAddressList(response.data);
+      console.log("address response", response.data);
     } catch (error) {
-      console.error("Error fetching order address data:", error);
+      console.error("Error fetching order address data:", error.response);
       setError("Failed to fetch order address data");
     }
   };
@@ -390,294 +401,11 @@ const CheckOut = ({ navigation, route }) => {
     navigation.navigate("Address Book");
   };
 
-  const selectAddress = (address) => {
-    setSelectedAddressId(address.addressId);
-
-    setLocationData({
-      customerId: customerId,
-      flatNo: address.flatNo,
-      landMark: address.landMark,
-      pincode: address.pinCode,
-      address: address.address,
-      addressType: address.addressType,
-      latitude: "",
-      longitude: "",
-    });
-  };
-
-  const applyCoupon = () => {
-    if (couponCode) {
-      setCouponApplied(true);
-    } else {
-      Alert.alert("Enter a valid coupon");
-    }
-  };
-
-  const removeCoupon = () => {
-    setCouponApplied(false);
-    setCouponCode("");
-  };
-
-  const changePaymentType = (type) => {
-    console.log({ type });
-
-    setPaymentType(type);
-  };
-
-  const placeOrder = () => {
-    console.log("Location Data:", locationData);
-
-    // Ensure that locationData contains the necessary data
-    const postData = {
-      address: locationData.address,
-      amount: grandTotal,
-      customerId: locationData.customerId,
-      flatNo: locationData.flatNo,
-      landMark: locationData.landMark,
-      orderStatus: paymentType,
-      pincode: locationData.pincode,
-      sellerId: locationData.sellerId,
-    };
-
-    console.log("Post Data:", postData);
-
-    // axios({
-    //     method: 'POST',
-    //     url: BASE_URL+'erice-service/checkout/orderPlacedPaymet',
-    //     data: postData,
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //         'Authorization': `Bearer ${token}`
-    //     }
-    // })
-    // .then((response) => {
-    //     console.log("Order Placed Response:", response.data);
-
-    //     // Handle COD or other payment types here
-    //     if (paymentType === null || paymentType === 'COD') {
-    //         Alert.alert("Order Placed!");
-    //         totalCart()
-    //     } else {
-    //         setTransactionId(response.data.paymentId)
-    //         // onlinePaymentFunc()
-    //         const data = {
-    //             mid: "786437",
-    //             amount: 1,
-    //             merchantTransactionId: response.data.paymentId,
-    //             transactionDate: new Date(),
-    //             terminalId: "Getepay.merchant129014@icici",
-    //             udf1: profileForm.customer_mobile,
-    //             udf2: profileForm.customer_name,
-    //             udf3: profileForm.customer_email,
-    //             udf4: "",
-    //             udf5: "",
-    //             udf6: "",
-    //             udf7: "",
-    //             udf8: "",
-    //             udf9: "",
-    //             udf10: "",
-    //             ru: "https://app.oxybricks.world/interact/paymentreturn",
-    //             callbackUrl: "https://fintech.oxyloans.com/oxyloans/v1/user/getepay",
-    //             currency: "INR",
-    //             paymentMode: "ALL",
-    //             bankId: "",
-    //             txnType: "single",
-    //             productType: "IPG",
-    //             txnNote: "Live Txn",
-    //             vpa: "Getepay.merchant129014@icici",
-
-    //           }
-    //           console.log({ data })
-    //           getepayPortal(data);
-    //     }
-    // })
-    // .catch((error) => {
-    //     console.error("Order Placement Error:", error);
-    // });
-  };
-
-  const getepayPortal = async (data) => {
-    console.log("getepayPortal", data);
-    const JsonData = JSON.stringify(data);
-    console.log("ytfddd");
-
-    var ciphertext = encryptEas(JsonData);
-    var newCipher = ciphertext.toUpperCase();
-
-    var myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-
-    var raw = JSON.stringify({
-      mid: data.mid,
-      terminalId: data.terminalId,
-      req: newCipher,
-    });
-    console.log("========");
-    var requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: raw,
-      redirect: "follow",
-    };
-    await fetch(
-      "https://portal.getepay.in:8443/getepayPortal/pg/generateInvoice",
-      requestOptions
-    )
-      .then((response) => response.text())
-      .then((result) => {
-        //  console.log("===getepayPortal result======")
-        //  console.log("result",result);
-        var resultobj = JSON.parse(result);
-        // console.log(resultobj);
-        var responseurl = resultobj.response;
-        var data = decryptEas(responseurl);
-        console.log("===getepayPortal data======");
-        console.log(data);
-        data = JSON.parse(data);
-        // console.log("Payment process",data);
-        // localStorage.setItem("paymentId",data.paymentId)
-        // console.log(data.paymentId);
-        // console.log(data.qrIntent)
-        // window.location.href = data.qrIntent;
-        setPaymentId(data.paymentId);
-        // paymentID = data.paymentId
-        Alert.alert(
-          "Total Amount",
-          "Amount of cart details: INR " + grandTotal,
-          [
-            {
-              text: "yes",
-              onPress: () => {
-                Linking.openURL(data.qrIntent);
-                // Requery(data.paymentId)
-              },
-            },
-            {
-              text: "No",
-              onPress: () => {},
-            },
-          ]
-        );
-      })
-      .catch((error) => console.log("getepayPortal", error.response));
-  };
-
-  function Requery(paymentId) {
-    if (
-      paymentStatus === "PENDING" ||
-      paymentStatus === "" ||
-      paymentStatus === null
-    ) {
-      // console.log("Before.....",paymentId)
-
-      const Config = {
-        "Getepay Mid": 786437,
-        "Getepay Terminal Id": "Getepay.merchant129014@icici",
-        "Getepay Key": "h9OfpK2eT1L8kU6PQaHK/w==",
-        "Getepay IV": "PaLE/C1iL1IX/o4nmerh5g==",
-      };
-
-      const JsonData = {
-        mid: Config["Getepay Mid"],
-        paymentId: parseInt(paymentId),
-        referenceNo: "",
-        status: "",
-        terminalId: Config["Getepay Terminal Id"],
-        vpa: "",
-      };
-      // console.log(JsonData);
-
-      var ciphertext = encryptEas(
-        JSON.stringify(JsonData),
-        Config["Getepay Key"],
-        Config["Getepay IV"]
-      );
-
-      var newCipher = ciphertext.toUpperCase();
-
-      var myHeaders = new Headers();
-      myHeaders.append("Content-Type", "application/json");
-      myHeaders.append(
-        "Cookie",
-        "AWSALBAPP-0=remove; AWSALBAPP-1=remove; AWSALBAPP-2=remove; AWSALBAPP-3=remove"
-      );
-
-      var raw = JSON.stringify({
-        mid: Config["Getepay Mid"],
-        terminalId: Config["Getepay Terminal Id"],
-        req: newCipher,
-      });
-
-      var requestOptions = {
-        method: "POST",
-        headers: myHeaders,
-        body: raw,
-        redirect: "follow",
-      };
-
-      fetch(
-        "https://portal.getepay.in:8443/getepayPortal/pg/invoiceStatus",
-        requestOptions
-      )
-        .then((response) => response.text())
-        .then((result) => {
-          // console.log("PaymentResult : ", result);
-          var resultobj = JSON.parse(result);
-          // console.log(resultobj);
-          // setStatus(resultobj);
-          if (resultobj.response != null) {
-            console.log("Requery ID result", paymentId);
-            var responseurl = resultobj.response;
-            console.log({ responseurl });
-            var data = decryptEas(responseurl);
-            data = JSON.parse(data);
-            console.log("Payment Result", data);
-            setPaymentStatus(data.paymentStatus);
-            console.log(data.paymentStatus);
-            if (
-              data.paymentStatus == "SUCCESS" ||
-              data.paymentStatus == "FAILURE"
-            ) {
-              // clearInterval(intervalId); 294182409
-              axios({
-                method: "POST",
-                url: BASE_URL + "erice-service/checkout/orderPlacedPaymet",
-                data: {
-                  ...postData,
-                  paymentId: transactionId,
-                  paymentStatus: data.paymentStatus,
-                },
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-              })
-                .then((secondResponse) => {
-                  console.log(
-                    "Order Placed with Payment API:",
-                    secondResponse.data
-                  );
-                  Alert.alert("Order Placed!");
-                })
-                .catch((error) => {
-                  console.error("Error in payment confirmation:", error);
-                });
-            } else {
-            }
-          }
-        })
-        .catch((error) => console.log("Payment Status", error));
-    }
-    // else{
-    //   clearInterval(intervalId)
-    // }
-  }
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Delivery Address</Text>
       <TouchableOpacity onPress={changeLocation}>
-        <Text style={styles.addButton}>+ Add New Address</Text>
+        <Text style={styles.addButton}>+ Change Address</Text>
       </TouchableOpacity>
 
       {status ? (
@@ -693,12 +421,28 @@ const CheckOut = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       ) : addressList.length > 0 ? (
-        addressList.slice(0, 1).map((address, index) => (
+        addressList.slice(-1).map((address, index) => (
           <View key={index} style={styles.addressRow}>
-            <Text style={styles.addressText}>
-              {address.flatNo}, {address.landMark}, {address.pinCode}
-            </Text>
-            <Text style={styles.addressDetail}>Address: {address.address}</Text>
+            <View style={styles.cardContainer}>
+              <View style={styles.iconAndTextContainer}>
+                <Icon
+                  name="map-marker"
+                  size={24}
+                  color="#007bff"
+                  style={styles.icon}
+                />
+                <View style={styles.addressContainer}>
+                  <Text style={styles.addressText}>
+                    {address.flatNo}, {address.landMark},{address.pincode}
+                  </Text>
+                  {/* <Text style={styles.addressText}>Pincode: {address.pincode}</Text> */}
+
+                  <Text style={styles.addressDetail}>
+                    Address: {address.address}
+                  </Text>
+                </View>
+              </View>
+            </View>
 
             <TouchableOpacity
               onPress={() => {
@@ -715,17 +459,17 @@ const CheckOut = ({ navigation, route }) => {
                       text: "Confirm",
                       onPress: () => {
                         // Update the selected address only if the user confirms
-                        setSelectedAddressId(address.addressId);
+                        setSelectedAddressId(address.id);
                         setLocationData({
                           flatNo: address.flatNo,
                           landMark: address.landMark,
-                          pincode: address.pinCode,
+                          pincode: address.pincode,
                           address: address.address,
                           addressType: "",
                           latitude: "",
                           longitude: "",
                         });
-                        console.log("Address Selected:", address.addressId);
+                        console.log("Address Selected:", address);
                       },
                     },
                   ]
@@ -734,14 +478,12 @@ const CheckOut = ({ navigation, route }) => {
             >
               <Text
                 style={
-                  selectedAddressId === address.addressId
+                  selectedAddressId === address.id
                     ? styles.selectedButton
                     : styles.selectButton
                 }
               >
-                {selectedAddressId === address.addressId
-                  ? "Selected"
-                  : "Select"}
+                {selectedAddressId === address.id ? "Selected" : "Select"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -754,11 +496,42 @@ const CheckOut = ({ navigation, route }) => {
         </View>
       )}
 
+      {grandStatus == true ? (
+        <View>
+          {/* <Text>Browse</Text> */}
+
+          <View style={styles.card}>
+            <MaterialIcons
+              name="shopping-cart"
+              size={80}
+              color="#A9A9A9"
+              style={styles.icon}
+            />
+            <Text style={{ fontSize: 18, color: "#333", marginBottom: 20 }}>
+              Your cart is empty
+            </Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: COLORS.primary,
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: 5,
+              }}
+              onPress={() => navigation.navigate("Rice")}
+            >
+              <Text style={{ color: "#fff", fontSize: 16 }}>
+                Browse Products
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
+
       <View style={styles.container1}>
-        <Text>My Cart</Text>
+        {!grandStatus ? <Text>My Cart</Text> : null}
         {loading ? (
           <ActivityIndicator size="large" color="#000" />
-        ) : (
+        ) : cartData || cartData != null || cartData != [] ? (
           <FlatList
             data={cartData}
             keyExtractor={(item) => item.itemId.toString()}
@@ -770,6 +543,10 @@ const CheckOut = ({ navigation, route }) => {
                   </View>
                 ) : (
                   <>
+                    {item.itemQuantity==1?
+                <Text style={{textAlign:"center",color:"red",marginBottom:5,fontWeight:"bold"}}>Note : Only one free sample is allowed per user.</Text>:null}
+               
+                  <View style={{flexDirection:"row"}}>
                     <TouchableOpacity>
                       <Image
                         source={{ uri: item.image }}
@@ -777,6 +554,7 @@ const CheckOut = ({ navigation, route }) => {
                         onError={() => console.log("Failed to load image")}
                       />
                     </TouchableOpacity>
+                    <View>
                     <View style={styles.itemDetails}>
                       <Text style={styles.itemName}>{item.itemName}</Text>
                       <Text style={styles.itemPrice}>
@@ -807,19 +585,30 @@ const CheckOut = ({ navigation, route }) => {
                           </Text>
                         )}
 
-                        <TouchableOpacity
-                          style={styles.quantityButton}
-                          onPress={() => handleIncrease(item)}
-                          disabled={loadingItems[item.itemId]}
-                        >
-                          <Text style={styles.buttonText}>+</Text>
-                        </TouchableOpacity>
-
+                        {item.itemQuantity != 1 ? (
+                          <TouchableOpacity
+                            style={styles.quantityButton}
+                            onPress={() => handleIncrease(item)}
+                            disabled={loadingItems[item.itemId]}
+                          >
+                            <Text style={styles.buttonText}>+</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <View
+                            style={styles.quantityButton1}
+                            onPress={() => handleIncrease(item)}
+                            disabled={loadingItems[item.itemId]}
+                          >
+                            <Text style={styles.buttonText}>+</Text>
+                          </View>
+                        )}
                         <Text style={styles.itemTotal}>
                           Total: ₹
                           {(item.priceMrp * item.cartQuantity).toFixed(2)}
                         </Text>
                       </View>
+                    </View>
+                    </View>
                     </View>
                   </>
                 )}
@@ -830,22 +619,25 @@ const CheckOut = ({ navigation, route }) => {
             showsHorizontalScrollIndicator={false}
             style={{ flex: 1 }}
           />
+        ) : (
+          <View>
+            <Text>Cart is empty</Text>
+          </View>
         )}
       </View>
-
       {/* Payment Details */}
       {loading ? (
         <ActivityIndicator size="large" color="#000" />
       ) : (
         <View style={styles.paymentDetails}>
-          <Text style={styles.detailText}>Sub Total: ₹{grandTotal}</Text>
+          {/* <Text style={styles.detailText}>Sub Total: ₹{grandTotal}</Text>
           <Text style={styles.detailText}>Discount: ₹{discount}</Text>
           <Text style={styles.detailText}>Delivery Fee: ₹{deliveryFee}</Text>
           {applyWalletAmount && (
             <Text style={styles.detailText}>
               From Wallet: ₹{availableWalletAmount}
             </Text>
-          )}
+          )} */}
           <Text style={styles.grandTotalText}>Grand Total: ₹{grandTotal}</Text>
         </View>
       )}
@@ -859,8 +651,6 @@ const CheckOut = ({ navigation, route }) => {
             { backgroundColor: addressData ? "#fd7e14" : "#d3d3d3" },
           ]}
           onPress={() => handlePlaceOrder()}
-          // onPress={()=>navigation.navigate("Order Summary",{addressData:selectedAddressId})}
-          // disabled={ !addressData}
         >
           <Text style={styles.placeOrderButtonText}>CONTINUE</Text>
         </TouchableOpacity>
@@ -881,9 +671,8 @@ const styles = StyleSheet.create({
     padding: 10,
     // borderColor:"#000",
     // borderWidth:5,
-    height: height * 0.2,
-    // backgroundColor: '#f8f9fa',
-    // width:'100%',
+    height: height * 0.3,
+
     flex: 2,
   },
   title: {
@@ -905,7 +694,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 8,
     padding: 12,
-    marginBottom: 8,
+    marginBottom: 5,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 1 },
@@ -995,7 +784,7 @@ const styles = StyleSheet.create({
   },
   paymentDetails: {
     // marginTop:30,
-    alignSelf: "flex-end",
+    alignSelf: "center",
     marginRight: 10,
   },
   detailText: {
@@ -1005,9 +794,11 @@ const styles = StyleSheet.create({
     marginLeft: 40,
   },
   grandTotalText: {
+    alignSelf: "center",
     fontSize: 20,
     fontWeight: "bold",
     color: "#28a745",
+    // marginLeft:30
     // marginTop:5,
   },
   grandTotalText1: {
@@ -1019,31 +810,29 @@ const styles = StyleSheet.create({
     marginTop: 9,
   },
   placeOrderButton: {
-    // flex:3,
-    // backgroundColor: '#007bff',
     backgroundColor: COLORS.primary,
     padding: 10,
 
     alignSelf: "center",
     borderRadius: 8,
-    width: width * 1,
-    // marginTop: 5,
-    borderRadius: 20,
+    width: width * 0.9,
+
+    borderRadius: 5,
     alignItems: "center",
 
-    // marginBottom:100
+    marginBottom: 20,
   },
   placeOrderButtonText: {
-    marginBottom:20,
+    // marginBottom:20,
     color: "#fff",
     fontSize: 14,
     fontWeight: "bold",
-    textAlign:"center",
-    alignSelf:"center",
-    justifyContent:"center"
+    textAlign: "center",
+    alignSelf: "center",
+    justifyContent: "center",
   },
   cartItem: {
-    flexDirection: "row",
+    // flexDirection: "row",
     padding: 16,
     marginBottom: 8,
     backgroundColor: "#FFFFFF",
@@ -1078,6 +867,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 18,
     fontWeight: "bold",
+    width:width*0.5
   },
   itemPrice: {
     color: "#16A34A",
@@ -1091,6 +881,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   quantityButton: {
+    backgroundColor: "#808080",
+    padding: 8,
+    borderRadius: 4,
+    marginHorizontal: 8,
+  },
+  quantityButton1: {
     backgroundColor: "#D1D5DB",
     padding: 8,
     borderRadius: 4,
@@ -1118,8 +914,59 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   loader: {
-    marginHorizontal: 10,
+    // marginHorizontal: 10,
     alignSelf: "center",
+  },
+  cardContainer: {
+    backgroundColor: "#fff",
+    padding: 16,
+    marginVertical: 10,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+    flexDirection: "column",
+    borderColor: "#FA7070",
+    borderStyle: "solid",
+  },
+  iconAndTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon: {
+    marginRight: 12,
+  },
+  addressContainer: {
+    flex: 1,
+  },
+  addressText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  addressDetail: {
+    fontSize: 14,
+    color: "#555",
+    fontStyle: "italic",
+  },
+  card: {
+    marginTop: 40,
+    width: "80%",
+    alignItems: "center",
+    padding: 20,
+    marginLeft: 35,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5, // For Android shadow
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
 });
 

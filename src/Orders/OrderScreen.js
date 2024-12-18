@@ -36,6 +36,7 @@ const OrderScreen = () => {
       customerId: customerId,
     };
     setLoading(true);
+
     try {
       const response = await axios.post(
         BASE_URL + "erice-service/order/getAllOrders_customerId",
@@ -67,6 +68,8 @@ const OrderScreen = () => {
     // console.log("order status",orderStatus);
     const statusNumber = Number(orderStatus);
     switch (statusNumber) {
+      case 0:
+        return "Incomplete";
       case 1:
         return "Placed";
       case 2:
@@ -92,7 +95,7 @@ const OrderScreen = () => {
    const orderDetails = (item) => {
     console.log("sravaniOrders", item.orderId);
     const status = getOrderStatusText(item.orderStatus); 
-    navigation.navigate("Order Details", { order_id: item.orderId, status }); 
+    navigation.navigate("Order Details", { order_id: item.orderId, status, new_Order_Id:item.newOrderId }); 
   };
 
   // Render each order
@@ -107,7 +110,7 @@ const OrderScreen = () => {
       <View style={styles.orderInfo}>
         <Text style={styles.date}>{item?.orderDate?.slice(0, 10)}</Text>
         <Text style={styles.orderId}>
-          Order Id: <Text>{item.orderId}</Text>
+          Order Id: <Text>{item.newOrderId}</Text>
         </Text>
         <Text style={styles.orderAmount}>
           Amount: Rs. {parseFloat(item.grandTotal).toFixed(2)}

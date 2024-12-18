@@ -34,6 +34,7 @@ const CartScreen = () => {
   const [loadingItems, setLoadingItems] = useState({});
   const [removalLoading, setRemovalLoading] = useState({});
   const [user, setUser] = useState({});
+  const[deleteLoader,setDeleteLoader]=useState(false)
 
   const [address, setAddress] = useState({
     email:"",
@@ -90,11 +91,11 @@ const CartScreen = () => {
       )
 
       .then((response) => {
-        console.log("cart items", response.data);
+        console.log("Display cart items", response.data);
         setLoading(false);
         setData(response.data);
         setCartData(response.data);
-        console.log("cart length", cartData.length);
+        // console.log("cart length", cartData.length);
 
         // setCartId(response.data);
         // console.log("cartId",cartData);
@@ -104,7 +105,7 @@ const CartScreen = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.log(error.response);
+        // console.log(error.response);
 
         setError("Failed to load cart data");
         setLoading(false);
@@ -136,14 +137,14 @@ const CartScreen = () => {
       // console.log(response.data);
 
       if (response.status === 200) {
-        console.log("customerProfileDetails", response.data);
+        // console.log("customerProfileDetails", response.data);
         setUser(response.data);
         setAddress(response.data);
-        console.log("user", user);
+        // console.log("user", user);
 
         
       }
-      console.log("user dress....",address)
+      // console.log("user dress....",address)
       // showToast(response.data.msg || 'Profile loaded successfully');
     } catch (error) {
       console.error(error);
@@ -164,10 +165,10 @@ const CartScreen = () => {
         },
       });
 
-      console.log("Cart data:", response);
+      // console.log("Cart data:", response.data);
       setGrandTotal(response.data.totalSum);
       // setCartData(response.data.cartResponseList);
-      console.log("cart data1", cartData);
+      // console.log("cart data1", cartData);
 
       // console.log("grand total",grandTotal);
     } catch (error) {
@@ -187,9 +188,9 @@ const CartScreen = () => {
   const increaseCartItem = async (item) => {
     // const accessToken = await AsyncStorage.getItem("accessToken");
     // setLoading(true)
-    console.log("Item to increase", item);
-    console.log("Item ID", item.itemId);
-    console.log("Current Cart Quantity", item.cartQuantity);
+    // console.log("Item to increase", item);
+    // console.log("Item ID", item.itemId);
+    // console.log("Current Cart Quantity", item.cartQuantity);
 
     const currentQuantity = item.cartQuantity;
     const newQuantity = currentQuantity + 1;
@@ -212,16 +213,16 @@ const CartScreen = () => {
       fetchCartData();
       totalCart();
       setLoading(false);
-      console.log("Cart item quantity updated successfully:", response.data);
+      // console.log("Cart item quantity updated successfully:", response.data);
     } catch (err) {
-      console.error("Error updating cart item quantity:", err.response);
+      // console.error("Error updating cart item quantity:", err.response);
     }
   };
 
   const decreaseCartItem = async (item) => {
     // setLoading(true)
     try {
-      console.log("Decreasing item ID:", item.itemId);
+      // console.log("Decreasing item ID:", item.itemId);
 
       if (item.cartQuantity > 1) {
         const newQuantity = item.cartQuantity - 1;
@@ -241,14 +242,15 @@ const CartScreen = () => {
           }
         );
 
-        console.log("Item decremented successfully");
+        // console.log("Item decremented successfully");
 
         fetchCartData();
         totalCart();
         setLoading(false);
-        console.log("Response data:", response.data);
+        // console.log("Response data:", response.data);
       } else {
         // If cartQuantity is 1 or less, prompt user to remove item
+        // setDeleteLoader(false)
         Alert.alert(
           "Remove Item",
           "Cart quantity is at the minimum. Do you want to remove this item from the cart?",
@@ -266,7 +268,7 @@ const CartScreen = () => {
         );
       }
     } catch (error) {
-      console.error("Failed to decrease cart item:", error);
+      // console.error("Failed to decrease cart item:", error);
     }
   };
 
@@ -288,8 +290,8 @@ const CartScreen = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              console.log("Removing cart item with ID:", item.cartId);
-
+              // console.log("Removing cart item with ID:", item.cartId);
+setDeleteLoader(true)
               const response = await axios.delete(
                 BASE_URL + "erice-service/cart/remove",
                 {
@@ -303,17 +305,17 @@ const CartScreen = () => {
                 }
               );
 
-              console.log("Item removed successfully", response.data);
-
+              // console.log("Item removed successfully", response.data);
+setDeleteLoader(false)
               // Fetch updated cart data and total after item removal
               fetchCartData();
               totalCart();
               setLoading(false);
             } catch (error) {
-              console.error(
-                "Failed to remove cart item:",
-                error.response || error.message
-              );
+              // console.error(
+              //   "Failed to remove cart item:",
+              //   error.response || error.message
+              // );
             }
           },
         },
@@ -340,58 +342,84 @@ const CartScreen = () => {
                 </View>
               ) : (
                 <>
-                  <TouchableOpacity>
+                {/* <Text>dcx</Text> */}
+                {item.itemQuantity==1?
+                <Text style={{textAlign:"center",color:"red",marginBottom:5,fontWeight:"bold"}}>Note : Only one free sample is allowed per user.</Text>:null}
+                <View style={{flexDirection:"row"}}>
+                  <View>
                     <Image
                       source={{ uri: item.image }}
                       style={styles.itemImage}
                       onError={() => console.log("Failed to load image")}
                     />
-                  </TouchableOpacity>
-                  <View style={styles.itemDetails}>
-                    <Text style={styles.itemName}>{item.itemName}</Text>
-                    <Text style={styles.itemPrice}>
-                      Price: ₹{item.priceMrp}
-                    </Text>
-                    <Text style={styles.itemWeight}>
-                      Weight: {item.itemQuantity} {item.units}
-                    </Text>
-                    <View style={styles.quantityContainer}>
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => handleDecrease(item)}
-                        disabled={loadingItems[item.cartId]}
-                      >
-                        <Text style={styles.buttonText}>-</Text>
-                      </TouchableOpacity>
-                      {/* Show loader in the middle when loading */}
-                      {loadingItems[item.cartId] ? (
-                        <ActivityIndicator
-                          size="small"
-                          color="#000"
-                          style={styles.loader}
-                        />
-                      ) : (
-                        <Text style={styles.quantityText}>
-                          {item.cartQuantity}
-                        </Text>
-                      )}
-                      <TouchableOpacity
-                        style={styles.quantityButton}
+                  </View>
+                  <View>
+                    <View style={styles.itemDetails}>
+                      <Text style={styles.itemName}>{item.itemName}</Text>
+                      <Text style={styles.itemPrice}>
+                        Price: ₹{item.priceMrp}
+                      </Text>
+                      <Text style={styles.itemWeight}>
+                        Weight: {item.itemQuantity} {item.units}
+                      </Text>
+                      <View style={styles.quantityContainer}>
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() => handleDecrease(item)}
+                          disabled={loadingItems[item.cartId]}
+                        >
+                          <Text style={styles.buttonText}>-</Text>
+                        </TouchableOpacity>
+                        {/* Show loader in the middle when loading */}
+                        {loadingItems[item.cartId] ? (
+                          <ActivityIndicator
+                            size="small"
+                            color="#000"
+                            style={styles.loader}
+                          />
+                        ) : (
+                          <Text style={styles.quantityText}>
+                            {item.cartQuantity}
+                          </Text>
+                        )}
+
+                        {item.itemQuantity!=1?
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() => handleIncrease(item)}
+                          disabled={loadingItems[item.cartId]}
+                        >
+                          <Text style={styles.buttonText}>+</Text>
+                        </TouchableOpacity>
+                        :
+                        <View
+                        style={styles.quantityButton1}
                         onPress={() => handleIncrease(item)}
                         disabled={loadingItems[item.cartId]}
                       >
                         <Text style={styles.buttonText}>+</Text>
+                      </View>
+                        }
+                        <Text style={styles.itemTotal}>
+                          Total: ₹{(item.priceMrp * item.cartQuantity).toFixed(2)}
+                        </Text>
+                      </View>
+                      {/* {deleteLoader==false? */}
+                      <TouchableOpacity
+                        style={{ marginLeft: 180 }}
+                        onPress={() => handleRemove(item)}
+                      >
+                        <MaterialIcons name="delete" size={23} color="#FF0000" />
                       </TouchableOpacity>
-                      <Text style={styles.itemTotal}>
-                        Total: ₹{(item.priceMrp * item.cartQuantity).toFixed(2)}
-                      </Text>
+                      {/* :
+                      <View
+                        style={{ marginLeft: 180 }}
+                      >
+                        <ActivityIndicator name="delete" size={23} color="#FF0000" />
+                      </View>
+            }  */}
                     </View>
-                    <TouchableOpacity
-                      style={{ marginLeft: 180 }}
-                      onPress={() => handleRemove(item)}
-                    >
-                      <MaterialIcons name="delete" size={23} color="#FF0000" />
-                    </TouchableOpacity>
+                  </View>
                   </View>
                 </>
               )}
@@ -497,7 +525,7 @@ const styles = StyleSheet.create({
   },
   cartItem: {
     // height:"auto",
-    flexDirection: "row",
+    // flexDirection: "row",
     padding: 16,
     marginBottom: 8,
     backgroundColor: "#FFFFFF",
@@ -521,6 +549,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 18,
     fontWeight: "bold",
+    width:width*0.6
   },
   itemPrice: {
     color: "#16A34A",
@@ -534,6 +563,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   quantityButton: {
+    backgroundColor: "#808080",
+    padding: 8,
+    borderRadius: 4,
+    marginHorizontal: 8,
+  },
+  quantityButton1:{
     backgroundColor: "#D1D5DB",
     padding: 8,
     borderRadius: 4,

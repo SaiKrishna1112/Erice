@@ -72,13 +72,28 @@ const Rice = () => {
     checkPermission();
   }, []);
 
+   // Get and log the latitude and longitude
+   const getLocation = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync({});
+      console.log("Latitude:", location.coords.latitude);  // Log latitude
+      console.log("Longitude:", location.coords.longitude); // Log longitude
+    } catch (error) {
+      console.error("Error getting location", error);
+    }
+  };
   // Fetch categories when permission is granted
   useFocusEffect(
     useCallback(() => {
       if (hasLocationPermission) {
         getAllCategories();
-        // getProfile()
+        getLocation(); // Get and log location  
+        // Latitude: 17.4752533
+        // Longitude: 78.3847054
       }
+      // else{
+      //   getAllCategories();
+      // }
     }, [hasLocationPermission])
   );
 

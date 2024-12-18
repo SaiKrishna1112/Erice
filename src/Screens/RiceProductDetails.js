@@ -11,7 +11,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect,useCallback } from "react";
 import Animated from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
@@ -20,11 +20,13 @@ import CartScreen from "./View/CartScreen";
 const { height, width } = Dimensions.get("window");
 import { useSelector } from "react-redux";
 import BASE_URL from "../../Config";
+import { useFocusEffect } from "@react-navigation/native";
 
 const RiceProductDetails = ({ route, navigation }) => {
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
+  // console.log("Rice Product Details route",route.params.details.categoryName)
 
   const [items, setItems] = useState([]);
   const [cartItems, setCartItems] = useState({});
@@ -55,9 +57,15 @@ const RiceProductDetails = ({ route, navigation }) => {
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
   };
 
-  useEffect(() => {
-    fetchCartItems();
-  }, []);
+ 
+   useFocusEffect(
+      useCallback(() => {
+        fetchCartItems();
+      }, [])
+    );
+  
+  // useEffect(() => {
+  // }, []);
 
   // Fetch cart items for the user
   const fetchCartItems = async () => {
@@ -70,7 +78,7 @@ const RiceProductDetails = ({ route, navigation }) => {
           },
         }
       );
-      console.log("response form cart", response.data);
+      // console.log("response form cart", response.data);
 
       const cartData = response.data;
       const cartItemsMap = cartData.reduce((acc, item) => {
@@ -134,15 +142,21 @@ const RiceProductDetails = ({ route, navigation }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      Alert.alert("Success", "Item added to cart successfully");
-      console.log("added items to cart", response.data);
-
-      setCartItems((prevCartItems) => ({
-        ...prevCartItems,
-        [item.itemId]: 1,
-      }));
-      UpdateCartCount(cartCount + 1);
-      fetchCartItems();
+      if(response.data.errorMessage=="Item added to cart successfully"){
+        Alert.alert("Success", "Item added to cart successfully");
+        // console.log("Success added items to cart", response.data);
+        setCartItems((prevCartItems) => ({
+          ...prevCartItems,
+          [item.itemId]: 1,
+        }));
+        UpdateCartCount(cartCount + 1);
+        fetchCartItems();  
+      }
+      else{
+        // console.log("Error added items to cart", response.data);
+        Alert.alert("Alert", response.data.errorMessage);
+      }
+     
     } catch (error) {
       console.error("Error adding item to cart:", error.response);
     }
@@ -183,16 +197,16 @@ const RiceProductDetails = ({ route, navigation }) => {
   };
 
   const decrementQuantity = async (item) => {
-    console.log("for removing items have to be printed", item);
+    // console.log("for removing items have to be printed", item);
     
 
     const newQuantity = cartItems[item.itemId] - 1;
-    console.log({ newQuantity });
+    // console.log({ newQuantity });
 
     const cartItem = cartData.find(
       (cartData) => cartData.itemId === item.itemId
     );
-    console.log("Removing cart item with ID:", cartItem);
+    // console.log("Removing cart item with ID:", cartItem);
 
     if (newQuantity === 0) {
       // Optionally, remove the item from the cart
@@ -202,11 +216,8 @@ const RiceProductDetails = ({ route, navigation }) => {
         return updatedCartItems;
       });
       try {
-        // console.log("Removing cart item with ID:", item.cartId);
 
-    
-
-        const response = await axios.delete(
+         const response = await axios.delete(
           BASE_URL + "erice-service/cart/remove",
           {
             data: {
@@ -219,16 +230,16 @@ const RiceProductDetails = ({ route, navigation }) => {
           }
         );
 
-        console.log("Item removed successfully", response.data);
+        // console.log("Item removed successfully", response.data);
         Alert.alert("Item removed", "Item removed from the cart");
         // Fetch updated cart data and total after item removal
         fetchCartItems();
         // setLoading(false)
       } catch (error) {
-        console.error(
-          "Failed to remove cart item:",
-          error.response || error.message
-        );
+        // console.error(
+        //   "Failed to remove cart item:",
+        //   error.response || error.message
+        // );
       }
     } else {
       const data = {
@@ -248,7 +259,7 @@ const RiceProductDetails = ({ route, navigation }) => {
           ...prevCartItems,
           [item.itemId]: newQuantity,
         }));
-        console.log("decremented cart data");
+        // console.log("decremented cart data");
         UpdateCartCount(cartCount - 1);
       } catch (error) {
         console.error("Error decrementing item quantity:", error.response);
@@ -262,7 +273,15 @@ const RiceProductDetails = ({ route, navigation }) => {
     return (
       <Animated.View key={item.itemId}>
         <View style={styles.productContainer}>
+          {route.params.details.categoryName!="Sample Rice"?
+          <TouchableOpacity  onPress={() => navigation.navigate('Item Details', { item })}>
           <Image source={{ uri: item.itemImage }} style={styles.productImage} />
+          </TouchableOpacity>
+          :
+          <View>
+          <Image source={{ uri: item.itemImage }} style={styles.productImage} />
+          </View>
+          }
           <View>
             <Text>{item.priceMrp}</Text>
             <Text style={styles.productName}>{item.itemName}</Text>
@@ -292,6 +311,7 @@ const RiceProductDetails = ({ route, navigation }) => {
                   <Text style={styles.quantityText}>{itemQuantity1}</Text>
                 )}
                 {/* <Text style={styles.quantityText}>{itemQuantity1}</Text> */}
+                {route.params.details.categoryName!="Sample Rice"?
                 <TouchableOpacity
                   style={styles.quantityButton}
                   // onPress={() => incrementQuantity(item)}
@@ -300,6 +320,16 @@ const RiceProductDetails = ({ route, navigation }) => {
                 >
                   <Text style={styles.quantityButtonText}>+</Text>
                 </TouchableOpacity>
+                :
+                <View
+                style={styles.quantityButton1}
+                // onPress={() => incrementQuantity(item)}
+                onPress={() => handleIncrease(item)}
+                disabled={loadingItems[item.itemId]}
+              >
+                <Text style={styles.quantityButtonText}>+</Text>
+              </View>
+                }
               </View>
             ) : (
               <TouchableOpacity
@@ -323,6 +353,9 @@ const RiceProductDetails = ({ route, navigation }) => {
           source={{ uri: categoryImage }}
           style={styles.banner}
         />
+       {route.params.details.categoryName=="Sample Rice"? 
+                <Text style={styles.noteText}>Note : Only one free sample is allowed per user.</Text>:null}
+               
         <FlatList
           data={items}
           keyExtractor={(item) => item.itemId.toString()}
@@ -372,7 +405,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
   },
-
+noteText:{
+  alignSelf:"center",
+  color:"red",
+  marginBottom:5,
+  fontWeight:"bold",
+  fontSize:16,
+  width:width*0.8,
+  textAlign:"center"
+},
   
   productPrice: {
     fontSize: 16,
@@ -405,6 +446,12 @@ const styles = StyleSheet.create({
   },
   quantityButton: {
     backgroundColor: "#FF6F00",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  quantityButton1: {
+    backgroundColor: "#c0c0c0",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 4,

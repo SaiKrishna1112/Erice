@@ -27,6 +27,7 @@ import OrderDetails from "../../src/Orders/OrderDetails";
 import WriteToUs from '../Screens/View/WriteToUs';
 import TicketHistory from '../Screens/View/TicketHistory';
 import TicketHistoryComments from "../Screens/View/TicketHistoryComments";
+import ItemDetails from "../Screens/ItemDetails";
 export default function StacksScreens() {
   const Stack = createStackNavigator();
   return (
@@ -60,9 +61,7 @@ export default function StacksScreens() {
       <Stack.Screen
         name="Rice Product Detail"
         component={RiceProductDetails}
-        // component={() => (
-        //   <Tabs initialRouteName="RiceProductDetails" /> // Define initial screen for Tabs
-        // )}
+        
         options={({ route }) => ({
           title: route.params.name,
           headerShown: true,
@@ -85,6 +84,7 @@ export default function StacksScreens() {
       {/* <Stack.Screen name="Write To Us" component={WriteToUs}/> */}
       <Stack.Screen name="Ticket History" component={TicketHistory}/>
       <Stack.Screen name="View Comments" component={TicketHistoryComments} />
+      <Stack.Screen name="Item Details" component={ItemDetails}/>
     </Stack.Navigator>
   );
 }

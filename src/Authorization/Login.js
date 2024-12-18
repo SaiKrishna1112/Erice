@@ -102,7 +102,7 @@ const LoginPage = () => {
             }
           }
         } catch (error) {
-          console.error("Error fetching login data", error);
+          console.error("Error fetching login data", error.response);
         }
       };
 
@@ -192,7 +192,7 @@ const LoginPage = () => {
       }
     } catch (error) {
       Alert.alert("Sorry", "You are not registered. Please sign up.");
-      console.log(error.response);
+      console.log("Send Otp error",error.response);
       setIsOtpSent(false)
 
       if (error.response?.status === 400) {
@@ -304,7 +304,7 @@ const LoginPage = () => {
                 value={otp}
                 maxLength={6}
                 onChangeText={setOtp}
-              />
+              /> 
               {errors.otp && <Text style={styles.errorText}>{errors.otp}</Text>}
 
               <View style={{alignSelf:"flex-end",paddingRight:5}}>

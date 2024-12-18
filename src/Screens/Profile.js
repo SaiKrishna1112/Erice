@@ -22,12 +22,14 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { Entypo } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../Config";
 const ProfilePage = () => {
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
+  // console.log({token})
 
   const [profileForm, setProfileForm] = useState({
     customer_name: "",
@@ -101,7 +103,7 @@ const ProfilePage = () => {
           BASE_URL +
           `erice-service/user/customerProfileDetails?customerId=${customerId}`,
       });
-      console.log(response.data);
+      console.log("customerProfileDetails",response.data);
 
       if (response.status === 200) {
         console.log("customerProfileDetails",response.data);
@@ -110,7 +112,7 @@ const ProfilePage = () => {
           customer_name: response.data.name,
           customer_email: response.data.email,
           customer_mobile:response.data.mobileNumber,
-          user_mobile : response.data.alterMobileNumber,
+          user_mobile : response.data.alterMobileNumber.trim(" "),
         //   customer_address: response.data.address,
         //  customer_flatNo:response.data.flatNo,
         //  customer_landmark:response.data.landMark,
@@ -140,6 +142,10 @@ const ProfilePage = () => {
       });
       return;
     }
+    else if(profileForm.user_mobile.length!=10){
+      Alert.alert("Error","Alternative Mobile Number should be 10 digits")
+      return false
+    }
     // if (customer_mobile == user_mobile) {
     //   Alert.alert(
     //     "Validation Error",
@@ -156,7 +162,7 @@ const ProfilePage = () => {
           customerName: profileForm.customer_name,
           customerEmail: profileForm.customer_email,
           customerId: customerId,
-          customerMobile: profileForm.customer_mobile,
+          // customerMobile: profileForm.customer_mobile,
           alterMobileNumber:profileForm.user_mobile,
           // address:profileForm.customer_address,
           // flatNo:profileForm.customer_flatNo,
@@ -170,9 +176,9 @@ const ProfilePage = () => {
         }
       );
 
-      
+      console.log("profile",response.data)
       if (response.data.errorMessage == null) {
-        console.log("Profile call response: ", response);
+        console.log("Profile call response: ", response.data);
         setErrors({ ...errors, customer_email: "" });
         setProfileData(response.data);
         console.log("Profile data:", profileData);
@@ -277,6 +283,7 @@ const ProfilePage = () => {
           placeholder="Enter your e-mail "
           keyboardType="email-address"
           value={profileForm?.customer_email || ""}
+          // editable={profileForm.customer_email==null?true:false}
           onChangeText={(text) => {
             if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
               setProfileForm({ ...profileForm, customer_email: text });
@@ -374,9 +381,10 @@ const ProfilePage = () => {
         ) : null} */}
         <TextInput
           style={styles.input}
-          placeholder = "Enter your  alternate mobile number"
+          placeholder ="Enter your alternate mobile number"
           value={profileForm?.user_mobile || ""}
           maxLength={10}
+          keyboardType="number-pad"
           onChangeText={(text) => {
             setProfileForm({ ...profileForm, user_mobile: text });
             setErrors({ ...errors, user_mobile: "" });

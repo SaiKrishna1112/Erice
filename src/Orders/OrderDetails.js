@@ -20,6 +20,8 @@ const OrderDetails = () => {
   const token = userData.accessToken;
   const customerId = userData.userId;
   const [orderstatus, setOrderStatus] = useState("");
+  const [isCancelDisabled, setIsCancelDisabled] = useState(false);
+  const [isExchangeDisabled, setIsExchangeDisabled] = useState(false);
   const [orderData, setOrderData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsmodelVisible] = useState(false);
@@ -27,7 +29,7 @@ const OrderDetails = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { order_id, status } = route.params;
-  // console.log(route.params);
+  // console.log("route",route.params.new_Order_Id);
 
   // console.log("varam", order_id);
 
@@ -61,7 +63,12 @@ const OrderDetails = () => {
     }
   };
 
+  const  handleExchangeOrder = ()=>{
+     setIsCancelDisabled(true)
+  }
+
   const handlecancelOrder = () => {
+    setIsExchangeDisabled(true)
     setIsmodelVisible(true);
   };
 
@@ -133,7 +140,7 @@ const OrderDetails = () => {
     granttotal,
     orderItems,
     deliveryFee,
-    paymentType,
+    payment,
     flatNo,
     landMark,
     address,
@@ -144,8 +151,8 @@ const OrderDetails = () => {
       <ScrollView style={styles.container}>
         {/* Header */}
         <View style={styles.receiptHeader}>
-          <Text style={styles.headerText}>Order Receipt</Text>
-          <Text style={styles.orderId}>Order ID: {order_id}</Text>
+          {/* <Text style={{color:"#808080"}}>Order Receipt</Text> */}
+          <Text style={{fontWeight:"bold",fontSize:16,marginBottom:15,color:"#626262"}}>Order ID : <Text style={{fontWeight:"normal",color:"black"}}>{route.params.new_Order_Id}</Text></Text>
         </View>
 
         {/* Order Items */}
@@ -211,7 +218,7 @@ const OrderDetails = () => {
           <View style={styles.row}>
             <Text style={styles.label}>Payment Type:</Text>
             <Text style={styles.value}>
-              {paymentType === 2 ? "ONLINE" : "COD"}
+              {payment == 2 ? "ONLINE" : "COD"}
             </Text>
           </View>
 
@@ -228,6 +235,7 @@ const OrderDetails = () => {
           </View>
         </View>
       </ScrollView>
+      
       {orderstatus === "6" ? (
         <View style={styles.footer}>
           <TouchableOpacity
@@ -242,13 +250,44 @@ const OrderDetails = () => {
         </View>
       ) : null}
 
-      {orderstatus === "1" ? (
-        <View style={styles.footer}>
+      
+
+      {/* // yesterday changes */}
+      <View style={{flexDirection:"row", justifyContent: "space-between",padding:30}}>
+      {(payment === 1 ||payment===2)&& ["1", "2", "3","4"].includes(orderstatus) ? (
+  <View style={styles.footer}>
+    <TouchableOpacity
+      style={[styles.cancelButton,isCancelDisabled &&{opacity:0.5}]}
+      onPress={() => handlecancelOrder()}
+      disabled={isCancelDisabled}
+    >
+      <Text style={styles.cancelButtonText}>Cancel Order</Text>
+    </TouchableOpacity>
+  </View>
+) : null}
+
+{((payment ===1 || payment ===2) && orderstatus=="4")?(
+   <View>
+    <TouchableOpacity
+      style={[styles.cancelButton,isExchangeDisabled &&{opacity:0.5}]}
+      onPress={() => handleExchangeOrder()}
+      disabled={isExchangeDisabled}
+    >
+      <Text style={styles.cancelButtonText}>Exchange Order</Text>
+    </TouchableOpacity>
+   </View>
+):null}
+</View>
+{orderstatus === "4" ? (
+        <View style={styles. footer1}>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={() => handlecancelOrder()}
+            onPress={() => cancelOrder()}
+            disabled={true}
           >
-            <Text style={styles.cancelButtonText}>Cancel Order</Text>
+            <Text style={styles.cancelButtonText}>
+            This Order Has Already Been Delivered
+            </Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -273,7 +312,13 @@ const OrderDetails = () => {
               <TouchableOpacity
                 style={styles.submitButtonModal}
                 onPress={() => {
+                  if (!cancelReason.trim()) {
+                    Alert.alert('Sorry', 'Please provide a reason for canceling the order.');
+                    return;
+                  }
                   cancelOrder(order_id, cancelReason, customerId);
+                
+                  // cancelOrder(order_id, cancelReason, customerId);
                   
                 }}
               >
@@ -299,11 +344,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   receiptHeader: {
-    backgroundColor: "#4CAF50",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-    alignItems: "center",
+    // backgroundColor: "#4CAF50",
+    // padding: 15,
+    // borderRadius: 8,
+    // marginBottom: 20,
+    // alignItems: "center",
   },
   headerText: {
     color: "#fff",
@@ -435,7 +480,7 @@ const styles = StyleSheet.create({
   grandTotalValue: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#ff3b30",
+    color: "#FA7070",
   },
   flatNo: {
     fontSize: 16,
@@ -453,6 +498,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   cancelButton: {
+    marginBottom:15,
     backgroundColor: "#FA7070",
     padding: 10,
     borderRadius: 5,
@@ -465,6 +511,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   footer: {
+    padding: 10,
+   borderTopColor: "#ccc",
+    // backgroundColor: "#fff",
+  },
+  footer1:{
     padding: 10,
     borderTopWidth: 1,
     borderTopColor: "#ccc",

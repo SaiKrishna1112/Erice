@@ -15,6 +15,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import BASE_URL from "../../Config";
 const OrderSummaryScreen = ({ navigation, route }) => {
+  console.log("Order Summary",route)
  
 
   const userData = useSelector((state) => state.counter);
@@ -55,7 +56,7 @@ const OrderSummaryScreen = ({ navigation, route }) => {
       setLoading(false)
     } catch (error) {
       console.error("Error fetching cart items:", error);
-      setLoading(false)
+      setLoading(false) 
     } finally {
       setLoading(false);
     }
@@ -129,28 +130,34 @@ const OrderSummaryScreen = ({ navigation, route }) => {
 
 
 
-  const handleContinuePress = () => {
-    console.log("user", user);
-      const orderDetails = formatOrderDetails();
-      Alert.alert(
-        "Confirm Order",
-        orderDetails,
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-          },
-          {
-            text: "Confirm",
-            onPress: () =>
-              navigation.navigate("Payment Details", {
-                items: cartItems,
-                address: address,
-              }),
-          },
-        ]
-      );
+  // const handleContinuePress = () => {
+  //   console.log("user", user);
+  //     const orderDetails = formatOrderDetails();
+  //     Alert.alert(
+  //       "Confirm Order",
+  //       orderDetails,
+  //       [
+  //         {
+  //           text: "Cancel",
+  //           style: "cancel",
+  //         },
+  //         {
+  //           text: "Confirm",
+  //           onPress: () =>
+  //             navigation.navigate("Payment Details", {
+  //               items: cartItems,
+  //               address: address,
+  //             }),
+  //         },
+  //       ]
+  //     );
    
+  // };
+  const handleContinuePress = () => {
+    navigation.navigate("Payment Details", {
+      items: cartItems,
+      address: address,
+    });
   };
   
 
@@ -181,17 +188,26 @@ const OrderSummaryScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      <View style={styles.addressSection}>
+      {/* <View style={styles.addressSection}>
         <View style={styles.addressRow}>
-          <Icon name="home" size={20} color="#000" style={styles.addressIcon} />
+          <Icon name="map-marker" size={20} color="#000" style={styles.addressIcon} />
           <Text style={styles.addressTitle}>{address.address}</Text>
         </View>
         <Text style={styles.addressDetails}>{address.flatNo}</Text>
         <Text style={styles.addressDetails}>{address.landMark}</Text>
-        {/* <TouchableOpacity onPress={() => navigation.navigate("AddressScreen")} style={styles.changeButton}>
-        <Text style={styles.changeText}>Change</Text>
-      </TouchableOpacity> */}
-      </View>
+      </View> */}
+   <View style={styles.addressSection}>
+  <View style={styles.addressRow}>
+    <Icon name="map-marker" size={20} color="#000" style={styles.addressIcon} />
+    <Text style={styles.flatNoText}>{address.flatNo}</Text>
+  </View>
+  <View style={styles.addressDetailsContainer}>
+    <Text style={styles.addressDetails}>{address.landMark}</Text>
+    <Text style={styles.addressDetails}>{address.address}</Text>
+    <Text style={styles.addressDetails}>{address.pincode}</Text>
+  </View>
+</View>
+
 
       {loading ? (
         <ActivityIndicator size="large" color="blue" style={styles.loader} />
@@ -210,9 +226,12 @@ const OrderSummaryScreen = ({ navigation, route }) => {
               <View style={styles.itemDetails}>
                 <Text style={styles.itemName}>{item.itemName}</Text>
                 <Text>
-                  Quantity: {item.itemQuantity * item.cartQuantity + " kgs"}
+                  {/* Quantity: {item.itemQuantity * item.cartQuantity + " kgs"} */}
+                  {/* Quantity :<Text>{item.itemQuantity} x {item.cartQuantity} kg </Text> */}
+                  Quantity : <Text> { item.itemQuantity} kg</Text>
                 </Text>
-                <Text>Price: ₹{item.priceMrp}</Text>
+                <Text>Price: <Text>{item.cartQuantity} x {item.priceMrp} </Text></Text>
+                <Text>Total Price : ₹{item.cartQuantity  * item.priceMrp}</Text>
               </View>
             </View>
           )}
@@ -308,32 +327,33 @@ const styles = StyleSheet.create({
     // flex:1
   },
   addressSection: {
-    padding: 16,
-    borderBottomWidth: 1,
+    padding: 15,
+    margin: 10,
+    borderWidth: 1,
     borderColor: "#ccc",
+    borderRadius: 10,
     backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-    marginBottom: 10,
   },
   addressRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   addressIcon: {
     marginRight: 10,
   },
-  addressTitle: {
+  flatNoText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
-    flex: 1,
+    color: "#000",
+  },
+  addressDetailsContainer: {
+    marginLeft: 30, 
   },
   addressDetails: {
     fontSize: 14,
     color: "#555",
-    marginLeft: 30,
-    marginBottom: 5,
+    marginVertical: 2, 
   },
 });
 

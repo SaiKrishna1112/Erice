@@ -27,6 +27,10 @@ import Icon from "react-native-vector-icons/Ionicons";
 const { width, height } = Dimensions.get("window");
 
 const PaymentDetails = ({ navigation, route }) => {
+
+
+  console.log("payment screen",route.params);
+  
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
@@ -210,7 +214,7 @@ const PaymentDetails = ({ navigation, route }) => {
   var postData;
   const placeOrder = () => {
     // console.log("Location Data:", addressDetails);
-
+console.log({selectedPaymentMode})
     // Ensure that locationData contains the necessary data
     let wallet;
     if(useWallet){
@@ -258,12 +262,14 @@ const PaymentDetails = ({ navigation, route }) => {
           setLoading(false);
           // totalCart()
         } else {
+          console.log("paymentId==================",response.data)
           setTransactionId(response.data.paymentId);
           // onlinePaymentFunc()
           console.log("==========");
           const data = {
             mid: "1152305",
             amount: grandTotalAmount,
+            // amount: 1,
             merchantTransactionId: response.data.paymentId,
             transactionDate: new Date(),
             terminalId: "getepay.merchant128638@icici",
@@ -294,6 +300,7 @@ const PaymentDetails = ({ navigation, route }) => {
       })
       .catch((error) => {
         console.error("Order Placement Error:", error.response);
+        Alert.alert('Error',error.response.data.error)
         setLoading(false);
       });
   };
