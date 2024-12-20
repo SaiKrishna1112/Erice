@@ -5,7 +5,11 @@ import { StyleSheet, Text, View } from "react-native";
 // Screens imports
 
 import LoginScreen from "../Authorization/Login";
+import LoginWithPassword from "../Authorization/LoginWithPassword";
+
 import Register from "../Authorization/Register";
+
+import Refund from "../Screens/View/Refund";
 
 import Tabs from "./BottomTabs";
 import RiceProductDetails from "../Screens/RiceProductDetails";
@@ -28,6 +32,8 @@ import WriteToUs from '../Screens/View/WriteToUs';
 import TicketHistory from '../Screens/View/TicketHistory';
 import TicketHistoryComments from "../Screens/View/TicketHistoryComments";
 import ItemDetails from "../Screens/ItemDetails";
+
+
 export default function StacksScreens() {
   const Stack = createStackNavigator();
   return (
@@ -46,6 +52,11 @@ export default function StacksScreens() {
       <Stack.Screen
         name="Login"
         component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LoginWithPassword"
+        component={LoginWithPassword}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -85,6 +96,7 @@ export default function StacksScreens() {
       <Stack.Screen name="Ticket History" component={TicketHistory}/>
       <Stack.Screen name="View Comments" component={TicketHistoryComments} />
       <Stack.Screen name="Item Details" component={ItemDetails}/>
+      <Stack.Screen name="Refund" component={Refund} />
     </Stack.Navigator>
   );
 }

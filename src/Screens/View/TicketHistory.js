@@ -155,16 +155,16 @@ console.log({query})
               <Text style={styles.label}>MobileNumber</Text>
               <Text style={styles.value}>{item.mobileNumber}</Text>
             </View> */}
-              <View style={styles.row}>
+                  <View style={styles.row}>
                     <Text style={styles.label}>Name</Text>
                     <Text style={styles.value}>{item.name}</Text>
                   </View>
-                 
+
                   <View style={styles.row}>
                     <Text style={styles.label}>Ticket Id</Text>
                     <Text style={styles.value}>{item.randomTicketId}</Text>
                   </View>
-{/*                 
+                  {/*                 
                   <View style={styles.row}>
                     <Text style={styles.label}>Created On</Text>
                     <Text style={styles.value}>
@@ -174,50 +174,48 @@ console.log({query})
 
                   <View style={styles.row}>
                     <View>
-                      <Text style={styles.label}>Query / </Text>
-                      <Text style={styles.label}>Created On</Text>
+                      <Text style={styles.label}>Query </Text>
                     </View>
 
                     <View>
                       <Text style={styles.value}>{item.query}</Text>
-                      <Text style={styles.value}>{item?.createdAt?.substring(0,10)}</Text>
                     </View>
                   </View>
 
-
-                  {queryStatus === "COMPLETED"?
-                  <>
-                  <View style={styles.row1}>
+                  <View style={styles.row}>
                     <View>
-                      <Text style={styles.label}>Admin Comments  </Text>
-                      {/* <Text style={styles.label}>Resolved</Text> */}
+                      <Text style={styles.label}>Created On</Text>
                     </View>
                     <View>
-                      <Text style={styles.value}>{item.comments}</Text>
-                      {/* <Text style={styles.value}>{item?.resolvedOn?.substring(0,10)}</Text> */}
+                      <Text style={styles.value}>
+                        {item?.createdAt?.substring(0, 10)}
+                      </Text>
                     </View>
                   </View>
-                  </>
-                :null}
 
+                  {queryStatus === "CANCELLED" ? (
+                    <>
+                      <View style={styles.row1}>
+                        <View>
+                          <Text style={styles.label}>Reason </Text>
+                        </View>
+                        <View>
+                          <Text style={styles.value}>{item.comments}</Text>
+                        </View>
+                      </View>
 
-
-
-                {queryStatus === "CANCELLED"?
-                  <>
-                  <View style={styles.row1}>
-                    <View>
-                      <Text style={styles.label}>Reason / </Text>
-                      <Text style={styles.label}>Resolved</Text>
-                    </View>
-                    <View>
-                      <Text style={styles.value}>{item.comments}</Text>
-                      <Text style={styles.value}>{item?.resolvedOn?.substring(0,10)}</Text>
-                    </View>
-                  </View>
-                  </>
-                :null}
-
+                      <View style={styles.row1}>
+                        <View>
+                          <Text style={styles.label}>Resolved</Text>
+                        </View>
+                        <View>
+                          <Text style={styles.value}>
+                            {item?.resolvedOn?.substring(0, 10)}
+                          </Text>
+                        </View>
+                      </View>
+                    </>
+                 ) : null} 
 
                   {item.userQueryDocumentStatus?.fileName != null ? (
                     <View style={styles.row}>
@@ -260,11 +258,17 @@ console.log({query})
                     </TouchableOpacity> */}
                       </>
                     ) : null}
-                    <TouchableOpacity style={styles.commentsbtn} onPress={() => { navigation.navigate('View Comments', { details:item })} }>
+                    <TouchableOpacity
+                      style={styles.commentsbtn}
+                      onPress={() => {
+                        navigation.navigate("View Comments", { details: item });
+                      }}
+                    >
                       <Text style={{ color: "white" }}>View Comments</Text>
                     </TouchableOpacity>
 
-                    {queryStatus === "COMPLETED" || queryStatus === "CANCELLED" ? (
+                    {queryStatus === "COMPLETED" ||
+                    queryStatus === "CANCELLED" ? (
                       <>
                         {/* <TouchableOpacity style={styles.cancelbtn}>
                           <Text style={{ color: "white" }}>Inquires Reply</Text>
@@ -306,7 +310,7 @@ console.log({query})
           </View>
         </View>
       </Modal>
-      
+
       {removeModal ? (
         <Modal
           animationType="slide"
@@ -319,14 +323,16 @@ console.log({query})
               {/* Optional Close Button */}
               <TouchableOpacity
                 style={styles.closeButton}
-                onPress={() => {setRemoveModal(false),setComments('')}}
+                onPress={() => {
+                  setRemoveModal(false), setComments("");
+                }}
               >
                 <Text style={{ fontSize: 20, color: "black" }}>X</Text>
               </TouchableOpacity>
-{/* <Text>{ticketId} , {query}</Text> */}
+              {/* <Text>{ticketId} , {query}</Text> */}
               {/* Confirmation Text */}
               <Text style={styles.confirmText}>
-                Are you sure you want to cancel the query? 
+                Are you sure you want to cancel the query?
                 {/* ${ticketId} */}
               </Text>
 
@@ -337,11 +343,15 @@ console.log({query})
                 value={comments}
                 numberOfLines={5}
                 multiline
-                onChangeText={(text) => {setComments(text),setComments_error(false)}}
+                onChangeText={(text) => {
+                  setComments(text), setComments_error(false);
+                }}
               />
-          {comments_error==true?
-              <Text style={{color:"red",margin:5}}>Reason is mandatory</Text>
-              :null}
+              {comments_error == true ? (
+                <Text style={{ color: "red", margin: 5 }}>
+                  Reason is mandatory
+                </Text>
+              ) : null}
 
               {/* Action Buttons */}
               <View style={styles.buttonContainer}>
@@ -349,7 +359,7 @@ console.log({query})
                   style={styles.submitbtn}
                   onPress={() => cancelTicketConfirm(ticketId, query)}
                 >
-                  <Text>yes</Text>
+                  <Text style={{color:"white"}}>yes</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -359,7 +369,7 @@ console.log({query})
                     setComments("");
                   }}
                 >
-                  <Text>No</Text>
+                  <Text style={{color:"white"}}>No</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -457,15 +467,6 @@ const styles = StyleSheet.create({
     marginLeft:15,
     width:width*0.4,
     justifyContent:"flex-end"
-  },
-  value1: {
-    fontSize: 16,
-    color: "#0384d5",
-    alignItems:"flex-end",
-    marginLeft:15,
-    width:width*0.4,
-    justifyContent:"flex-end",
-    // backgroundColor:
   },
   emptyText: {
     // flex:1,

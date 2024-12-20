@@ -53,6 +53,8 @@ const OrderSummaryScreen = ({ navigation, route }) => {
       );
       const data = await response.json();
       setCartItems(data);
+      console.log("cartItems",data);
+      
       setLoading(false)
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -188,29 +190,23 @@ const OrderSummaryScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* <View style={styles.addressSection}>
-        <View style={styles.addressRow}>
-          <Icon name="map-marker" size={20} color="#000" style={styles.addressIcon} />
-          <Text style={styles.addressTitle}>{address.address}</Text>
-        </View>
-        <Text style={styles.addressDetails}>{address.flatNo}</Text>
-        <Text style={styles.addressDetails}>{address.landMark}</Text>
-      </View> */}
+     
    <View style={styles.addressSection}>
   <View style={styles.addressRow}>
     <Icon name="map-marker" size={20} color="#000" style={styles.addressIcon} />
     <Text style={styles.flatNoText}>{address.flatNo}</Text>
   </View>
-  <View style={styles.addressDetailsContainer}>
-    <Text style={styles.addressDetails}>{address.landMark}</Text>
-    <Text style={styles.addressDetails}>{address.address}</Text>
-    <Text style={styles.addressDetails}>{address.pincode}</Text>
+  {/* <View style={styles.addressDetailsContainer}> */}
+  <View style={{flexDirection:"row"}}>
+    <Text style={styles.addressDetails}>{address.landMark} ,</Text>
+    <Text style={styles.addressDetails}> {address.address} ,</Text>
+    <Text style={styles.addressDetails}> {address.pincode}</Text>
   </View>
 </View>
 
 
       {loading ? (
-        <ActivityIndicator size="large" color="blue" style={styles.loader} />
+        <ActivityIndicator size="large" color="#fd7e14" style={styles.loader} />
       ) : (
         <FlatList
           data={cartItems}
@@ -228,10 +224,11 @@ const OrderSummaryScreen = ({ navigation, route }) => {
                 <Text>
                   {/* Quantity: {item.itemQuantity * item.cartQuantity + " kgs"} */}
                   {/* Quantity :<Text>{item.itemQuantity} x {item.cartQuantity} kg </Text> */}
-                  Quantity : <Text> { item.itemQuantity} kg</Text>
+                  Quantity : <Text> { item.cartQuantity} </Text>
                 </Text>
-                <Text>Price: <Text>{item.cartQuantity} x {item.priceMrp} </Text></Text>
-                <Text>Total Price : ₹{item.cartQuantity  * item.priceMrp}</Text>
+                <Text>Weight :<Text> {item.itemQuantity} kgs</Text></Text>
+                <Text>Price: <Text>{item.cartQuantity} x {item.itemPrice} </Text></Text>
+                <Text>Total Price : ₹{item.cartQuantity  * item.itemPrice}</Text>
               </View>
             </View>
           )}
@@ -295,9 +292,9 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
   },
   activeStepCircle: {
-    backgroundColor: "blue",
+    backgroundColor: "#fd7e14",
     borderWidth: 2,
-    borderColor: "blue",
+    borderColor: "#fd7e14",
   },
   stepNumber: {
     color: "#fff",
@@ -309,7 +306,7 @@ const styles = StyleSheet.create({
     color: "#999",
   },
   activeStepLabel: {
-    color: "blue",
+    color: "#999",
     fontWeight: "bold",
   },
   connector: {
@@ -331,7 +328,8 @@ const styles = StyleSheet.create({
     margin: 10,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 10,
+    marginVertical:5,
+    borderRadius: 8,
     backgroundColor: "#f9f9f9",
   },
   addressRow: {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback ,useLayoutEffect} from "react";
 import {
   View,
   Text,
@@ -17,7 +17,9 @@ import {
   Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+// import { Ionicons } from "@expo/vector-icons";
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { Entypo } from "@expo/vector-icons";
@@ -29,7 +31,7 @@ const ProfilePage = () => {
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
-  // console.log({token})
+  // console.log({customerId})
 
   const [profileForm, setProfileForm] = useState({
     customer_name: "",
@@ -66,7 +68,7 @@ const ProfilePage = () => {
       getProfile();
     }, [getProfile])
   );
-
+ 
   
 
   const animateProfile = () => {
@@ -112,7 +114,7 @@ const ProfilePage = () => {
           customer_name: response.data.name,
           customer_email: response.data.email,
           customer_mobile:response.data.mobileNumber,
-          user_mobile : response.data.alterMobileNumber.trim(" "),
+          user_mobile : response.data.alterMobileNumber,
         //   customer_address: response.data.address,
         //  customer_flatNo:response.data.flatNo,
         //  customer_landmark:response.data.landMark,
@@ -327,58 +329,7 @@ const ProfilePage = () => {
           }
           disabled={true}
         />
-       {/* <TextInput
-          style={styles.input}
-          placeholder="Enter your Flatno"
-          value={profileForm?.customer_flatNo|| ""}
-          onChangeText={(text) => {
-            setProfileForm({ ...profileForm, customer_flatNo: text });
-            setErrors({ ...errors, customer_flatNo: "" });
-          }}
-        />
-        {errors.customer_flatNo ? (
-          <Text style={styles.errorText}>{errors.customer_flatNo}</Text>
-        ) : null}
 
-<TextInput
-          style={styles.input}
-          placeholder="Enter your Landmark"
-          value={profileForm?.customer_landmark|| ""}
-          onChangeText={(text) => {
-            setProfileForm({ ...profileForm, customer_landmark: text });
-            setErrors({ ...errors, customer_landmark: "" });
-          }}
-        />
-        {errors.customer_landmark ? (
-          <Text style={styles.errorText}>{errors.customer_landmark}</Text>
-        ) : null}
-
-<TextInput
-          style={styles.input}
-          placeholder="Enter your Address"
-          value={profileForm?.customer_address|| ""}
-          onChangeText={(text) => {
-            setProfileForm({ ...profileForm, customer_address: text });
-            setErrors({ ...errors, customer_address: "" });
-          }}
-        />
-        {errors.customer_address ? (
-          <Text style={styles.errorText}>{errors.customer_address}</Text>
-        ) : null}
-
-<TextInput
-          style={styles.input}
-          placeholder="Enter your Pincode"
-          value={profileForm?.customer_pincode|| ""}
-          onChangeText={(text) => {
-            setProfileForm({ ...profileForm, customer_pincode: text });
-            setErrors({ ...errors, customer_pincode: "" });
-          }}
-          maxLength={6}
-        />
-        {errors.customer_pincode ? (
-          <Text style={styles.errorText}>{errors.customer_pincode}</Text>
-        ) : null} */}
         <TextInput
           style={styles.input}
           placeholder ="Enter your alternate mobile number"
@@ -439,7 +390,7 @@ const ProfilePage = () => {
                     <Text>Version: 1.0.24</Text>
                 </View> */}
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.logoutButton}
           onPress={() => {
             navigation.navigate("Login"), AsyncStorage.removeItem("userData");
@@ -447,7 +398,7 @@ const ProfilePage = () => {
         >
           <Ionicons name="log-out-outline" size={20} color="white" />
           <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </ScrollView>
     </View>

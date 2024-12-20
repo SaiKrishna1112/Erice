@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "OxyRice",
-    "slug": "oxyrice_customer",
+    "slug": "Oxyrice",
     "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,14 +21,20 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.oxyrice.oxyrice_customer",
-      "versionCode": 4
+      "versionCode": 6
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5a84fd6f-6ba0-45a1-92c2-dfd6caa52e85"
+    },
     "extra": {
       "eas": {
-        "projectId": "5a84fd6f-6ba0-45a1-92c2-dfd6caa52e85"
+        "projectId": "ce226648-f9fe-48e4-b9d1-02f76cf9fcee"
       }
     }
   }

@@ -76,8 +76,8 @@ const Rice = () => {
    const getLocation = async () => {
     try {
       const location = await Location.getCurrentPositionAsync({});
-      console.log("Latitude:", location.coords.latitude);  // Log latitude
-      console.log("Longitude:", location.coords.longitude); // Log longitude
+      console.log("Latitude:", location.coords.latitude);  
+      console.log("Longitude:", location.coords.longitude); 
     } catch (error) {
       console.error("Error getting location", error);
     }
@@ -85,19 +85,16 @@ const Rice = () => {
   // Fetch categories when permission is granted
   useFocusEffect(
     useCallback(() => {
-      if (hasLocationPermission) {
+      // if (hasLocationPermission) {
         getAllCategories();
-        getLocation(); // Get and log location  
+        getLocation();  
         // Latitude: 17.4752533
         // Longitude: 78.3847054
-      }
-      // else{
-      //   getAllCategories();
-      // }
-    }, [hasLocationPermission])
+      
+    }, [])
   );
 
-  // Fetch categories from API
+  
   const getAllCategories = () => {
     setLoading(true);
     axios
@@ -105,6 +102,8 @@ const Rice = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
+        console.log("rice",response.data);
+        
         setCategories(response.data);
         
         setLoading(false);

@@ -45,6 +45,7 @@ const WriteToUs = ({navigation,route}) => {
     email: "",
     mobileNumber: "", 
     query: "",
+    query_error:false,
     fileName: "",
     documentId: "",
     uploadStatus:'',
@@ -105,8 +106,8 @@ const WriteToUs = ({navigation,route}) => {
       const { name, email, mobileNumber, query } = formData;
 
       // Validation
-      if (!name || !email || !mobileNumber || !query) {
-        Alert.alert("Error", "All fields are required!");
+      if (query=="" || query==null) {
+        setFormData({ ...formData, query_error: true });
         return;
       }
       if (!/^\S+@\S+\.\S+$/.test(email)) {
@@ -170,7 +171,7 @@ else{
       })
         .then(function (response) {
           console.log(response.data)
-          Alert.alert("Success", "Your query has been submitted!");
+          Alert.alert("Success", "You have sucessfully submitted the query");
           console.log("formdataquery",formData.query);
           
           setFormData({...formData,loading:false})
@@ -240,7 +241,7 @@ else{
           })
             .then(function (response) {
                console.log("uploadQueryScreenShot",response.data);
-               Alert.alert("Successfully Uploaded")
+               Alert.alert("Success","File uploaded successfully")
                setFormData({...formData,fileName:fileToUpload.name,documentId:response.data.id,uploadLoader:false})
               // setLoading(false);
               // setmodal1(true);
@@ -305,8 +306,11 @@ else{
         placeholder="Enter Your Query"
         multiline
         value={formData.query}
-        onChangeText={(text) => setFormData({ ...formData, query: text })}
+        onChangeText={(text) => setFormData({ ...formData, query: text,query_error:false })}
       />
+      {formData.query_error == true ?
+        <Text style={{ color: "red", fontWeight: "bold", marginBottom: 5 ,alignSelf:"center"}}>Query is Mandatory</Text>
+      : null}
 
     {ticketId==""?
     <>
@@ -384,7 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
     width: width * 0.9,
-    height: 100,
+    height: "auto",
     alignSelf:"center"
     
   },

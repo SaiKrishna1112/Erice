@@ -60,41 +60,71 @@ const WalletPage = ({ route }) => {
       <View style={styles.headerContainer}>
   <View style={styles.header}>
     <Text style={styles.walletTitle}>Wallet Balance</Text>
-    <Text style={styles.walletAmount}>₹ {walletAmount}</Text>
+  <Text style={styles.walletAmount}> ₹ {walletAmount || 0}</Text>
   </View>
 </View>
 
 {walletTxs.length > 0 ? (
   <FlatList
     data={walletTxs}
-    keyExtractor={(item) => item.id.toString()}
+    keyExtractor={(item) => item.id}
     renderItem={({ item }) => (
+      // <View style={styles.transactionCard}>
+      //   {/* Wallet Transaction Amount */}
+      //   <Text style={styles.txAmount}>
+      //     Amount: ₹ {item.walletTxAmount}
+      //   </Text>
+
+      //   {/* Order ID */}
+      //   <Text style={styles.txOrder}>
+      //     Order ID: {item.orderId}
+      //   </Text>
+
+      //   {/* Wallet Transaction Description */}
+      //   <Text style={styles.txDesc}>
+      //     Description: {item.walletTxDesc.split('Order ID:')[0].trim()}
+      //   </Text>
+
+      //   {/* Transaction Date */}
+      //   <Text style={styles.txDate}>
+      //     Date: {new Date(item.createdAt).toLocaleDateString()}
+      //   </Text>
+
+      //   {/* Wallet Balance */}
+      //   <Text style={styles.txBalance}>
+      //     Balance: ₹ {item.walletTxBalance}
+      //   </Text>
+      // </View>
       <View style={styles.transactionCard}>
-        {/* Wallet Transaction Amount */}
-        <Text style={styles.txAmount}>
-          Amount: ₹ {item.walletTxAmount}
-        </Text>
+  {/* Header with Transaction Amount */}
+  <View style={styles.headerRow}>
+    <Text style={styles.txAmountLabel}>Amount:</Text>
+    <Text style={styles.txAmountValue}>₹ {item.walletTxAmount}</Text>
+  </View>
 
-        {/* Order ID */}
-        <Text style={styles.txOrder}>
-          Order ID: {item.orderId}
-        </Text>
+  {/* Transaction Details */}
+  <View style={styles.detailRow}>
+    <Text style={styles.label}>Order ID:</Text>
+    <Text style={styles.value}>{item.orderId}</Text>
+  </View>
+  <View style={styles.detailRow}>
+    <Text style={styles.label}>Description:</Text>
+    <Text style={styles.value}>
+      {item.walletTxDesc.split('Order ID:')[0].trim()}
+    </Text>
+  </View>
+  <View style={styles.detailRow}>
+    <Text style={styles.label}>Date:</Text>
+    <Text style={styles.value}>
+      {new Date(item.createdAt).toLocaleDateString()}
+    </Text>
+  </View>
+  <View style={styles.detailRow}>
+    <Text style={styles.label}>Wallet Balance:</Text>
+    <Text style={styles.value}>₹ {item.walletTxBalance}</Text>
+  </View>
+</View>
 
-        {/* Wallet Transaction Description */}
-        <Text style={styles.txDesc}>
-          Description: {item.walletTxDesc.split('Order ID:')[0].trim()}
-        </Text>
-
-        {/* Transaction Date */}
-        <Text style={styles.txDate}>
-          Date: {new Date(item.createdAt).toLocaleDateString()}
-        </Text>
-
-        {/* Wallet Balance */}
-        <Text style={styles.txBalance}>
-          Balance: ₹ {item.walletTxBalance}
-        </Text>
-      </View>
     )}
   />
 ) : (
@@ -155,12 +185,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,
-    marginBottom: 12,
+    marginVertical: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 2
+    elevation: 3,
   },
   txId: {
     fontWeight: 'bold',
@@ -242,6 +272,36 @@ const styles = StyleSheet.create({
     color: '#000',
     textAlign: 'center',
     marginTop: 20,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  txAmountLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  txAmountValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#4caf50',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 4,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#555',
+  },
+  value: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#222',
   },
 });
 

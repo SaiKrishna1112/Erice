@@ -12,6 +12,8 @@ import OrderScreen from "../../src/Orders/OrderScreen";
 import { COLORS } from "../../assets/theme/theme";
 import WriteToUs from '../Screens/View/WriteToUs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../Config"
 import OfferScreen from "../Screens/View/OfferScreen";
 
@@ -92,6 +94,18 @@ const cartCountValue = (focused) => {
 
             </View>
           ),
+          // headerRight: () => (
+          //   <TouchableOpacity
+          //     style={styles.logoutButton}
+          //     onPress={() => {
+          //       AsyncStorage.removeItem("userData"); 
+          //       navigation.navigate("Login"); 
+          //     }}
+          //   >
+             
+          //     <Ionicons name ="log-out-outline" size={25} color="#000" />
+          //   </TouchableOpacity>
+          // ),
         }}
       />
     {/* <Tab.Screen
@@ -156,7 +170,7 @@ const cartCountValue = (focused) => {
           ),
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Profile"
         component={ProfilePage}
         options={{
@@ -172,24 +186,48 @@ const cartCountValue = (focused) => {
             </View>
           ),
         }}
-      />
-      {/* <Tab.Screen
-        name="Write To Us"
-        component={WriteToUs}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <View style={styles.tabIconContainer}>
-              <Image
-                source={require("../../assets/BottomTabImages/order.png")}
-                resizeMode="contain"
-                style={[styles.tabIcon, getIconColor(focused)]}
-              />
-           <Text style={[styles.tabLabel, focused && styles.focusedLabel]}>Write us</Text>
-
-            </View>
-          ),
-        }}
       /> */}
+
+<Tab.Screen
+  name="Profile"
+  component={ProfilePage}
+  screenOptions={{
+    headerShown: true,
+  }}
+  options={({ navigation }) => ({
+    tabBarIcon: ({ focused }) => (
+      <View style={styles.tabIconContainer}>
+        <Image
+          source={require("../../assets/BottomTabImages/profile.png")}
+          resizeMode="contain"
+          style={[styles.tabIcon, getIconColor(focused)]}
+        />
+        <Text style={[styles.tabLabel, focused && styles.focusedLabel]}>Profile</Text>
+      </View>
+    ),
+    headerRight: () => (
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() => {
+          AsyncStorage.removeItem("userData"); 
+          navigation.navigate("Login"); 
+        }}
+      >
+       
+        <Ionicons name ="log-out-outline" size={25} color="#000" />
+      </TouchableOpacity>
+    ),
+    headerStyle: {
+      backgroundColor: "#fff", 
+    },
+    headerTitleStyle: {
+      color: "#000", 
+    },
+  })}
+/>
+
+
+     
 <Tab.Screen
   name="Write To Us"
   component={WriteToUs}
@@ -264,6 +302,11 @@ const styles = StyleSheet.create({
   focusedLabel: {
     color: COLORS.white,
     fontWeight: "bold",
+  },
+  logoutButton: {
+    // backgroundColor: 'red', 
+   marginRight:20
+
   },
 });
 

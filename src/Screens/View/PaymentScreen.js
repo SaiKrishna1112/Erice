@@ -71,13 +71,13 @@ const PaymentDetails = ({ navigation, route }) => {
   var calculatedTotal;
   useEffect(() => {
     calculatedTotal = items.reduce(
-      (total, item) => total + item.cartQuantity * item.priceMrp,
+      (total, item) => total + item.cartQuantity * item.itemPrice,
       0
     );
     console.log(
       "grand total",
       items.reduce(
-        (total, item) => total + item.cartQuantity * item.priceMrp,
+        (total, item) => total + item.cartQuantity * item.itemPrice,
         0
       )
     );
@@ -234,7 +234,9 @@ console.log({selectedPaymentMode})
       // paymentStatus:{selectedPaymentMode=="COD" ? "":"ONLINE"}
     };
 
-    console.log({ postData });
+    // console.log({ postData });
+    console.log("postdata",postData);
+    
     setLoading(true);
     axios({
       method: "POST",
@@ -259,7 +261,7 @@ console.log({selectedPaymentMode})
       onPress: () => navigation.navigate('My Orders'), 
     },
   ])
-          setLoading(false);
+          // setLoading(false);
           // totalCart()
         } else {
           console.log("paymentId==================",response.data)
@@ -297,6 +299,10 @@ console.log({selectedPaymentMode})
           console.log({ data });
           getepayPortal(data);
         }
+
+        setTimeout(() => {
+          setLoading(false);
+        }, 4000)
       })
       .catch((error) => {
         console.error("Order Placement Error:", error.response);
@@ -370,16 +376,23 @@ console.log({selectedPaymentMode})
           "Cart Summary",
   `The total amount for your cart is ₹${totalAmount.toFixed(2)}. Please proceed to checkout to complete your purchase.`,
           [
+            // {
+            //   text: "yes",
+            //   onPress: () => {
+            //     Linking.openURL(data.qrIntent);
+            //     Requery(data.paymentId);
+            //   },
+            // },
+            {
+              text: "No",
+              onPress: () => {},
+            },
             {
               text: "yes",
               onPress: () => {
                 Linking.openURL(data.qrIntent);
                 Requery(data.paymentId);
               },
-            },
-            {
-              text: "No",
-              onPress: () => {},
             },
           ]
         );
@@ -624,23 +637,11 @@ console.log({selectedPaymentMode})
           </TouchableOpacity>)}
         </View>
       </View>
-       {/* from Wllet */}
-       {/* <View style={styles.checkboxContainer}>
-        <Checkbox
-          status={useWallet ? "checked" : "unchecked"} 
-          onPress={handleCheckboxToggle} 
-          color="#00bfff" 
-          uncheckedColor="#ccc" 
-        />
-        <Text style={styles.checkboxLabel}>
-          Use Wallet Balance 
-          
-        </Text>
-      </View> */}
+      
 
 {walletAmount > 0 ?(
   <View style={styles.walletContainer}>
-    <View style={styles.checkboxWrapper}>
+    <View style={styles.walletHeader}>
       <Checkbox
         status={useWallet ? "checked" : "unchecked"}
         onPress={handleCheckboxToggle}
@@ -672,7 +673,7 @@ console.log({selectedPaymentMode})
           <FontAwesome5
             name="credit-card"
             size={24}
-            color={selectedPaymentMode === "ONLINE" ? "blue" : "black"}
+            color={selectedPaymentMode === "ONLINE" ? "green" : "black"}
           />
           <Text style={styles.optionText}>Online Payment</Text>
         </TouchableOpacity>
@@ -686,7 +687,7 @@ console.log({selectedPaymentMode})
           <MaterialIcons
             name="delivery-dining"
             size={24}
-            color={selectedPaymentMode === "COD" ? "blue" : "black"}
+            color={selectedPaymentMode === "COD" ? "green" : "black"}
           />
           <Text style={styles.optionText}>Cash on Delivery</Text>
         </TouchableOpacity>
@@ -859,6 +860,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     marginBottom: 16,
+    marginVertical: 20,
+    padding: 10,
+    backgroundColor: "#4DA1A9", 
+    borderRadius: 12,
+    // shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6, // Shadow for Android
+
   },
   paymentOption: {
     alignItems: "center",
@@ -867,8 +878,18 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 8,
     width: "45%",
+    backgroundColor: "#c0c0c0",
+    borderRadius: 10,
+    width: 180,
+    height: 90,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
+    marginBottom: 15,
   },
-  selectedOption: { borderColor: "blue", backgroundColor: "#e6f7ff" },
+  selectedOption: { borderColor: "green", backgroundColor: "#e6f7ff" },
   optionText: { fontSize: 16, marginTop: 8 },
   confirmButton: {
     backgroundColor: "#fd7e14",
@@ -925,14 +946,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
   },
-  paymentOption: {
-    alignItems: "center",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    width: width * 0.4,
-  },
+  // paymentOption: {
+  //   alignItems: "center",
+  //   padding: 10,
+  //   borderWidth: 1,
+  //   borderColor: "#ddd",
+  //   borderRadius: 8,
+  //   width: width * 0.4,
+  // },
   selectedOption: {
     borderColor: "blue",
   },
@@ -1055,6 +1076,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     lineHeight: 20,
+  },
+  walletContainer: {
+    backgroundColor: "#f9f9f9", 
+    borderRadius: 10,          
+    padding: 15,              
+    marginVertical: 10,        
+    borderWidth: 1,            
+    borderColor: "#e0e0e0",    
+  },
+  walletHeader: {
+    flexDirection: "row",     
+    alignItems: "center",      
+    marginBottom: 10,         
+  },
+  checkboxLabel: {
+    fontSize: 14,             
+    marginLeft: 10,           
+    color: "#333",             
+  },
+  walletMessage: {
+    fontSize: 12,             
+    color: "#000",             
+  },
+  highlight: {
+    color: "#00bfff",         
+    fontWeight: "bold",       
   },
 });
 

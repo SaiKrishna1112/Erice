@@ -17,6 +17,9 @@ export default function CustomNavigationBar({
 
   const title = getHeaderTitle(options, route.name);
 
+  console.log(title);
+  
+
   const goBack = () => {
     AsyncStorage.removeItem('accessToken');
     AsyncStorage.removeItem('userId'); 
@@ -33,7 +36,11 @@ export default function CustomNavigationBar({
       <Appbar.Content title={title} />
       {!back ? (
 							<>
-							{/* <Appbar.Action icon="magnify" onPress={() => {}} /> */}
+							<Appbar.Action icon="logout" onPress={() => {
+          AsyncStorage.removeItem("userData"); 
+          navigation.navigate("Login"); 
+        }} />
+     
         {/* <Menu
           visible={visible}
           onDismiss={closeMenu}

@@ -70,6 +70,8 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import BASE_URL from "../../Config";
 
 const CheckOut = ({ navigation, route }) => {
+  console.log("from cartscreen", route.params);
+
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
@@ -119,7 +121,7 @@ const CheckOut = ({ navigation, route }) => {
       calculateTotal();
       totalCart();
       fetchCartData();
-      fetchOrderAddress();
+      // fetchOrderAddress();
       console.log("from my location page", route.params.locationdata);
       setStatus(route.params.locationdata.status);
       setAddressData(route.params.locationdata);
@@ -166,7 +168,7 @@ const CheckOut = ({ navigation, route }) => {
       )
 
       .then((response) => {
-        // console.log("sudheesh", response.data);
+        console.log("mrpprices", response.data);
 
         setCartData(response.data);
         setLoading(false);
@@ -176,6 +178,9 @@ const CheckOut = ({ navigation, route }) => {
       });
   };
 
+  useEffect(()=>{
+    fetchOrderAddress()
+  },[])
   const handlePlaceOrder = () => {
     console.log({ grandTotal });
     console.log("locationdata==================================", locationData);
@@ -270,6 +275,19 @@ const CheckOut = ({ navigation, route }) => {
     }
   };
 
+  function handleAddress(address){
+    setSelectedAddressId(address.id);
+    setLocationData({
+      flatNo: address.flatNo,
+      landMark: address.landMark,
+      pincode: address.pincode,
+      address: address.address,
+      addressType: "",
+      latitude: "",
+      longitude: "",
+    });
+  }
+
   const removeCartItem = async (item) => {
     console.log("removed items from cart", item);
 
@@ -358,6 +376,18 @@ const CheckOut = ({ navigation, route }) => {
       });
 
       setAddressList(response.data);
+      response.data.slice(-1).map((address) => (
+      setSelectedAddressId(address.id),
+      setLocationData({
+        flatNo: address.flatNo,
+        landMark: address.landMark,
+        pincode: address.pincode,
+        address: address.address,
+        addressType: "",
+        latitude: "",
+        longitude: "",
+      })
+    ))
       console.log("address response", response.data);
     } catch (error) {
       console.error("Error fetching order address data:", error.response);
@@ -405,7 +435,17 @@ const CheckOut = ({ navigation, route }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Delivery Address</Text>
       <TouchableOpacity onPress={changeLocation}>
-        <Text style={styles.addButton}>+ Change Address</Text>
+        {addressList==null||""?(
+        <Text style={styles.addButton}>+ Add Address</Text>
+      ):
+      
+      (
+      <View style ={{flexDirection:"row",marginLeft:250}}>
+        <Icon name="edit" size={18} color="#fd7e14" style={styles.icon} />
+        <Text style={styles.addButton}>Change Address</Text>
+      </View>
+      )
+      }
       </TouchableOpacity>
 
       {status ? (
@@ -416,35 +456,32 @@ const CheckOut = ({ navigation, route }) => {
           <Text style={styles.addressDetail}>
             Address: {locationData.address}
           </Text>
-          <TouchableOpacity>
-            <Text style={styles.selectedButton}>Selected</Text>
-          </TouchableOpacity>
+         {/* <TouchableOpacity style={styles.smallButton}>
+            <Text style={styles.smallButtonText}>Selected</Text>
+          </TouchableOpacity> */}
         </View>
       ) : addressList.length > 0 ? (
         addressList.slice(-1).map((address, index) => (
           <View key={index} style={styles.addressRow}>
-            <View style={styles.cardContainer}>
-              <View style={styles.iconAndTextContainer}>
-                <Icon
-                  name="map-marker"
-                  size={24}
-                  color="#007bff"
-                  style={styles.icon}
-                />
-                <View style={styles.addressContainer}>
-                  <Text style={styles.addressText}>
-                    {address.flatNo}, {address.landMark},{address.pincode}
-                  </Text>
-                  {/* <Text style={styles.addressText}>Pincode: {address.pincode}</Text> */}
+            {/* {handleAddress(address)} */}
+            <View style={styles.iconAndTextContainer}>
+              <Icon
+                name="map-marker"
+                size={30}
+                color="#007bff"
+                style={styles.icon}
+              />
+              <View style={styles.addressContainer}>
+                <Text style={styles.addressText}>
+                  {address.flatNo}, {address.landMark},{address.pincode}
+                </Text>
+             
 
-                  <Text style={styles.addressDetail}>
-                    Address: {address.address}
-                  </Text>
-                </View>
+                <Text style={styles.addressText}>{address.address}</Text>
               </View>
             </View>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => {
                 Alert.alert(
                   "Address Confirmation",
@@ -479,13 +516,13 @@ const CheckOut = ({ navigation, route }) => {
               <Text
                 style={
                   selectedAddressId === address.id
-                    ? styles.selectedButton
-                    : styles.selectButton
+                    ? styles.smallButton
+                    : styles.smallButton
                 }
               >
-                {selectedAddressId === address.id ? "Selected" : "Select"}
+                {selectedAddressId === address.id ? "Selected" : "Selected"}
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         ))
       ) : (
@@ -543,72 +580,92 @@ const CheckOut = ({ navigation, route }) => {
                   </View>
                 ) : (
                   <>
-                    {item.itemQuantity==1?
-                <Text style={{textAlign:"center",color:"red",marginBottom:5,fontWeight:"bold"}}>Note : Only one free sample is allowed per user.</Text>:null}
-               
-                  <View style={{flexDirection:"row"}}>
-                    <TouchableOpacity>
-                      <Image
-                        source={{ uri: item.image }}
-                        style={styles.itemImage}
-                        onError={() => console.log("Failed to load image")}
-                      />
-                    </TouchableOpacity>
-                    <View>
-                    <View style={styles.itemDetails}>
-                      <Text style={styles.itemName}>{item.itemName}</Text>
-                      <Text style={styles.itemPrice}>
+                    {item.itemQuantity == 1 ? (
+                      <Text
+                        style={{
+                          textAlign: "center",
+                          color: "red",
+                          marginBottom: 5,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Note : Only one free sample is allowed per user.
+                      </Text>
+                    ) : null}
+
+                    <View style={{ flexDirection: "row" }}>
+                      <TouchableOpacity>
+                        <Image
+                          source={{ uri: item.image }}
+                          style={styles.itemImage}
+                          onError={() => console.log("Failed to load image")}
+                        />
+                      </TouchableOpacity>
+                      <View>
+                        <View style={styles.itemDetails}>
+                          <Text style={styles.itemName}>{item.itemName}</Text>
+                          {/* <Text style={styles.itemPrice}>
                         Price: ₹{item.priceMrp}
-                      </Text>
-                      <Text style={styles.itemWeight}>
-                        Weight: {item.itemQuantity} {item.units}
-                      </Text>
-                      <View style={styles.quantityContainer}>
-                        <TouchableOpacity
-                          style={styles.quantityButton}
-                          onPress={() => handleDecrease(item)}
-                          disabled={loadingItems[item.itemId]}
-                        >
-                          <Text style={styles.buttonText}>-</Text>
-                        </TouchableOpacity>
-
-                        {/* Show loader in the middle when loading */}
-                        {loadingItems[item.itemId] ? (
-                          <ActivityIndicator
-                            size="small"
-                            color="#000"
-                            style={styles.loader}
-                          />
-                        ) : (
-                          <Text style={styles.quantityText}>
-                            {item.cartQuantity}
-                          </Text>
-                        )}
-
-                        {item.itemQuantity != 1 ? (
-                          <TouchableOpacity
-                            style={styles.quantityButton}
-                            onPress={() => handleIncrease(item)}
-                            disabled={loadingItems[item.itemId]}
-                          >
-                            <Text style={styles.buttonText}>+</Text>
-                          </TouchableOpacity>
-                        ) : (
-                          <View
-                            style={styles.quantityButton1}
-                            onPress={() => handleIncrease(item)}
-                            disabled={loadingItems[item.itemId]}
-                          >
-                            <Text style={styles.buttonText}>+</Text>
+                      </Text> */}
+                          <View style={styles.priceContainer}>
+                            <Text
+                              style={[styles.itemPrice, styles.crossedPrice]}
+                            >
+                              MRP: ₹{item.priceMrp}
+                            </Text>
+                            <Text style={[styles.itemPrice, styles.boldPrice]}>
+                              ₹{item.itemPrice}
+                            </Text>
                           </View>
-                        )}
-                        <Text style={styles.itemTotal}>
-                          Total: ₹
-                          {(item.priceMrp * item.cartQuantity).toFixed(2)}
-                        </Text>
+                          <Text style={styles.itemWeight}>
+                            Weight: {item.itemQuantity} {item.units}
+                          </Text>
+                          <View style={styles.quantityContainer}>
+                            <TouchableOpacity
+                              style={styles.quantityButton}
+                              onPress={() => handleDecrease(item)}
+                              disabled={loadingItems[item.itemId]}
+                            >
+                              <Text style={styles.buttonText}>-</Text>
+                            </TouchableOpacity>
+
+                            {/* Show loader in the middle when loading */}
+                            {loadingItems[item.itemId] ? (
+                              <ActivityIndicator
+                                size="small"
+                                color="#000"
+                                style={styles.loader}
+                              />
+                            ) : (
+                              <Text style={styles.quantityText}>
+                                {item.cartQuantity}
+                              </Text>
+                            )}
+
+                            {item.itemQuantity != 1 ? (
+                              <TouchableOpacity
+                                style={styles.quantityButton}
+                                onPress={() => handleIncrease(item)}
+                                disabled={loadingItems[item.itemId]}
+                              >
+                                <Text style={styles.buttonText}>+</Text>
+                              </TouchableOpacity>
+                            ) : (
+                              <View
+                                style={styles.quantityButton1}
+                                onPress={() => handleIncrease(item)}
+                                disabled={loadingItems[item.itemId]}
+                              >
+                                <Text style={styles.buttonText}>+</Text>
+                              </View>
+                            )}
+                            <Text style={styles.itemTotal}>
+                              Total: ₹
+                              {(item.itemPrice* item.cartQuantity).toFixed(2)}
+                            </Text>
+                          </View>
+                        </View>
                       </View>
-                    </View>
-                    </View>
                     </View>
                   </>
                 )}
@@ -630,14 +687,6 @@ const CheckOut = ({ navigation, route }) => {
         <ActivityIndicator size="large" color="#000" />
       ) : (
         <View style={styles.paymentDetails}>
-          {/* <Text style={styles.detailText}>Sub Total: ₹{grandTotal}</Text>
-          <Text style={styles.detailText}>Discount: ₹{discount}</Text>
-          <Text style={styles.detailText}>Delivery Fee: ₹{deliveryFee}</Text>
-          {applyWalletAmount && (
-            <Text style={styles.detailText}>
-              From Wallet: ₹{availableWalletAmount}
-            </Text>
-          )} */}
           <Text style={styles.grandTotalText}>Grand Total: ₹{grandTotal}</Text>
         </View>
       )}
@@ -689,6 +738,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
     fontWeight: "600",
     marginBottom: 15,
+    marginLeft:0
   },
   addressRow: {
     backgroundColor: "#ffffff",
@@ -867,7 +917,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 18,
     fontWeight: "bold",
-    width:width*0.5
+    width: width * 0.5,
   },
   itemPrice: {
     color: "#16A34A",
@@ -935,13 +985,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  icon: {
-    marginRight: 12,
-  },
+  
   addressContainer: {
     flex: 1,
   },
   addressText: {
+    paddingLeft:15,
+    marginLeft:5,
     fontSize: 16,
     color: "#333",
     fontWeight: "500",
@@ -967,6 +1017,48 @@ const styles = StyleSheet.create({
     elevation: 5, // For Android shadow
     borderWidth: 1,
     borderColor: "#e0e0e0",
+  },
+  smallButton: {
+    marginTop: 10,
+    marginLeft: 280,
+    backgroundColor: "#fd7e14",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    width: width / 5,
+    textDecorationColor: "white",
+    fontWeight: "bold",
+  },
+  smallButtonText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "bold",
+    alignSelf: "center",
+    textAlign: "center",
+  },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  itemPrice: {
+    fontSize: 16,
+    marginRight: 10,
+  },
+  crossedPrice: {
+    textDecorationLine: "line-through",
+    color: "#D32F2F",
+  },
+  boldPrice: {
+    fontWeight: "bold",
+    color: "#388E3C",
+  },
+  icon: {
+    paddingLeft:30,
+    marginRight: 5,
+    fontWeight:"bold"
   },
 });
 

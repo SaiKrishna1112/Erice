@@ -1,9 +1,9 @@
 import React, { useEffect, useState,useLayoutEffect  } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Pressable, } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Pressable, Dimensions} from 'react-native';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { useNavigation } from "@react-navigation/native";
-
+const { width, height } = Dimensions.get("window");
 import Icon from "react-native-vector-icons/Ionicons";
 import BASE_URL from "../../Config";
 
@@ -273,8 +273,11 @@ const increaseCartItem = async (item) => {
         <Image source={{ uri: item.itemImage }} style={styles.detailImage} />
         <Text style={styles.itemName}>{item.itemName.toUpperCase()}</Text>
       </View>
-
-      <View style={styles.infoContainer}>
+      <View style={styles.descriptionCard}>
+  <Text style={styles.descriptionLabel}>Description:</Text>
+  <Text style={styles.descriptionText}>{item.itemDescription}</Text>
+</View>
+      {/* <View style={styles.infoContainer}>
         <View style={styles.row}>
           <Text style={styles.label}>MRP:</Text>
           <Text style={styles.value}>Rs.{item.itemMrp}/-</Text>
@@ -330,8 +333,79 @@ const increaseCartItem = async (item) => {
   </TouchableOpacity>
 )}
 
+      </View> */}
+      <View style={styles.infoContainer}>
+  {/* Item Info */}
+  <View style={styles.infoRow}>
+  <Text style={styles.label}>Mrp:</Text>
+  <Text style={styles.mrpvalue}>₹ {item.itemMrp}/-</Text>
+  </View>
+  <View style={styles.infoRow}>
+    <Text style={styles.label}>Price:</Text>
+    <Text style={styles.value}>₹ {item.itemPrice}/-</Text>
+  </View>
+  
+  <View style={styles.infoRow}>
+    <Text style={styles.label}>Weight:</Text>
+    <Text style={styles.value}>
+      {item.quantity} {item.units}
+    </Text>
+  </View>
+  <View style={styles.infoRow1}>
+     <Text style={{alignSelf:"center",alignItems:"center"}}>{item.itemQuantity1}</Text>
+  </View>
+
+  {/* Action Section */}
+  <View style={styles.actionRow}>
+    {cartItems[item.itemId] || loadingItems[item.itemId] ? (
+      <View style={styles.quantityContainer}>
+        {/* Decrease Button */}
+        <TouchableOpacity
+          style={styles.quantityButton}
+          onPress={() => handleDecrease(item)}
+          disabled={loadingItems[item.itemId]}
+        >
+          <Text style={styles.quantityButtonText}>-</Text>
+        </TouchableOpacity>
+
+        {/* Loader or Quantity */}
+        {loadingItems[item.itemId] ? (
+          <ActivityIndicator size="small" color="#000" style={styles.loader} />
+        ) : (
+          <Text style={styles.quantityText}>{cartItems[item.itemId]}</Text>
+        )}
+
+        {/* Increase Button */}
+        <TouchableOpacity
+          style={styles.quantityButton}
+          onPress={() => handleIncrease(item)}
+          disabled={loadingItems[item.itemId]}
+        >
+          <Text style={styles.quantityButtonText}>+</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.buttonContainer}>
+    ) : (
+      <>
+      {item.itemPrice!=1?(
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => handleAddToCart(item)}
+        disabled={loadingItems[item.itemId]}
+      >
+        {loadingItems[item.itemId] ? (
+          <ActivityIndicator size="small" color="#FFF" />
+        ) : (
+          <Text style={styles.addButtonText}>Add to Cart</Text>
+        )}
+      </TouchableOpacity>
+      ):null}
+      </>
+    )}
+  </View>
+</View>
+
+
+      <View style={styles.footer}>
   <View style={styles.rowContainer}>
     <TouchableOpacity onPress={() => navigation.navigate("Rice")} style={styles.smallButton}>
       <Text style={styles.buttonText}>Add More</Text>
@@ -357,13 +431,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     padding: 10,
   },
+  actionRow: {
+    // flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
   imageContainer: {
     alignItems: 'center',
     marginBottom: 15,
   },
   detailImage: {
-    width: 250,
-    height: 250,
+    width: 200,
+    height: 200,
     borderRadius: 10,
     resizeMode: 'cover',
     backgroundColor: '#eaeaea',
@@ -377,9 +457,20 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    elevation: 3,
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 4,
+  },
+  infoRow1:{
+   alignSelf:"center",
+   justifyContent:"center",
   },
   row: {
     flexDirection: 'row',
@@ -387,16 +478,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#555',
-    flex: 0.4,
   },
   value: {
-    fontSize: 16,
-    color: '#333',
-    flex: 0.6,
-    textAlign: 'right',
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#222',
   },
   descriptionContainer: {
     marginTop: 15,
@@ -407,19 +496,24 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   quantityContainer: {
+  
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
   },
   quantityButton: {
     backgroundColor: '#FF6F00',
     padding: 10,
     borderRadius: 5,
+    alignSelf:"center",
+    alignItems:"center"
   },
   quantityButtonText: {
-    fontSize: 20,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
     color: '#fff',
+    alignItems: "center",
+    alignSelf:"center",
   },
   quantityText: {
     fontSize: 18,
@@ -486,4 +580,39 @@ ViewButton: {
     fontSize: 16,
     fontWeight: "bold",
   },
+  descriptionCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  descriptionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 6,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#555',
+    lineHeight: 20,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+    elevation: 4, // Adds a shadow effect
+  },
+  mrpvalue:{
+    textDecorationLine: 'line-through', 
+    color: '#D32F2F', 
+  }
 });

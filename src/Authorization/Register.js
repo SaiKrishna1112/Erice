@@ -27,18 +27,30 @@ const Register = () => {
   const [mobileError, setMobileError] = useState("");
   const [otpError, setOtpError] = useState("");
   const navigation = useNavigation();
-
-  const handleSendOtp = async () => {
-    setOtpSending(true);
-    setLoading(true);
-    setMobileError("");
-    if (!/^\d{10}$/.test(mobileNumber)) {
-      setOtpSending(false);
-      setLoading(false);
-      setMobileError("Please enter a valid 10-digit mobile number.");
-      return;
+  
+  const validateMobileNumber = () => {
+    if (!mobileNumber) {
+      setMobileError("Mobile number is required.")
+      return false;
+    }
+    if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
+      
+      setMobileError("Enter a valid 10-digit mobile number.")
+      return false;
     }
     setMobileError(" ");
+    setOtpSending(true);
+    return true;
+  };
+
+
+
+  const handleSendOtp = async () => {
+   
+    setLoading(true);
+    setMobileError(" ");
+  
+  if (!validateMobileNumber()) return;
     try {
       const response = await axios.post(
         `${BASE_URL}erice-service/user/login-or-register`,
@@ -100,13 +112,7 @@ const Register = () => {
         }
       );
 
-      // if (response.status === 200) {
-      //   Alert.alert("Success", "Mobile verified! Please log in.");
-      //   await AsyncStorage.setItem("mobileNumber", mobileNumber);
-      //   navigation.navigate("Login");
-      // } else {
-      //   setOtpError("OTP verification failed. Please try again.");
-      // }
+      
 
       console.log("register",response.data);
       
@@ -126,11 +132,14 @@ const Register = () => {
 
   const handleMobileNumberChange = (text) => {
     setMobileNumber(text);
-    if (text.length === 10) {
+    if (mobileError) {
       setMobileError("");
-    } else {
-      setMobileError("Please enter a valid 10-digit mobile number.");
     }
+    // if (text.length === 10) {
+    //   setMobileError("");
+    // } else {
+    //   setMobileError("Please enter a valid 10-digit mobile number.");
+    // }
   };
 
   return (
@@ -151,11 +160,7 @@ const Register = () => {
           keyboardType="phone-pad"
           value={mobileNumber}
           onChangeText={handleMobileNumberChange}
-          // onChangeText={setMobileNumber}
-          // onChangeText={(text) => {
-          //   setMobileNumber(text);
-          //   setMobileError(""); 
-          // }}
+         
           editable={!isOtpSent}
           maxLength={10}
         />
@@ -193,6 +198,7 @@ const Register = () => {
               keyboardType="numeric"
               value={otp}
               onChangeText={setOtp}
+              maxLength={6}
             />
             {otpError && <Text style={styles.errorText}>{otpError}</Text>}
 

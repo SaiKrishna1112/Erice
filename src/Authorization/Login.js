@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ImageBackground,
+  Dimensions,
 } from "react-native";
 import axios from "axios";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -18,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
 import { AccessToken } from "../../Redux/action/index";
 import BASE_URL from "../../Config";
+const{height,width}=Dimensions.get('window')
 
 const LoginPage = () => {
   // State hooks
@@ -45,43 +47,7 @@ const LoginPage = () => {
 
   
 
-  // const getProfile = async () => {
-   
-  //   try {
-  //     const response = await axios({
-  //       method: "GET",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       url:
-  //         BASE_URL +
-  //         `erice-service/user/customerProfileDetails?customerId=${customerId}`,
-  //     });
-  //     // console.log(response.data);
 
-  //     if (response.data.email && response.data.name && response.data.mobileNumber == null ) {
-  //       Alert.alert(
-  //         "Incomplete Profile",
-  //         "Please fill out your profile to proceed.",
-  //         [
-  //           {
-  //             text: "OK",
-  //             onPress: () => navigation.navigate("Profile"), 
-  //           },
-  //         ]
-  //       );
-  //       console.log("customerProfileDetails",response.data);
-  //       setUser(response.data);
-
-  //       console.log("user",user);
-        
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     showToast("Error loading profile");
-  //   }
-  // };
 
 
 
@@ -330,7 +296,7 @@ const LoginPage = () => {
               
             </>
           )}
-          {!isLogin && (
+          {/* {!isLogin && (
             <Text style={styles.registerPrompt}>
               Don't have an account ?
               <Text
@@ -340,7 +306,25 @@ const LoginPage = () => {
                 {" Sign up here"}
               </Text>
             </Text>
-          )}
+          )} */}
+          {!isLogin && (
+        <View style={{alignItems:"center"}}>
+          <TouchableOpacity style={styles.btn} onPress={()=>navigation.navigate('LoginWithPassword')}>
+            <Text style={{ color: "white" }}>Login with Password</Text>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.registerPrompt}>
+              Don't have an account?
+              <Text
+                style={styles.registerLink}
+                onPress={() => navigation.navigate("RegisterScreen")}
+              >
+                {" Sign up here"}
+              </Text>
+            </Text>
+          </View>
+        </View>
+      )}
         </View>
       </KeyboardAvoidingView>
     </ImageBackground>
@@ -360,8 +344,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   formContainer: {
-    width: "100%",
-    maxWidth: 400,
+    width: width*0.9,
+    // maxWidth: 400,
     padding: 20,
     backgroundColor: "#fff", 
     borderRadius: 10,
@@ -369,6 +353,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
+    alignItems:"center"
   },
   logo: {
     alignSelf:"center",
@@ -385,7 +370,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
-    width: "100%",
+    width: width*0.8,
     height: 50,
     borderWidth: 1,
     borderColor: "#CCC",
@@ -398,7 +383,7 @@ const styles = StyleSheet.create({
     borderColor: "red",
   },
   button: {
-    width: "100%",
+    width: width*0.7,
     backgroundColor: "#4CAF50",
     paddingVertical: 15,
     borderRadius: 8,
@@ -436,6 +421,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginRight:30
   },
+  btn: {
+    marginTop: 20,
+    backgroundColor: "orange",
+    width: width * 0.7,
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 5,
+  },    
 });
 
 export default LoginPage;

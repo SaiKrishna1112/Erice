@@ -34,13 +34,13 @@ const CartScreen = () => {
   const [loadingItems, setLoadingItems] = useState({});
   const [removalLoading, setRemovalLoading] = useState({});
   const [user, setUser] = useState({});
-  const[deleteLoader,setDeleteLoader]=useState(false)
+  const [deleteLoader, setDeleteLoader] = useState(false);
 
   const [address, setAddress] = useState({
-    email:"",
-    mobileNumber:"",
-    name :"",
-    alterMobileNumber:""
+    email: "",
+    mobileNumber: "",
+    name: "",
+    alterMobileNumber: "",
   });
   const locationdata = {
     // customerId: 4,data
@@ -141,8 +141,6 @@ const CartScreen = () => {
         setUser(response.data);
         setAddress(response.data);
         // console.log("user", user);
-
-        
       }
       // console.log("user dress....",address)
       // showToast(response.data.msg || 'Profile loaded successfully');
@@ -291,7 +289,7 @@ const CartScreen = () => {
           onPress: async () => {
             try {
               // console.log("Removing cart item with ID:", item.cartId);
-setDeleteLoader(true)
+              setDeleteLoader(true);
               const response = await axios.delete(
                 BASE_URL + "erice-service/cart/remove",
                 {
@@ -306,7 +304,7 @@ setDeleteLoader(true)
               );
 
               // console.log("Item removed successfully", response.data);
-setDeleteLoader(false)
+              setDeleteLoader(false);
               // Fetch updated cart data and total after item removal
               fetchCartData();
               totalCart();
@@ -342,84 +340,110 @@ setDeleteLoader(false)
                 </View>
               ) : (
                 <>
-                {/* <Text>dcx</Text> */}
-                {item.itemQuantity==1?
-                <Text style={{textAlign:"center",color:"red",marginBottom:5,fontWeight:"bold"}}>Note : Only one free sample is allowed per user.</Text>:null}
-                <View style={{flexDirection:"row"}}>
-                  <View>
-                    <Image
-                      source={{ uri: item.image }}
-                      style={styles.itemImage}
-                      onError={() => console.log("Failed to load image")}
-                    />
-                  </View>
-                  <View>
-                    <View style={styles.itemDetails}>
-                      <Text style={styles.itemName}>{item.itemName}</Text>
+                  {/* <Text>dcx</Text> */}
+                  {item.itemQuantity == 1 ? (
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        color: "red",
+                        marginBottom: 5,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Note : Only one free sample is allowed per user.
+                    </Text>
+                  ) : null}
+                  <View style={{ flexDirection: "row" }}>
+                    <View>
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.itemImage}
+                        onError={() => console.log("Failed to load image")}
+                      />
+                    </View>
+                    <View>
+                      <View style={styles.itemDetails}>
+                        <Text style={styles.itemName}>{item.itemName}</Text>
+                        {/* <Text style={styles.itemPrice}>
+                        Mrp: ₹{item.priceMrp} 
+                      </Text>
                       <Text style={styles.itemPrice}>
-                        Price: ₹{item.priceMrp}
-                      </Text>
-                      <Text style={styles.itemWeight}>
-                        Weight: {item.itemQuantity} {item.units}
-                      </Text>
-                      <View style={styles.quantityContainer}>
-                        <TouchableOpacity
-                          style={styles.quantityButton}
-                          onPress={() => handleDecrease(item)}
-                          disabled={loadingItems[item.cartId]}
-                        >
-                          <Text style={styles.buttonText}>-</Text>
-                        </TouchableOpacity>
-                        {/* Show loader in the middle when loading */}
-                        {loadingItems[item.cartId] ? (
-                          <ActivityIndicator
-                            size="small"
-                            color="#000"
-                            style={styles.loader}
-                          />
-                        ) : (
-                          <Text style={styles.quantityText}>
-                            {item.cartQuantity}
+                        ₹{item.itemPrice} 
+                      </Text> */}
+                        <View style={styles.priceContainer}>
+                          <Text style={[styles.itemPrice, styles.crossedPrice]}>
+                            MRP: ₹{item.priceMrp}
                           </Text>
-                        )}
-
-                        {item.itemQuantity!=1?
-                        <TouchableOpacity
-                          style={styles.quantityButton}
-                          onPress={() => handleIncrease(item)}
-                          disabled={loadingItems[item.cartId]}
-                        >
-                          <Text style={styles.buttonText}>+</Text>
-                        </TouchableOpacity>
-                        :
-                        <View
-                        style={styles.quantityButton1}
-                        onPress={() => handleIncrease(item)}
-                        disabled={loadingItems[item.cartId]}
-                      >
-                        <Text style={styles.buttonText}>+</Text>
-                      </View>
-                        }
-                        <Text style={styles.itemTotal}>
-                          Total: ₹{(item.priceMrp * item.cartQuantity).toFixed(2)}
+                          <Text style={[styles.itemPrice, styles.boldPrice]}>
+                            ₹{item.itemPrice}
+                          </Text>
+                        </View>
+                        <Text style={styles.itemWeight}>
+                          Weight: {item.itemQuantity} {item.units}
                         </Text>
-                      </View>
-                      {/* {deleteLoader==false? */}
-                      <TouchableOpacity
-                        style={{ marginLeft: 180 }}
-                        onPress={() => handleRemove(item)}
-                      >
-                        <MaterialIcons name="delete" size={23} color="#FF0000" />
-                      </TouchableOpacity>
-                      {/* :
+                        <View style={styles.quantityContainer}>
+                          <TouchableOpacity
+                            style={styles.quantityButton}
+                            onPress={() => handleDecrease(item)}
+                            disabled={loadingItems[item.cartId]}
+                          >
+                            <Text style={styles.buttonText}>-</Text>
+                          </TouchableOpacity>
+                          {/* Show loader in the middle when loading */}
+                          {loadingItems[item.cartId] ? (
+                            <ActivityIndicator
+                              size="small"
+                              color="#000"
+                              style={styles.loader}
+                            />
+                          ) : (
+                            <Text style={styles.quantityText}>
+                              {item.cartQuantity}
+                            </Text>
+                          )}
+
+                          {item.itemQuantity != 1 ? (
+                            <TouchableOpacity
+                              style={styles.quantityButton}
+                              onPress={() => handleIncrease(item)}
+                              disabled={loadingItems[item.cartId]}
+                            >
+                              <Text style={styles.buttonText}>+</Text>
+                            </TouchableOpacity>
+                          ) : (
+                            <View
+                              style={styles.quantityButton1}
+                              onPress={() => handleIncrease(item)}
+                              disabled={loadingItems[item.cartId]}
+                            >
+                              <Text style={styles.buttonText}>+</Text>
+                            </View>
+                          )}
+                          <Text style={styles.itemTotal}>
+                            Total: ₹
+                            {(item.itemPrice * item.cartQuantity).toFixed(2)}
+                          </Text>
+                        </View>
+                        {/* {deleteLoader==false? */}
+                        <TouchableOpacity
+                          style={{ marginLeft: 180 }}
+                          onPress={() => handleRemove(item)}
+                        >
+                          <MaterialIcons
+                            name="delete"
+                            size={23}
+                            color="#FF0000"
+                          />
+                        </TouchableOpacity>
+                        {/* :
                       <View
                         style={{ marginLeft: 180 }}
                       >
                         <ActivityIndicator name="delete" size={23} color="#FF0000" />
                       </View>
             }  */}
+                      </View>
                     </View>
-                  </View>
                   </View>
                 </>
               )}
@@ -449,7 +473,7 @@ setDeleteLoader(false)
             }}
             onPress={() => navigation.navigate("Home")}
           >
-            <Text style={{ color: "#fff", fontSize: 16 }}>Browse Products</Text>
+            <Text style={{ color: "#fff", fontSize: 16 }}>Browse Items</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -465,16 +489,18 @@ setDeleteLoader(false)
             >
               <Text style={styles.actionButtonText}>Add More</Text>
             </TouchableOpacity>
-          
+
             <TouchableOpacity
               style={styles.checkoutButton}
               onPress={() => {
                 if (
-                  (address.email.trim() == null || address.email.trim()== "") &&
+                  (address.email.trim() == null ||
+                    address.email.trim() == "") &&
                   (address.name.trim() == null || address.name.trim() == "") &&
-                  (address.mobileNumber.trim() !== null || address.mobileNumber.trim() !== "") && (
-                    address.alterMobileNumber.trim() !== null || address.alterMobileNumber.trim() !== ""
-                  )
+                  (address.mobileNumber.trim() !== null ||
+                    address.mobileNumber.trim() !== "") &&
+                  (address.alterMobileNumber.trim() !== null ||
+                    address.alterMobileNumber.trim() !== "")
                 ) {
                   // Show alert if user profile is incomplete
                   Alert.alert(
@@ -487,9 +513,7 @@ setDeleteLoader(false)
                       },
                     ]
                   );
-                } 
-                
-                else {
+                } else {
                   // Navigate to checkout page if profile is complete
                   navigation.navigate("Checkout", {
                     subtotal: cartData.reduce(
@@ -500,7 +524,6 @@ setDeleteLoader(false)
                     addressdata,
                   });
                 }
-              
               }}
             >
               <Text style={styles.actionButtonText}> Checkout</Text>
@@ -549,7 +572,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 18,
     fontWeight: "bold",
-    width:width*0.6
+    width: width * 0.6,
   },
   itemPrice: {
     color: "#16A34A",
@@ -568,7 +591,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginHorizontal: 8,
   },
-  quantityButton1:{
+  quantityButton1: {
     backgroundColor: "#D1D5DB",
     padding: 8,
     borderRadius: 4,
@@ -679,6 +702,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.7)", // Optional semi-transparent background
     zIndex: 1,
+  },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  itemPrice: {
+    fontSize: 16,
+    marginRight: 10,
+  },
+  crossedPrice: {
+    textDecorationLine: "line-through",
+    color: "#D32F2F",
+  },
+  boldPrice: {
+    fontWeight: "bold",
+    color: "#388E3C",
   },
 });
 

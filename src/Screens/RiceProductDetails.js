@@ -34,16 +34,19 @@ const RiceProductDetails = ({ route, navigation }) => {
   const [categoryImage, setCategoryIamge] = useState();
   const [loadingItems, setLoadingItems] = useState({});
   const [cartData, setCartData] = useState([]);
+  const[loader,setLoader]=useState(false)
 
   const [error, setError] = useState();
-  // console.log("form rice",route.params.details.itemsResponseDtoList);
-  // console.log("from rice image",route.params.image);
-
-  // setCategoryIamge(route.params)
+ 
   useEffect(() => {
     setItems(route.params.details.itemsResponseDtoList);
     setCategoryIamge(route.params.image);
   }, []);
+  const handleAdd = async(item)=>{
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
+    await handleAddToCart(item);
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
+  }
 
   const handleIncrease = async (item) => {
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
@@ -64,10 +67,7 @@ const RiceProductDetails = ({ route, navigation }) => {
       }, [])
     );
   
-  // useEffect(() => {
-  // }, []);
-
-  // Fetch cart items for the user
+ 
   const fetchCartItems = async () => {
     try {
       const response = await axios.get(
@@ -78,20 +78,18 @@ const RiceProductDetails = ({ route, navigation }) => {
           },
         }
       );
-      // console.log("response form cart", response.data);
+    
 
       const cartData = response.data;
       const cartItemsMap = cartData.reduce((acc, item) => {
         acc[item.itemId] = item.cartQuantity;
-        // console.log({acc});
 
         return acc;
       }, {});
-      // console.log(cartItemsMap);
+     
       setCartItems(cartItemsMap);
       setCartCount(cartData.length);
       setCartData(response.data);
-      // console.log("cart count",cartCount);
     } catch (error) {
       setError(error.response);
       console.error("Error fetching cart items:", error.response);
@@ -134,6 +132,7 @@ const RiceProductDetails = ({ route, navigation }) => {
   const UpdateCartCount = (newCount) => setCartCount(newCount);
   const handleAddToCart = async (item) => {
     const data = { customerId: customerId, itemId: item.itemId, quantity: 1 };
+    // setLoader(true)
     try {
       const response = await axios.post(
         BASE_URL + "erice-service/cart/add_Items_ToCart",
@@ -142,9 +141,9 @@ const RiceProductDetails = ({ route, navigation }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      // setLoader(false)
       if(response.data.errorMessage=="Item added to cart successfully"){
         Alert.alert("Success", "Item added to cart successfully");
-        // console.log("Success added items to cart", response.data);
         setCartItems((prevCartItems) => ({
           ...prevCartItems,
           [item.itemId]: 1,
@@ -153,12 +152,13 @@ const RiceProductDetails = ({ route, navigation }) => {
         fetchCartItems();  
       }
       else{
-        // console.log("Error added items to cart", response.data);
+              setLoader(false);
         Alert.alert("Alert", response.data.errorMessage);
       }
      
     } catch (error) {
-      console.error("Error adding item to cart:", error.response);
+      setLoader(false)
+      console.error("Error adding item to cart:", error);
     }
   };
 
@@ -188,28 +188,20 @@ const RiceProductDetails = ({ route, navigation }) => {
         [item.itemId]: newQuantity,
       }));
       
-      // console.log("increment data");
-      // UpdateCartCount(cartCount+1);
-      // console.log(response.data);
+     
     } catch (error) {
       console.error("Error incrementing item quantity:", error.response);
     }
   };
 
   const decrementQuantity = async (item) => {
-    // console.log("for removing items have to be printed", item);
-    
-
     const newQuantity = cartItems[item.itemId] - 1;
-    // console.log({ newQuantity });
 
     const cartItem = cartData.find(
       (cartData) => cartData.itemId === item.itemId
     );
-    // console.log("Removing cart item with ID:", cartItem);
 
     if (newQuantity === 0) {
-      // Optionally, remove the item from the cart
       setCartItems((prevCartItems) => {
         const updatedCartItems = { ...prevCartItems };
         delete updatedCartItems[item.itemId];
@@ -230,16 +222,11 @@ const RiceProductDetails = ({ route, navigation }) => {
           }
         );
 
-        // console.log("Item removed successfully", response.data);
         Alert.alert("Item removed", "Item removed from the cart");
-        // Fetch updated cart data and total after item removal
         fetchCartItems();
-        // setLoading(false)
       } catch (error) {
-        // console.error(
-        //   "Failed to remove cart item:",
-        //   error.response || error.message
-        // );
+        // console.log(error.response);
+        
       }
     } else {
       const data = {
@@ -273,20 +260,31 @@ const RiceProductDetails = ({ route, navigation }) => {
     return (
       <Animated.View key={item.itemId}>
         <View style={styles.productContainer}>
-          {route.params.details.categoryName!="Sample Rice"?
-          <TouchableOpacity  onPress={() => navigation.navigate('Item Details', { item })}>
-          <Image source={{ uri: item.itemImage }} style={styles.productImage} />
-          </TouchableOpacity>
-          :
-          <View>
-          <Image source={{ uri: item.itemImage }} style={styles.productImage} />
-          </View>
-          }
+          
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Item Details", { item })}
+            >
+              <Image
+                source={{ uri: item.itemImage }}
+                style={styles.productImage}
+              />
+            </TouchableOpacity>
+          
           <View>
             <Text>{item.priceMrp}</Text>
             <Text style={styles.productName}>{item.itemName}</Text>
-            
-            <Text style={styles.productPrice}>MRP: Rs.{item.itemMrp}/-</Text>
+          
+      {route.params.details.categoryName === "Sample Rice" ? (
+        <Text style={styles.productPrice}> ₹ {item.itemPrice}</Text>
+       ) : (
+       <>
+   <Text style={styles.mrpText}>
+  MRP: ₹ <Text style={styles.crossedPrice}>{item.itemMrp}/-</Text>
+</Text>
+    <Text style={styles.productPrice}> ₹ {item.itemPrice}/-</Text>
+      </>
+)}
+
             <Text style={styles.productWeight}>
               {item.quantity} {item.units}
             </Text>
@@ -310,34 +308,45 @@ const RiceProductDetails = ({ route, navigation }) => {
                 ) : (
                   <Text style={styles.quantityText}>{itemQuantity1}</Text>
                 )}
-                {/* <Text style={styles.quantityText}>{itemQuantity1}</Text> */}
-                {route.params.details.categoryName!="Sample Rice"?
-                <TouchableOpacity
-                  style={styles.quantityButton}
-                  // onPress={() => incrementQuantity(item)}
-                  onPress={() => handleIncrease(item)}
-                  disabled={loadingItems[item.itemId]}
-                >
-                  <Text style={styles.quantityButtonText}>+</Text>
-                </TouchableOpacity>
-                :
-                <View
-                style={styles.quantityButton1}
-                // onPress={() => incrementQuantity(item)}
-                onPress={() => handleIncrease(item)}
-                disabled={loadingItems[item.itemId]}
-              >
-                <Text style={styles.quantityButtonText}>+</Text>
-              </View>
-                }
+                {route.params.details.categoryName != "Sample Rice" ? (
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    // onPress={() => incrementQuantity(item)}
+                    onPress={() => handleIncrease(item)}
+                    disabled={loadingItems[item.itemId]}
+                  >
+                    <Text style={styles.quantityButtonText}>+</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View
+                    style={styles.quantityButton1}
+                    // onPress={() => incrementQuantity(item)}
+                    onPress={() => handleIncrease(item)}
+                    disabled={loadingItems[item.itemId]}
+                  >
+                    <Text style={styles.quantityButtonText}>+</Text>
+                  </View>
+                )}
               </View>
             ) : (
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => handleAddToCart(item)}
-              >
-                <Text style={styles.addButtonText}>Add to Cart</Text>
-              </TouchableOpacity>
+              <View>
+                {loader == false ? (
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => handleAdd(item)}
+                    
+                  >
+                    {/* <Text style={styles.addButtonText}>Add to Cart</Text> */}
+                    <Text style={styles.addButtonText}>
+                    {loadingItems[item.itemId] ? "Adding..." : "Add to Cart"}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.addButton}>
+                    <ActivityIndicator size="small" color="white" />
+                  </View>
+                )}
+              </View>
             )}
           </View>
         </View>
@@ -347,14 +356,15 @@ const RiceProductDetails = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <Image
+       <Image
           // source={require("../../assets/Images/1.jpg")}
           source={{ uri: categoryImage }}
           style={styles.banner}
         />
        {route.params.details.categoryName=="Sample Rice"? 
                 <Text style={styles.noteText}>Note : Only one free sample is allowed per user.</Text>:null}
+      <ScrollView>
+       
                
         <FlatList
           data={items}
@@ -373,8 +383,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   banner: {
     width: width,
-    height: 200,
-    resizeMode: "cover",
+    height:250,
+    // resizeMode: "cover",
     marginVertical: 10,
   },
   cartIconContainer: {
@@ -391,13 +401,16 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
     flexDirection: "row",
+    alignItems:"center"
   },
   productImage: {
     height: height / 8,
     width: width * 0.25,
+    justifyContent:"center",
     alignSelf: "center",
     margin: 5,
     marginRight: 30,
+    // marginTop:20
   },
   productName: {
     width:width*0.6,
@@ -464,5 +477,20 @@ noteText:{
   quantityText: {
     fontSize: 16,
     marginHorizontal: 15,
+  },
+  mrpText: {
+    fontSize: 16, 
+    fontWeight: 'normal', 
+    color: '#888', 
+    textDecorationColor: '#D32F2F', 
+    textDecorationStyle: 'solid', 
+    marginBottom: 5, 
+    paddingRight: 10, 
+  
+  },
+  crossedPrice: {
+    textDecorationLine: 'line-through', 
+    color: '#D32F2F', 
+    marginRight: 5, 
   },
 });

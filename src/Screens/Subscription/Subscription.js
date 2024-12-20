@@ -136,7 +136,8 @@ function SubscriptionConfirmation(details){
     setLoader(false)
     console.log(response.data)
     if(response.data.paymentId==null&&response.data.status==false){
-      Alert.alert(response.data.message)
+      // Alert.alert(response.data.message)
+     Alert.alert(response.data.message.replace(/\. /g, '.\n') );
     }
     else{
     setTransactionId(response.data.paymentId)
