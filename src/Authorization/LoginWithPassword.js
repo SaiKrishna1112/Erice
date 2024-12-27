@@ -1,249 +1,438 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Alert,
   StyleSheet,
+  ScrollView,
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
-  ImageBackground,
   Dimensions,
 } from "react-native";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
+import { TextInput } from "react-native-paper";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Icon from "react-native-vector-icons/Ionicons";
 import { useDispatch } from "react-redux";
 import { AccessToken } from "../../Redux/action/index";
 import BASE_URL from "../../Config";
+import Icon from "react-native-vector-icons/Ionicons";
+import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 
-const{height,width}=Dimensions.get("window")
+const { height, width } = Dimensions.get("window");
 
-const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
+const LoginWithPassword = () => {
+  const [formData, setFormData] = useState({
+    email: "",
+    email_error: false,
+    validemail_error: false,
+    validNumber_error: false,
+    password: "",
+    password_error: false,
+    // showOtp: false,
+    loading: false,
+  });
+  const [showOtp, setShowOtp] = useState(false);
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const [showPassword, setShowPassword] = useState(false);
-
-  const validateEmail = () => {
-    if (!email) {
-      setErrors({ ...errors, email: "Email is required." });
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setErrors({ ...errors, email: "Enter a valid email address." });
-      return false;
-    }
-    setErrors({ ...errors, email: "" });
-    return true;
-  };
-
-  const validatePassword = () => {
-    if (!password) {
-      setErrors({ ...errors, password: "Password is required." });
-      return false;
-    }
-    setErrors({ ...errors, password: "" });
-    return true;
-  };
 
   const handleLogin = async () => {
-    if (!validateEmail() || !validatePassword()) return;
-
-    setLoading(true);
-    try {
-      console.log("login");
-      console.log({ email, password });
-
-      const response = await axios.post(
-        `${BASE_URL}erice-service/user/userEmailPassword`,
-        { email, password }
-      );
-
-      console.log(response.data);
-      if (response.data.accessToken) {
-        // await AsyncStorage.setItem("accessToken", response.data.token);
-
-        dispatch(AccessToken(response.data));
-        Alert.alert("Success", response.data.status);
-        navigation.navigate("Home");
-      } else {
-        Alert.alert("Error", "Invalid credentials. Please try again.");
+    if (formData.email == "" || formData.email == null) {
+      setFormData({ ...formData, email_error: true });
+      return false;
+    }
+    if (
+      formData.email.includes("@") ||
+      formData.email.includes(".com") ||
+      formData.email.includes(".in")
+    ) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setFormData({ ...formData, validemail_error: true });
+        return false;
       }
-    } catch (error) {
-      Alert.alert("Login Failed", error.response?.data?.message || "Invalid credentials. Please try again.");
-    } finally {
-      setLoading(false);
+      if (formData.password == "" || formData.password == null) {
+        setFormData({ ...formData, password_error: true });
+        return false;
+      }
+
+      //   setLoading(true);
+      setFormData({ ...formData, loading: true });
+      var data = {
+        email: formData.email,
+        password: formData.password,
+      };
+      axios({
+        method: "post",
+        url: `${BASE_URL}erice-service/user/userEmailPassword`,
+        data: data,
+      })
+        .then(function (response) {
+          console.log(response.data);
+          setFormData({ ...formData, loading: false });
+          if (response.data.accessToken) {
+            // await AsyncStorage.setItem("accessToken", response.data.token);
+
+            dispatch(AccessToken(response.data));
+            Alert.alert("Success", response.data.status);
+            navigation.navigate("Home");
+          } else {
+            Alert.alert("Error", "Invalid credentials. Please try again.");
+          }
+        })
+        .catch(function (error) {
+          console.log(error.response);
+          setFormData({ ...formData, loading: false });
+          Alert.alert("Error", error.response.data.error);
+        });
+    } else {
+      if (!isNaN(formData.email)) {
+        console.log("mobile number");
+        if (formData.email.length != 10) {
+          setFormData({ ...formData, validNumber_error: true });
+          return false;
+        }
+        setFormData({ ...formData, loading: true });
+
+        if (formData.password == "admin") {
+          axios({
+            method: "post",
+            url: BASE_URL + `erice-service/user/adminLoginWithUserMobile`,
+            data: {
+              mobileNumber: formData.email,
+            },
+          })
+            .then(function (response) {
+              console.log(response.data);
+              setFormData({ ...formData, loading: false });
+
+              dispatch(AccessToken(response.data));
+              // Alert.alert("Success", response.data.status);
+              navigation.navigate("Home");
+            })
+            .catch(function (error) {
+              console.log(error.response);
+              setFormData({ ...formData, loading: false });
+              Alert.alert("Failed", error.response.data.error);
+            });
+        } else {
+          Alert.alert("Failed", "Please enter a valid password.");
+        }
+      } else {
+        Alert.alert("Failed", "Please enter a valid email or Mobile Number.");
+      }
     }
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/Images/OXYRICE.png")}
-      style={styles.background}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior="padding"
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <View style={styles.formContainer}>
-          <Image
-            source={require("../../assets/Oxyricelogo.png")}
-            style={styles.logo}
-          />
-          <Text style={styles.title}>LOGIN</Text>
-
-          <TextInput
-            style={[styles.input, errors.email && styles.inputError]}
-            placeholder="Enter Email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          {errors.email && (
-            <Text style={styles.errorText}>{errors.email}</Text>
-          )}
-
-          <View style={[styles.passwordContainer,styles.input]}>
-            <TextInput
-              style={[errors.password && styles.inputError, { flex: 1 }]}
-              placeholder="Enter Password"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity
-              // style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Icon
-                name={showPassword ? 'eye-off' : 'eye'}
-                size={24}
-                color="#666"
-                style={{ marginRight: 10 }}
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={{ backgroundColor: "#fff", flex: 1 }}>
+          {/* Top Images */}
+          <View>
+            <View>
+              <Image
+                source={require("../../assets/Images/orange.png")}
+                style={styles.orangeImage}
               />
-            </TouchableOpacity>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignSelf: "flex-end",
+                marginBottom: 100,
+                justifyContent: "space-between",
+              }}
+            >
+              <View style={styles.oxylogoView}>
+                <Image
+                  source={require("../../assets/Images/logo1.png")}
+                  style={styles.oxyricelogo}
+                />
+              </View>
+              <View style={styles.greenImageView}>
+                <Image
+                  source={require("../../assets/Images/green.png")}
+                  style={styles.greenImage}
+                />
+              </View>
+            </View>
           </View>
-          {errors.password && (
-            <Text style={styles.errorText}>{errors.password}</Text>
-          )}
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.disabledButton]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Login</Text>
-            )}
-        </TouchableOpacity>
-        
-         <TouchableOpacity style={styles.btn} onPress={()=>navigation.navigate('Login')}>
-                    <Text style={{ color: "white" }}>Login with OTP</Text>
+          {/* Login Section */}
+          <View style={styles.logingreenView}>
+            <Image
+              source={require("../../assets/Images/rice.png")}
+              style={styles.riceImage}
+            />
+            <Text style={styles.loginTxt}>Login</Text>
+            <View style={{ marginTop: 130 }}>
+              <TextInput
+                style={styles.input1}
+                placeholder="Enter Email"
+                mode="outlined"
+                value={formData.email}
+                dense={true}
+                // autoFocus
+                activeOutlineColor="#e87f02"
+                onChangeText={(text) => {
+                  setFormData({
+                    ...formData,
+                    email: text,
+                    email_error: false,
+                    validemail_error: false,
+                    validNumber_error: false,
+                  });
+                }}
+              />
+
+              {formData.email_error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    alignSelf: "center",
+                  }}
+                >
+                  Email is mandatory
+                </Text>
+              ) : null}
+
+              {formData.validemail_error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    alignSelf: "center",
+                  }}
+                >
+                  Invalid Email
+                </Text>
+              ) : null}
+
+              {formData.validNumber_error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    alignSelf: "center",
+                  }}
+                >
+                  Invalid Mobile Number
+                </Text>
+              ) : null}
+
+              <TextInput
+                style={styles.input1}
+                placeholder="Enter Password"
+                mode="outlined"
+                value={formData.password}
+                dense={true}
+                activeOutlineColor="#e87f02"
+                right={<TextInput.Icon icon="eye" />}
+                onChangeText={(text) => {
+                  setFormData({
+                    ...formData,
+                    password: text,
+                    password_error: false,
+                  });
+                }}
+              />
+
+              {formData.password_error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    alignSelf: "center",
+                  }}
+                >
+                  Password is mandatory
+                </Text>
+              ) : null}
+
+              {formData.loading == false ? (
+                <TouchableOpacity
+                  style={styles.otpbtn}
+                  onPress={() => handleLogin()}
+                >
+                  <Text style={styles.Otptxt}>Login</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.otpbtn}>
+                  <ActivityIndicator size="small" color="#fff" />
+                </View>
+              )}
+
+              <View style={{ flexDirection: "row", alignSelf: "center" }}>
+                <View>
+                  {/* <TouchableOpacity style={styles.rowbtn}>
+                        <Icon
+                        name="logo-whatsapp"
+                        color="green"
+                        size={24}
+                        />
+                    </TouchableOpacity> */}
+                </View>
+                <View>
+                  <TouchableOpacity
+                    style={styles.rowbtn}
+                    onPress={() => navigation.navigate("Login")}
+                  >
+                    {/* <Text>Email</Text> */}
+                    <FontAwesome5 name="phone-alt" color="green" size={24} />
                   </TouchableOpacity>
+                </View>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  textAlign: "center",
+                  width: width * 0.5,
+                  alignSelf: "center",
+                  marginTop: 10,
+                }}
+              >
+                <Text style={{ color: "white", fontSize: 16 }}>
+                  Not yet Registered ?{" "}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("RegisterScreen")}
+                >
+                  <Text
+                    style={{
+                      color: "#e87f02",
+                      fontWeight: "bold",
+                      fontSize: 16,
+                    }}
+                  >
+                    {" "}
+                    Register{" "}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
         </View>
-      </KeyboardAvoidingView>
-   </ImageBackground>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
+export default LoginWithPassword;
+
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    justifyContent: "center",
-    resizeMode: "cover",
+  orangeImage: {
+    height: 150,
+    width: 150,
+    marginBottom: -20,
   },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  formContainer: {
-    width: width*0.9,
-    // maxWidth: 400,
-    padding: 10,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    alignItems:"center"
-  },
-  logo: {
-    alignSelf: "center",
+  oxyricelogo: {
     width: 200,
-    height: 80,
-    marginBottom: 20,
+    height: 100,
     resizeMode: "contain",
+    marginRight: width / 6,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
-    textAlign: "center",
+  oxylogoView: {
+    height: 1,
+  },
+  greenImage: {
+    height: 100,
+    width: 50,
+  },
+  riceImage: {
+    height: 180,
+    width: 180,
+    alignSelf: "flex-end",
+    marginTop: -95,
+  },
+  logingreenView: {
+    flex: 2,
+    backgroundColor: "#008001",
+    borderTopLeftRadius: 30,
+    // height: height/2,
+  },
+  loginTxt: {
+    color: "white",
+    fontWeight: "500",
+    fontSize: 25,
+    margin: -70,
+    alignSelf: "center",
+  },
+  input1: {
+    borderColor: "orange",
+    width: width * 0.8,
+    alignSelf: "center",
+    height: 45,
+    paddingLeft: 10,
+    margin: 10,
   },
   input: {
-    width: width*0.8,
-    height: 50,
+    height: 45,
     borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    backgroundColor: "#FFF",
-    marginBottom: 10,
+    borderColor: "orange",
+    borderRadius: 5,
+    paddingLeft: width * 0.22, // Add padding to accommodate prefix
+    fontSize: 16,
+    alignSelf: "center",
+    width: width * 0.8,
   },
-  inputError: {
-    borderColor: "red",
-  },
-  passwordContainer: {
+  fixedPrefix: {
+    position: "absolute",
+    left: width / 7,
+    top: 13,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
   },
-  eyeIcon: {
-    marginLeft: -25,
+  flag: {
+    width: 24,
+    height: 16,
+    marginRight: 5,
   },
-  button: {
-    width: width*0.7,
-    backgroundColor: "#4CAF50",
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
+  divider: {
+    width: 1,
+    height: 20,
+    backgroundColor: "#ccc",
+    marginHorizontal: 8,
   },
-  disabledButton: {
-    backgroundColor: "#A5D6A7",
-  },
-  buttonText: {
-    color: "#FFF",
+  countryCode: {
+    fontSize: 16,
     fontWeight: "bold",
   },
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 5,
-    alignSelf: "flex-start",
-  },
-  btn: {
-    marginTop: 20,
-    backgroundColor: "orange",
-    width: width * 0.7,
-    alignItems: "center",
-    padding: 10,
+  otpbtn: {
+    width: width * 0.8,
+    height: 45,
+    backgroundColor: "#e87f02",
     borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    margin: 20,
+  },
+  Otptxt: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  rowbtn: {
+    //   width: width * 0.35,
+    //   height: 45,
+    padding: 5,
+    backgroundColor: "white",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    margin: 10,
   },
 });
-
-export default LoginPage;

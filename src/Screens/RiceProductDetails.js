@@ -281,10 +281,14 @@ const RiceProductDetails = ({ route, navigation }) => {
    <Text style={styles.mrpText}>
   MRP: ₹ <Text style={styles.crossedPrice}>{item.itemMrp}/-</Text>
 </Text>
+<Text style={styles.discountPercentage}>
+  ({Math.round(((item.itemMrp - item.itemPrice) / item.itemMrp) * 100)}% OFF)
+</Text>
     <Text style={styles.productPrice}> ₹ {item.itemPrice}/-</Text>
       </>
 )}
-
+      
+        
             <Text style={styles.productWeight}>
               {item.quantity} {item.units}
             </Text>

@@ -53,6 +53,11 @@ const OrderScreen = () => {
 
       if (response.data) {
         setOrders(response.data);
+        response.data.forEach((item) => {
+          console.log(item.newOrderId,item.orderStatus);
+      });
+      
+        
       } else {
         alert("No orders found!");
       }
@@ -100,6 +105,7 @@ const OrderScreen = () => {
 
   // Render each order
   const renderOrder = ({ item }) => (
+    
     <TouchableOpacity style={styles.orderList} onPress={()=>orderDetails(item)}>
       <View style={styles.imageContainer}>
         <Image
@@ -152,6 +158,20 @@ const OrderScreen = () => {
         />
       )}
       {/* <Footer navigation={navigation} /> */}
+      <View style={styles.footer}>
+      <TouchableOpacity
+        style={styles.footerButton}
+        onPress={() => navigation.navigate("My Cancelled Item Details")}
+      >
+        <Text style={styles.footerButtonText}>Cancelled Items</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.footerButton}
+        onPress={() => navigation.navigate("My Exchanged Item Details")}
+      >
+        <Text style={styles.footerButtonText}>Exchanged Items</Text>
+      </TouchableOpacity>
+    </View>
     </View>
   );
 };
@@ -229,6 +249,29 @@ const styles = StyleSheet.create({
   },
   orderview: {
     paddingBottom: 120,
+  },
+  footer: {
+    marginBottom:50,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#f9f9f9",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+  },
+  footerButton: {
+    flex: 1,
+    marginHorizontal: 8,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#e87f02",
+    alignItems: "center",
+  },
+  footerButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
   },
 });
 

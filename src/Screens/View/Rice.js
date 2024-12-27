@@ -8,7 +8,8 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
-  Alert
+  Alert,
+  BackHandler
 } from "react-native";
 import React, { useState, useEffect, useCallback } from "react";
 import Animated, { FadeInDown, SlideInDown } from "react-native-reanimated";
@@ -18,6 +19,8 @@ import { useSelector } from "react-redux";
 import * as Location from "expo-location";
 import BASE_URL from "../../../Config";
 const { height, width } = Dimensions.get("window");
+import { useNavigationState } from '@react-navigation/native';
+
 
 const Rice = () => {
   const userData = useSelector((state) => state.counter);
@@ -32,14 +35,61 @@ const Rice = () => {
   const [user,setUser] = useState();
 
   // Request location permission when the component is focused
-  useFocusEffect(
-    useCallback(() => {
-      requestLocationPermission();
-    }, [])
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     requestLocationPermission();
+  //   }, [])
+  // );
+
+
+  const currentScreen = useNavigationState(
+    (state) => state.routes[state.index]?.name
   );
+
+  useEffect(() => {
+    const handleBackPress = () => {
+      if (currentScreen === 'Login') {
+        // Custom behavior for Login screen
+        Alert.alert(
+          'Exit App',
+          'Are you sure you want to exit?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'OK', onPress: () => BackHandler.exitApp() },
+          ],
+          { cancelable: false }
+        );
+      } else {
+        // Default behavior for other screens
+        Alert.alert(
+          'Go Back',
+          'Are you sure you want to go back?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ],
+          { cancelable: false }
+        );
+      }
+      return true;
+    };
+
+    // Add BackHandler event listener
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Cleanup
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, [currentScreen]);
+
+  return null; // Replace this with your screen/component tree
+};
+
 
 
   
+
  
   // Function to request location permission
   const requestLocationPermission = async () => {
@@ -58,19 +108,19 @@ const Rice = () => {
     }
   };
 
-  useEffect(() => {
-    const checkPermission = async () => {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      if (status === "granted") {
-        setHasLocationPermission(true);
-        setLoading(false);
-      } else {
-        requestLocationPermission();
-      }
-    };
+  // useEffect(() => {
+  //   const checkPermission = async () => {
+  //     const { status } = await Location.getForegroundPermissionsAsync();
+  //     if (status === "granted") {
+  //       setHasLocationPermission(true);
+  //       setLoading(false);
+  //     } else {
+  //       requestLocationPermission();
+  //     }
+  //   };
 
-    checkPermission();
-  }, []);
+  //   checkPermission();
+  // }, []);
 
    // Get and log the latitude and longitude
    const getLocation = async () => {
@@ -87,7 +137,7 @@ const Rice = () => {
     useCallback(() => {
       // if (hasLocationPermission) {
         getAllCategories();
-        getLocation();  
+        // getLocation();  
         // Latitude: 17.4752533
         // Longitude: 78.3847054
       
@@ -167,7 +217,7 @@ const Rice = () => {
       <SafeAreaView />
 
       {/* Location Permission Request Section */}
-      {!hasLocationPermission && !permissionRequested && (
+      {/* {!hasLocationPermission && !permissionRequested && (
         <View style={styles.permissionRequestContainer}>
           <Text style={styles.title}>We need your location</Text>
           <Text style={styles.subtitle}>
@@ -180,11 +230,12 @@ const Rice = () => {
             <Text style={styles.buttonText}>Grant Permission</Text>
           </TouchableOpacity>
         </View>
-      )}
+      )} */}
 
       {/* Main Content - Rice Categories */}
 
-      {hasLocationPermission && (
+      {/* {hasLocationPermission && ( */}
+      
         <View>
           <Text style={styles.title}>Rice Categories</Text>
 
@@ -197,7 +248,7 @@ const Rice = () => {
             showsVerticalScrollIndicator={false}
           />
         </View>
-      )}
+      {/* )} */}
     </View>
   );
 };

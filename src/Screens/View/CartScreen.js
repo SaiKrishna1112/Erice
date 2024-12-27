@@ -377,7 +377,11 @@ const CartScreen = () => {
                           <Text style={[styles.itemPrice, styles.boldPrice]}>
                             ₹{item.itemPrice}
                           </Text>
+                         
                         </View>
+                        <Text style={{marginTop:5}}>
+                            ({Math.round(((item.priceMrp- item.itemPrice) / item.priceMrp) * 100)}% OFF)
+                          </Text>
                         <Text style={styles.itemWeight}>
                           Weight: {item.itemQuantity} {item.units}
                         </Text>
@@ -664,7 +668,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     // marginVertical: 4,
-    marginLeft: 40,
+    marginLeft: 10,
     marginBottom: 20,
   },
   totalText: {
@@ -706,7 +710,7 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   itemPrice: {
     fontSize: 16,

@@ -70,11 +70,12 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import BASE_URL from "../../Config";
 
 const CheckOut = ({ navigation, route }) => {
-  console.log("from cartscreen", route.params);
+  // console.log("from cartscreen", route.params);
 
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
+  console.log({customerId})
 
   const [profileForm, setProfileForm] = useState({
     customer_name: "",
@@ -121,21 +122,26 @@ const CheckOut = ({ navigation, route }) => {
       calculateTotal();
       totalCart();
       fetchCartData();
-      // fetchOrderAddress();
       console.log("from my location page", route.params.locationdata);
-      setStatus(route.params.locationdata.status);
-      setAddressData(route.params.locationdata);
-      setLocationData({
-        customerId: customerId,
-        flatNo: route.params.locationdata.flatNo,
-        landMark: route.params.locationdata.landMark,
-        pincode: route.params.locationdata.pincode,
-        address: route.params.locationdata.address,
-        addressType: route.params.locationdata.type,
-        latitude: "",
-        longitude: "",
-      });
+    
 
+      if(route.params.locationdata.status==false){
+        fetchOrderAddress();
+      }
+      else{
+        setStatus(route.params.locationdata.status);
+        setAddressData(route.params.locationdata);
+        setLocationData({
+          customerId: customerId,
+          flatNo: route.params.locationdata.flatNo,
+          landMark: route.params.locationdata.landMark,
+          pincode: route.params.locationdata.pincode,
+          address: route.params.locationdata.address,
+          addressType: route.params.locationdata.type,
+          latitude: "",
+          longitude: "",
+        });
+      }
       return () => {
         // Clean up any side effects here if needed
       };
@@ -178,15 +184,16 @@ const CheckOut = ({ navigation, route }) => {
       });
   };
 
-  useEffect(()=>{
-    fetchOrderAddress()
-  },[])
+  // useEffect(()=>{
+  //   fetchOrderAddress()
+  // },[])
   const handlePlaceOrder = () => {
     console.log({ grandTotal });
     console.log("locationdata==================================", locationData);
-
-    if (locationData.address == "" || locationData.address == null) {
-      // if(locationData!=null){
+   console.log("addresslist",addressList);
+   
+    if ((locationData.address == "" || locationData.address == null) &&( addressList == null||addressList.length==0)) {
+     
       Alert.alert(
         "Address is Mandatory",
         "Please select an address / Add new address before proceeding.",
@@ -374,7 +381,8 @@ const CheckOut = ({ navigation, route }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-
+       console.log("address response",response.data);
+       
       setAddressList(response.data);
       response.data.slice(-1).map((address) => (
       setSelectedAddressId(address.id),
@@ -435,12 +443,12 @@ const CheckOut = ({ navigation, route }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Delivery Address</Text>
       <TouchableOpacity onPress={changeLocation}>
-        {addressList==null||""?(
+        {addressList === undefined || addressList.length==0 || locationData == null? (
         <Text style={styles.addButton}>+ Add Address</Text>
       ):
       
       (
-      <View style ={{flexDirection:"row",marginLeft:250}}>
+      <View style ={{flexDirection:"row",marginLeft:180}}>
         <Icon name="edit" size={18} color="#fd7e14" style={styles.icon} />
         <Text style={styles.addButton}>Change Address</Text>
       </View>
@@ -617,6 +625,9 @@ const CheckOut = ({ navigation, route }) => {
                               ₹{item.itemPrice}
                             </Text>
                           </View>
+                          <Text style={{marginTop:5}}>
+                                ({Math.round(((item.priceMrp- item.itemPrice) / item.priceMrp) * 100)}% OFF)
+                           </Text>
                           <Text style={styles.itemWeight}>
                             Weight: {item.itemQuantity} {item.units}
                           </Text>
@@ -697,7 +708,7 @@ const CheckOut = ({ navigation, route }) => {
         <TouchableOpacity
           style={[
             styles.placeOrderButton,
-            { backgroundColor: addressData ? "#fd7e14" : "#d3d3d3" },
+            // { backgroundColor: addressData ? "#fd7e14" : "#d3d3d3" },
           ]}
           onPress={() => handlePlaceOrder()}
         >
@@ -718,8 +729,6 @@ const styles = StyleSheet.create({
   container1: {
     marginTop: 5,
     padding: 10,
-    // borderColor:"#000",
-    // borderWidth:5,
     height: height * 0.3,
 
     flex: 2,
@@ -1041,7 +1050,7 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom:3,
   },
   itemPrice: {
     fontSize: 16,

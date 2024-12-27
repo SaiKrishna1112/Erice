@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "OxyRice",
-    "slug": "Oxyrice",
-    "version": "1.0.4",
+    "slug": "oxyrice",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -34,7 +34,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "ce226648-f9fe-48e4-b9d1-02f76cf9fcee"
+        "projectId": "76f305d7-221e-4ac9-aad9-e454152cb432"
       }
     }
   }

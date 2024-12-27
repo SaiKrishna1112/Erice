@@ -2,435 +2,526 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Alert,
   StyleSheet,
+  ScrollView,
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
-  ImageBackground,
   Dimensions,
 } from "react-native";
 import axios from "axios";
+import { TextInput } from "react-native-paper";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
 import { AccessToken } from "../../Redux/action/index";
 import BASE_URL from "../../Config";
-const{height,width}=Dimensions.get('window')
-
-const LoginPage = () => {
-  // State hooks
-  // console.log(route.params);
+const { height, width } = Dimensions.get("window");
+import Icon from "react-native-vector-icons/Ionicons";
  
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [isLogin, setIsLogin] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [responseMessage, setResponseMessage] = useState("");
-  const [errors, setErrors] = useState({ mobileNumber: "", otp: "" });
-  const [mobileOtpSession, setMobileOtpSession] = useState("");
-  const [isOtpSent,setIsOtpSent] = useState(false)
-  const [loading, setLoading] = useState(false);
+const Login = () => {
+  const [formData, setFormData] = useState({
+    mobileNumber: "",
+    mobileNumber_error: false,
+    validMobileNumber_error: false,
+    otp: "",
+    otp_error: false,
+    validOtpError: false,
+    // showOtp: false,
+    loading: false,
+    // mobileOtpSession: "",
+  });
+  const [showOtp, setShowOtp] = useState(false);
   const navigation = useNavigation();
   const dispatch = useDispatch();
-
-  useFocusEffect(
-    React.useCallback(() => {
-      setMobileNumber("");
-      setOtp("");
-      setIsLogin(false);
-      // getProfile();
-    }, [])
-  );
-
-  
-
-
-
-
-
-  useFocusEffect(
-    useCallback(() => {
-      const checkLoginData = async () => {
-        try {
-          const loginData = await AsyncStorage.getItem("userData");
-          const storedmobilenumber = await AsyncStorage.getItem('mobileNumber')
-          console.log(storedmobilenumber);
-          
-        setMobileNumber(storedmobilenumber)
-          if (loginData) {
-            const user = JSON.parse(loginData);
-            if (user.accessToken) {
-              dispatch(AccessToken(user));
-              navigation.navigate("Home");
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching login data", error.response);
-        }
-      };
-
-      checkLoginData();
-    }, [])
-  )
-
-  const handleResendOtp = async () => {
-    if (!isOtpSent) return; // Prevent resend if OTP is not sent yet
-    setLoading(true);
-    setOtp(""); 
-    // setErrors({ ...errors, otp: "" });
-    try {
-      const response = await axios.post(
-        BASE_URL + `erice-service/user/login-or-register`,
-        {
-          mobileNumber,
-          userType: "Login",
-        }
-      );
-      if (response.data.mobileOtpSession) {
-        setMobileOtpSession(response.data.mobileOtpSession);
-        setResponseMessage("OTP resent successfully.");
-        setTimeout(() => setResponseMessage(""), 3000);
-      } else {
-        Alert.alert("Oops!", "Unable to resend OTP. Please try again.");
-      }
-    } catch (error) {
-      Alert.alert("Sorry", "Error resending OTP. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  const validateMobileNumber = () => {
-    if (!mobileNumber) {
-      setErrors({ ...errors, mobileNumber: "Mobile number is required." });
-      return false;
-    }
-    if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
-      setErrors({
-        ...errors,
-        mobileNumber: "Enter a valid 10-digit mobile number.",
-      });
-      return false;
-    }
-    setErrors({ ...errors, mobileNumber: "" });
-    return true;
-  };
-
-  const validateOtp = () => {
-    if (!otp) {
-      setErrors({ ...errors, otp: "OTP is required." });
-      return false;
-    }
-    if (!/^\d{6}$/.test(otp)) {
-      setErrors({ ...errors, otp: "OTP must be 6 digits." });
-      return false;
-    }
-    setErrors({ ...errors, otp: "" });
-    return true;
-  };
+  const [mobileOtpSession,setMobileOtpSession]=useState();
 
   const handleSendOtp = async () => {
-    setIsOtpSent(false)
-    if (!validateMobileNumber()) return;
-    // setMobileNumber(storedmobilenumber);
-    setLoading(true);
+    // if (!validateMobileNumber()) return;
+    if (formData.mobileNumber == "" || formData.mobileNumber == null) {
+      setFormData({ ...formData, mobileNumber_error: true });
+      return;
+    }
+    if (formData.mobileNumber.length != 10) {
+      setFormData({ ...formData, validMobileNumber_error: true });
+      return;
+    }
+    console.log("mobileNumber", formData.mobileNumber);
+    let data = {
+      mobileNumber: formData.mobileNumber,
+      userType: "Login",
+    };
+    console.log({ data });
+    setFormData({ ...formData, loading: true });
     try {
       const response = await axios.post(
         BASE_URL + `erice-service/user/login-or-register`,
-        {
-          mobileNumber,
-          userType: "Login",
-        }
+        data
       );
+      console.log("Send Otp", response.data.mobileOtpSession);
 
       if (response.data.mobileOtpSession) {
-        setIsOtpSent(true);
-        setMobileOtpSession(response.data.mobileOtpSession);
-        setIsLogin(true);
-        setResponseMessage("OTP sent successfully.");
-        setTimeout(() => setResponseMessage(""), 3000);
+         setMobileOtpSession(response.data.mobileOtpSession);
+        setFormData({
+            ...formData,
+          // showOtp: true,
+        //   mobileOtpSession:response.data.mobileOtpSession,
+          loading: false,
+        });
+        setShowOtp(true);
+        //  setIsLogin(true);
+        //  setResponseMessage("OTP sent successfully.");
+        // setTimeout(() => setResponseMessage(""), 3000);
       } else {
-        Alert.alert("Oops!", "Unable to send OTP. Please check your details and try again.");
+        Alert.alert("Error", "Failed to send OTP. Try again.");
+        // setFormData({ formData, loading: false });
       }
     } catch (error) {
-      Alert.alert("Sorry", "You are not registered. Please sign up.");
-      console.log("Send Otp error",error.response);
-      setIsOtpSent(false)
+      Alert.alert("Sorry", "You not register,Please signup");
+      //   setFormData({ formData, loading: false });
 
-      if (error.response?.status === 400) {
+      if (error.response.status == 400) {
         navigation.navigate("RegisterScreen");
       }
     } finally {
-      setLoading(false);
+      setFormData({ ...formData, loading: false });
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (!validateOtp()) return;
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        BASE_URL + `erice-service/user/login-or-register`,
-        {
-          mobileNumber,
-          mobileOtpSession,
-          mobileOtpValue: otp,
-          userType: "Login",
-        }
-      );
-      console.log(response.data);
+  const handleVerifyOtp = () => {
+    // if (!validateOtp()) return;
+    if (formData.otp == "" || formData.otp == null) {
+      setFormData({ ...formData, otp_error: true });
+      return false;
+    }
+    if (formData.otp.length != 6) {
+      setFormData({ ...formData, validOtpError:true });
+      return false;
+    }
+    //  setLoading(true);
+    setFormData({ ...formData, loading: true });
 
-      if (response.data.primaryType === "CUSTOMER") {
-        if (response.data.accessToken) {
-          setIsOtpSent(false)
-          dispatch(AccessToken(response.data));
-          await AsyncStorage.setItem("userData", JSON.stringify(response.data));
-          await AsyncStorage.setItem('mobileNumber',mobileNumber)
-          Alert.alert("Success", "Login successful!");
-        
-          navigation.navigate("Home"); 
+    let data = {
+      mobileNumber: formData.mobileNumber,
+      mobileOtpSession: mobileOtpSession,
+      mobileOtpValue: formData.otp,
+      userType: "Login",
+      // primaryType: "CUSTOMER",
+    };
+    console.log({ data });
+    axios({
+      method: "post",
+      url: BASE_URL + `erice-service/user/login-or-register`,
+      data: data,
+    })
+      .then((response) => {
+        console.log("response", response.data);
+        setFormData({ ...formData, loading: false });
+       setShowOtp(false)
+        if (response.data.accessToken != null) {
+          if (response.data.primaryType == "CUSTOMER") {
+            dispatch(AccessToken(response.data));
+            AsyncStorage.setItem("userData", JSON.stringify(response.data));
+            // await AsyncStorage.setItem('mobileNumber',mobileNumber)
+            // await AsyncStorage.setItem("userData", JSON.stringify(response.data));
+            Alert.alert("Success", "Login successful!");
+            navigation.navigate("Home");
+            setFormData({...formData,otp:""})
+          } else {
+            Alert.alert(
+              `You have logged in as ${response.data.primaryType} , Please login as Customer`
+            );
+          }
         } else {
           Alert.alert("Error", "Invalid credentials.");
         }
-      } else {
-        Alert.alert("Please login as Customer", "", [
-          {
-            text: "Ok",
-            onPress: () => {
-              setMobileNumber("");
-              setOtp("");
-            },
-          },
-        ]);
-      }
-    } catch (error) {
-      Alert.alert("Invalid OTP", "OTP verification failed. Please enter a valid OTP.");
-    } finally {
-      setLoading(false);
-    }
+      })
+      .catch((error) => {
+        setFormData({ ...formData, loading: false });
+        console.log(error.response.status);
+        if(error.response.status==400){
+            Alert.alert("Failed","Invalid Credentials")
+        }
+      });
   };
- 
+
   return (
-    <ImageBackground
-      source={require("../../assets/Images/OXYRICE.png")}
-      style={styles.background}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior="padding"
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <View style={styles.formContainer}>
-          <Image
-            source={require("../../assets/Oxyricelogo.png")}
-            style={styles.logo}
-          />
-          <Text style={styles.title}>Login to OxyRice</Text>
-
-          <TextInput
-            style={[styles.input, errors.mobileNumber && styles.inputError]}
-            placeholder="Enter Mobile Number"
-            keyboardType="phone-pad"
-            value={mobileNumber}
-            maxLength={10}
-            // onChangeText={setMobileNumber}
-           editable={!isOtpSent}
-            onChangeText={(text) => {
-              setMobileNumber(text); 
-              setErrors((prev) => ({ ...prev, mobileNumber: "" })); 
-            }}
-            
-          />
-          {errors.mobileNumber && (
-            <Text style={styles.errorText}>{errors.mobileNumber}</Text>
-          )}
-
-          {!isLogin ? (
-            <TouchableOpacity
-              style={[styles.button, loading && styles.disabledButton]}
-              onPress={handleSendOtp}
-              disabled={loading}
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={{ backgroundColor: "#fff", flex: 1 }}>
+          {/* Top Images */}
+          <View>
+            <View>
+              <Image
+                source={require("../../assets/Images/orange.png")}
+                style={styles.orangeImage}
+              />
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignSelf: "flex-end",
+                marginBottom: 100,
+                justifyContent: "space-between",
+              }}
             >
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Send OTP</Text>
-              )}
-            </TouchableOpacity>
-          ) : (
-            <>
-              <TextInput
-                style={[styles.input, errors.otp && styles.inputError]}
-                placeholder="Enter OTP"
-                keyboardType="numeric"
-                autoFocus
-                value={otp}
-                maxLength={6}
-                onChangeText={setOtp}
-              /> 
-              {errors.otp && <Text style={styles.errorText}>{errors.otp}</Text>}
+              <View style={styles.oxylogoView}>
+                <Image
+                  source={require("../../assets/Images/logo1.png")}
+                  style={styles.oxyricelogo}
+                />
+              </View>
+              <View style={styles.greenImageView}>
+                <Image
+                  source={require("../../assets/Images/green.png")}
+                  style={styles.greenImage}
+                />
+              </View>
+            </View>
+          </View>
 
-              <View style={{alignSelf:"flex-end",paddingRight:5}}>
-              {isOtpSent && !loading && (
-                <TouchableOpacity onPress={handleResendOtp}>
-                  <Text style={styles.resendText}>Resend OTP</Text>
-                </TouchableOpacity>
-              )}
+          {/* Login Section */}
+          <View style={styles.logingreenView}>
+            <Image
+              source={require("../../assets/Images/rice.png")}
+              style={styles.riceImage}
+            />
+            <Text style={styles.loginTxt}>Login</Text>
+            <View style={{ marginTop: 130 }}>
+              {/* <TextInput
+                style={styles.input}
+                placeholder="Enter Mobile Number"
+                mode="outlined"
+                value={formData.mobileNumber}
+                dense={true}
+                autoFocus
+                activeOutlineColor="#e87f02"
+                onChangeText={(text) => {
+                  setFormData({
+                    ...formData,
+                    mobileNumber: text,
+                    mobileNumber_error: false,
+                  });
+                }}
+                left={<TextInput.Icon icon="eye" />}
+              /> */}
+              <TextInput
+                style={styles.input}
+                mode="outlined"
+                placeholder="Enter Mobile Number"
+                keyboardType="numeric"
+                dense={true}
+                // autoFocus
+                error={formData.mobileNumber_error}
+                activeOutlineColor={
+                  formData.mobileNumber_error ? "red" : "#e87f02"
+                }
+                value={formData.mobileNumber}
+                maxLength={10}
+                onChangeText={(text) => {
+                  setFormData({
+                    ...formData,
+                    mobileNumber: text,
+                    mobileNumber_error: false,
+                    validMobileNumber_error: false,
+                  });
+                }}
+              />
+              {formData.mobileNumber_error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    alignSelf: "center",
+                  }}
+                >
+                  Mobile Number is mandatory
+                </Text>
+              ) : null}
+
+              {formData.validMobileNumber_error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    alignSelf: "center",
+                  }}
+                >
+                  Invalid Mobile Number
+                </Text>
+              ) : null}
+
+              {/* Fixed Indian flag and +91 prefix */}
+              <View style={styles.fixedPrefix}>
+                <Image
+                  source={{
+                    uri: "https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/1200px-Flag_of_India.svg.png",
+                  }}
+                  style={styles.flag}
+                />
+                <View style={styles.divider} />
+                <Text style={styles.countryCode}>+91</Text>
               </View>
 
-              <TouchableOpacity
-                style={[styles.button, loading && styles.disabledButton]}
-                onPress={handleVerifyOtp}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Verify OTP</Text>
-                )}
-              </TouchableOpacity>
-               {/* Only show the Resend OTP button after OTP is sent */}
-              
-            </>
-          )}
-          {/* {!isLogin && (
-            <Text style={styles.registerPrompt}>
-              Don't have an account ?
-              <Text
-                style={styles.registerLink}
-                onPress={() => navigation.navigate("RegisterScreen")}
-              >
-                {" Sign up here"}
-              </Text>
-            </Text>
-          )} */}
-          {!isLogin && (
-        <View style={{alignItems:"center"}}>
-          <TouchableOpacity style={styles.btn} onPress={()=>navigation.navigate('LoginWithPassword')}>
-            <Text style={{ color: "white" }}>Login with Password</Text>
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.registerPrompt}>
-              Don't have an account?
-              <Text
-                style={styles.registerLink}
-                onPress={() => navigation.navigate("RegisterScreen")}
-              >
-                {" Sign up here"}
-              </Text>
-            </Text>
+              {showOtp == false ? (
+                <View>
+                  {formData.loading == false ? (
+                    <View>
+                      <TouchableOpacity
+                        style={styles.otpbtn}
+                        onPress={() => handleSendOtp()}
+                      >
+                        <Text style={styles.Otptxt}>Send OTP</Text>
+                      </TouchableOpacity>
+                      <View
+                        style={{ flexDirection: "row", alignSelf: "center" }}
+                      >
+                        <View>
+                          {/* <TouchableOpacity style={styles.rowbtn}>
+                            <Icon
+                              name="logo-whatsapp"
+                              color="green"
+                              size={24}
+                            />
+                          </TouchableOpacity> */}
+                        </View>
+                        <View>
+                          <TouchableOpacity
+                            style={styles.rowbtn}
+                            onPress={() =>
+                              navigation.navigate("LoginWithPassword")
+                            }
+                          >
+                            {/* <Text>Email</Text> */}
+                            <Icon name="mail-outline" color="green" size={24} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {/* <View style={{}} /> */}
+                      {/* Not yet Register */}
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          textAlign: "center",
+                          width: width * 0.5,
+                          alignSelf: "center",
+                          marginTop: 10,
+                        }}
+                      >
+                        <Text style={{ color: "white", fontSize: 16 }}>
+                          Not yet Registered ?{" "}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => navigation.navigate("RegisterScreen")}
+                        >
+                          <Text
+                            style={{
+                              color: "#e87f02",
+                              fontWeight: "bold",
+                              fontSize: 16,
+                            }}
+                          >
+                            {" "}
+                            Register{" "}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.otpbtn}>
+                      <ActivityIndicator size="small" color="#fff" />
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View>
+                  <TextInput
+                    style={styles.input1}
+                    placeholder="Enter OTP"
+                    mode="outlined"
+                    value={formData.otp}
+                    dense={true}
+                    maxLength={6}
+                     keyboardType="number-pad"
+                    activeOutlineColor="#e87f02"
+                    autoFocus
+                    onChangeText={(text) => {
+                      setFormData({
+                        ...formData,
+                        otp: text,
+                        otp_error: false,
+                      });
+                    }}
+                  />
+
+                  {formData.otp_error ? (
+                    <Text
+                      style={{
+                        color: "red",
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        alignSelf: "center",
+                      }}
+                    >
+                      OTP is mandatory
+                    </Text>
+                  ) : null}
+
+                  {formData.validOtpError ? (
+                    <Text
+                      style={{
+                        color: "red",
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        alignSelf: "center",
+                      }}
+                    >
+                      Invalid OTP
+                    </Text>
+                  ) : null}
+
+                  {formData.loading == false ? (
+                    <>
+                    <TouchableOpacity
+                      style={styles.otpbtn}
+                      onPress={() => handleVerifyOtp()}
+                    >
+                      <Text style={styles.Otptxt}>Verify OTP</Text>
+                    </TouchableOpacity>
+                    <View style={{marginLeft:270}}>
+                        <TouchableOpacity  onPress={() => handleVerifyOtp()}>
+                        <Text style={{color:"#fff",fontWeight:"bold",textDecorationLine:"underline"}}>Resend Otp</Text>
+                        </TouchableOpacity>
+                    </View>
+                    </>
+                  ) : (
+                    <View style={styles.otpbtn}>
+                      <ActivityIndicator size="small" color="#fff" />
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
           </View>
         </View>
-      )}
-        </View>
-      </KeyboardAvoidingView>
-    </ImageBackground>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
+export default Login;
+
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    // alignSelf:"center",
-    justifyContent: "center",
-    resizeMode: "cover", 
+  orangeImage: {
+    height: 150,
+    width: 150,
+    marginBottom: -20,
   },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  formContainer: {
-    width: width*0.9,
-    // maxWidth: 400,
-    padding: 20,
-    backgroundColor: "#fff", 
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    alignItems:"center"
-  },
-  logo: {
-    alignSelf:"center",
+  oxyricelogo: {
     width: 200,
-    height: 80,
-    marginBottom: 20,
+    height: 100,
     resizeMode: "contain",
+    marginRight: width / 6,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
-    textAlign: "center",
+  oxylogoView: {
+    height: 1,
+  },
+  greenImage: {
+    height: 100,
+    width: 50,
+  },
+  riceImage: {
+    height: 180,
+    width: 180,
+    alignSelf: "flex-end",
+    marginTop: -95,
+  },
+  logingreenView: {
+    flex: 2,
+    backgroundColor: "#008001",
+    borderTopLeftRadius: 30,
+    // height: height/2,
+  },
+  loginTxt: {
+    color: "white",
+    fontWeight: "500",
+    fontSize: 25,
+    margin: -70,
+    alignSelf: "center",
+  },
+  input1: {
+    borderColor: "orange",
+    width: width * 0.8,
+    alignSelf: "center",
+    height: 45,
+    paddingLeft: 10,
+    margin: 10,
   },
   input: {
-    width: width*0.8,
-    height: 50,
+    height: 45,
     borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    backgroundColor: "#FFF",
-    marginBottom: 10,
-  },
-  inputError: {
-    borderColor: "red",
-  },
-  button: {
-    width: width*0.7,
-    backgroundColor: "#4CAF50",
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  disabledButton: {
-    backgroundColor: "#A5D6A7",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-  },
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 5,
-    alignSelf: "flex-start",
-  },
-  registerPrompt: {
-    marginTop: 20,
-    fontSize: 14,
-    textAlign: "center",
-    color:"#4CAF50"
-  },
-  registerLink: {
-    color: "#fd7e14",
-    fontWeight: "bold",
-    textDecorationLine:"underline"
-  },
-  resendText: {
-    color: "#fd7e14",
-    fontSize: 14,
-    textDecorationLine: "underline",
-    marginTop: 10,
-    marginRight:30
-  },
-  btn: {
-    marginTop: 20,
-    backgroundColor: "orange",
-    width: width * 0.7,
-    alignItems: "center",
-    padding: 10,
+    borderColor: "orange",
     borderRadius: 5,
-  },    
+    paddingLeft: width * 0.22, // Add padding to accommodate prefix
+    fontSize: 16,
+    alignSelf: "center",
+    width: width * 0.8,
+  },
+  fixedPrefix: {
+    position: "absolute",
+    left: width / 7,
+    top: 13,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  flag: {
+    width: 24,
+    height: 16,
+    marginRight: 5,
+  },
+  divider: {
+    width: 1,
+    height: 20,
+    backgroundColor: "#ccc",
+    marginHorizontal: 8,
+  },
+  countryCode: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  otpbtn: {
+    width: width * 0.8,
+    height: 45,
+    backgroundColor: "#e87f02",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    margin: 20,
+  },
+  Otptxt: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  rowbtn: {
+    //   width: width * 0.35,
+    //   height: 45,
+    padding: 5,
+    backgroundColor: "white",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    margin: 10,
+  },
 });
-
-export default LoginPage;
-
-

@@ -1,4 +1,9 @@
-import React, { useState, useEffect, useCallback ,useLayoutEffect} from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import {
   View,
   Text,
@@ -18,7 +23,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 // import { Ionicons } from "@expo/vector-icons";
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 import axios from "axios";
 import { useSelector } from "react-redux";
@@ -37,7 +42,7 @@ const ProfilePage = () => {
     customer_name: "",
     customer_email: "",
     customer_mobile: "",
-    user_mobile:"",
+    user_mobile: "",
     // customer_address:"",
     // customer_flatNo:"",
     // customer_landmark:"",
@@ -46,7 +51,7 @@ const ProfilePage = () => {
   const [errors, setErrors] = useState({
     customer_name: "",
     customer_email: "",
-    user_mobile:"",
+    user_mobile: "",
     // customer_address:"",
     // customer_flatNo:"",
     // customer_landmark:"",
@@ -60,16 +65,13 @@ const ProfilePage = () => {
   const [isInitiallySaved, setIsInitiallySaved] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const [profileData, setProfileData] = useState();
-  
+
   useFocusEffect(
     useCallback(() => {
-      
       animateProfile();
       getProfile();
     }, [getProfile])
   );
- 
-  
 
   const animateProfile = () => {
     Animated.loop(
@@ -93,7 +95,7 @@ const ProfilePage = () => {
 
   const getProfile = async () => {
     // const mobile_No = AsyncStorage.getItem('mobileNumber');
-   
+
     try {
       const response = await axios({
         method: "GET",
@@ -105,20 +107,20 @@ const ProfilePage = () => {
           BASE_URL +
           `erice-service/user/customerProfileDetails?customerId=${customerId}`,
       });
-      console.log("customerProfileDetails",response.data);
+      console.log("customerProfileDetails", response.data);
 
       if (response.status === 200) {
-        console.log("customerProfileDetails",response.data);
+        console.log("customerProfileDetails", response.data);
         setUser(response.data);
         setProfileForm({
           customer_name: response.data.name,
           customer_email: response.data.email,
-          customer_mobile:response.data.mobileNumber,
-          user_mobile : response.data.alterMobileNumber,
-        //   customer_address: response.data.address,
-        //  customer_flatNo:response.data.flatNo,
-        //  customer_landmark:response.data.landMark,
-        //  customer_pincode:response.data.pinCode
+          customer_mobile: response.data.mobileNumber,
+          user_mobile: response.data.alterMobileNumber,
+          //   customer_address: response.data.address,
+          //  customer_flatNo:response.data.flatNo,
+          //  customer_landmark:response.data.landMark,
+          //  customer_pincode:response.data.pinCode
         });
       }
     } catch (error) {
@@ -128,25 +130,31 @@ const ProfilePage = () => {
   };
 
   const handleProfileSubmit = async () => {
-    if (!profileForm.customer_name || !profileForm.customer_email|| errors.customer_email||!profileForm.user_mobile) {
+    if (
+      !profileForm.customer_name ||
+      !profileForm.customer_email ||
+      errors.customer_email ||
+      !profileForm.user_mobile
+    ) {
       setErrors({
         customer_name: profileForm.customer_name
           ? ""
           : "Name should not be empty",
         customer_email: profileForm.customer_email
-          ?  errors.customer_email
+          ? errors.customer_email
           : "Email should not be empty",
-        user_mobile: profileForm.user_mobile? "":"Mobile number should not be empty",
+        user_mobile: profileForm.user_mobile
+          ? ""
+          : "Mobile number should not be empty",
         // customer_address: profileForm.customer_address?"":"Address should not be empty",
         // customer_flatNo: profileForm.customer_flatNo? "":"Flatno should not be empty",
         // customer_landmark: profileForm.customer_landmark? "":"Landmark should not be empty",
         // customer_pincode: profileForm.customer_pincode? "":"pincode should not be empty",
       });
       return;
-    }
-    else if(profileForm.user_mobile.length!=10){
-      Alert.alert("Error","Alternative Mobile Number should be 10 digits")
-      return false
+    } else if (profileForm.user_mobile.length != 10) {
+      Alert.alert("Error", "Alternative Mobile Number should be 10 digits");
+      return false;
     }
     // if (customer_mobile == user_mobile) {
     //   Alert.alert(
@@ -154,7 +162,7 @@ const ProfilePage = () => {
     //     "The alternate mobile number must be different from the login mobile number.",
     //     [{ text: "OK" }]
     //   );
-    //   return; 
+    //   return;
     // }
 
     try {
@@ -165,7 +173,7 @@ const ProfilePage = () => {
           customerEmail: profileForm.customer_email,
           customerId: customerId,
           // customerMobile: profileForm.customer_mobile,
-          alterMobileNumber:profileForm.user_mobile,
+          alterMobileNumber: profileForm.user_mobile,
           // address:profileForm.customer_address,
           // flatNo:profileForm.customer_flatNo,
           // landMark:profileForm.customer_landmark
@@ -178,26 +186,26 @@ const ProfilePage = () => {
         }
       );
 
-      console.log("profile",response.data)
+      console.log("profile", response.data);
       if (response.data.errorMessage == null) {
         console.log("Profile call response: ", response.data);
         setErrors({ ...errors, customer_email: "" });
         setProfileData(response.data);
         console.log("Profile data:", profileData);
-          getProfile();
-      
+        getProfile();
+
         // Mark profile as saved and show success alert
         setIsProfileSaved(true);
         Alert.alert("Success", "Profile saved successfully");
-      
+
         console.log("Profile form data:", profileForm);
       } else {
         // Show error message from the response
         Alert.alert("Alert", response.data.errorMessage);
       }
-      } catch (error) {
+    } catch (error) {
       console.error(error.response);
-      Alert.alert("Alert Error saving profile");
+      Alert.alert("Failed", error.response?.data?.error);
     }
   };
 
@@ -261,13 +269,13 @@ const ProfilePage = () => {
 
   return (
     <KeyboardAvoidingView
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-    style={styles.outerContainer}
-  >
-    <View style={styles.mainContainer}> 
-    <ScrollView contentContainerStyle={styles.container}>
-      <View>
-        <TextInput
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.outerContainer}
+    >
+      <View style={styles.mainContainer}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <View>
+            {/* <TextInput
           style={styles.input}
           placeholder="Enter your name"
           value={profileForm?.customer_name || ""}
@@ -275,122 +283,142 @@ const ProfilePage = () => {
             setProfileForm({ ...profileForm, customer_name: text });
             setErrors({ ...errors, customer_name: "" });
           }}
-        />
-        {errors.customer_name ? (
-          <Text style={styles.errorText}>{errors.customer_name}</Text>
-        ) : null}
+        /> */}
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your name"
+              value={profileForm?.customer_name || ""}
+              onChangeText={(text) => {
+                // Allow only alphabetic characters
+                const alphabeticText = text.replace(/[^a-zA-Z]/g, ""); 
+                setProfileForm({
+                  ...profileForm,
+                  customer_name: alphabeticText,
+                });
+                setErrors({ ...errors, customer_name: "" });
+              }}
+            />
+            {errors.customer_name ? (
+              <Text style={styles.errorText}>{errors.customer_name}</Text>
+            ) : null}
 
-      <TextInput
-          style={styles.input}
-          placeholder="Enter your e-mail "
-          keyboardType="email-address"
-          value={profileForm?.customer_email || ""}
-          // editable={profileForm.customer_email==null?true:false}
-          onChangeText={(text) => {
-            if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
-              setProfileForm({ ...profileForm, customer_email: text });
-              setErrors({ ...errors, customer_email: "" }); 
-            } else {
-              setProfileForm({ ...profileForm, customer_email: text });
-              setErrors({
-                ...errors,
-                customer_email: "Please enter a valid gmail address",
-              });
-            }
-          }}
-        />
-        {errors.customer_email ? (
-          <Text style={styles.errorText}>{errors.customer_email}</Text>
-        ) : null}
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your e-mail "
+              keyboardType="email-address"
+              value={profileForm?.customer_email || ""}
+              // editable={profileForm.customer_email==null?true:false}
+              onChangeText={(text) => {
+                if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
+                  setProfileForm({ ...profileForm, customer_email: text });
+                  setErrors({ ...errors, customer_email: "" });
+                } else {
+                  setProfileForm({ ...profileForm, customer_email: text });
+                  setErrors({
+                    ...errors,
+                    customer_email: "Please enter a valid gmail address",
+                  });
+                }
+              }}
+            />
+            {errors.customer_email ? (
+              <Text style={styles.errorText}>{errors.customer_email}</Text>
+            ) : null}
 
-       
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor:
+                    isProfileSaved ||
+                    (profileForm?.customer_mobile?.length || 0) === 10
+                      ? "#e0e0e0"
+                      : "#fff",
+                },
+              ]}
+              placeholder="Enter your mobile number"
+              value={profileForm?.customer_mobile || ""}
+              onChangeText={(text) => {
+                if (text.length <= 10) {
+                  setProfileForm({ ...profileForm, customer_mobile: text });
+                }
+              }}
+              maxLength={10}
+              editable={
+                !isProfileSaved &&
+                (profileForm?.customer_mobile?.length || 0) < 10
+              }
+              disabled={true}
+            />
 
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor:
-                isProfileSaved ||
-                (profileForm?.customer_mobile?.length || 0) === 10
-                  ? "#e0e0e0"
-                  : "#fff",
-            },
-          ]}
-          placeholder ="Enter your mobile number"
-          value={profileForm?.customer_mobile || ""}
-          onChangeText={(text) => {
-            if (text.length <= 10) {
-              setProfileForm({ ...profileForm, customer_mobile: text });
-            }
-          }}
-          maxLength={10}
-          editable={
-            !isProfileSaved && (profileForm?.customer_mobile?.length || 0) < 10
-          }
-          disabled={true}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your alternate mobile number"
+              value={profileForm?.user_mobile || ""}
+              maxLength={10}
+              keyboardType="number-pad"
+              onChangeText={(text) => {
+                setProfileForm({ ...profileForm, user_mobile: text });
+                setErrors({ ...errors, user_mobile: "" });
+              }}
+            />
+            {errors.user_mobile ? (
+              <Text style={styles.errorText}>{errors.user_mobile}</Text>
+            ) : null}
+            <View style={styles.noteContainer}>
+              <Text style={styles.noteText}>
+                Please provide a backup mobile number. We’ll use it only if your
+                registered number can’t be reached.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#007bff",
+                padding: 10,
+                borderRadius: 5,
+                alignItems: "center",
+                marginTop: 5,
+              }}
+              onPress={() => handleProfileSubmit()}
+            >
+              <Text style={{ color: "white", fontSize: 16 }}>
+                {isProfileSaved || isInitiallySaved
+                  ? "Save Profile"
+                  : "Save Profile"}
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.optionContainer}>
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={() => navigation.navigate("Subscription")}
+              >
+                <Text style={styles.optionText}>Subscription</Text>
+              </TouchableOpacity>
 
-        <TextInput
-          style={styles.input}
-          placeholder ="Enter your alternate mobile number"
-          value={profileForm?.user_mobile || ""}
-          maxLength={10}
-          keyboardType="number-pad"
-          onChangeText={(text) => {
-            setProfileForm({ ...profileForm, user_mobile: text });
-            setErrors({ ...errors, user_mobile: "" });
-          }}
-        />
-          {errors.user_mobile ? (<Text style={styles.errorText}>{errors.user_mobile}</Text> ) : null}
-       <View style={styles.noteContainer}>
-         <Text style={styles.noteText}>
-          Please provide a backup mobile number. We’ll use it only if your registered number can’t be reached.
-          </Text>
-    </View>
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#007bff",
-            padding: 10,
-            borderRadius: 5,
-            alignItems: "center",
-            marginTop: 5,
-          }}
-          onPress={()=>handleProfileSubmit()}
-        >
-          <Text style={{ color: "white", fontSize: 16 }}>
-            {isProfileSaved || isInitiallySaved
-              ? "Save Profile"
-              : "Save Profile"}
-          </Text>
-        </TouchableOpacity>
-        <View style={styles.optionContainer}>
-        
-                   
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={() => navigation.navigate("Wallet")}
+              >
+                <Entypo
+                  name="wallet"
+                  size={20}
+                  color="#fff"
+                  style={styles.icon}
+                />
+                <Text style={styles.optionText}>Wallet</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Subscription')}>
-                        <Text style={styles.optionText}>Subscription</Text>
-                    </TouchableOpacity> 
-         
-
-          <TouchableOpacity
-      style={styles.optionButton}
-      onPress={() => navigation.navigate('Wallet')}
-    >
-      <Entypo name="wallet" size={20} color="#fff" style={styles.icon} />
-      <Text style={styles.optionText}>Wallet</Text>
-    </TouchableOpacity>
-
-          {/* <TouchableOpacity style={styles.optionButton} onPress={onShare}>
+              {/* <TouchableOpacity style={styles.optionButton} onPress={onShare}>
                         <Text style={styles.optionText}>Refer & Share App Link</Text>
                     </TouchableOpacity> */}
-        </View>
+            </View>
 
-        {/* <View style={styles.footer}>
+            {/* <View style={styles.footer}>
                     <Text>MY REFERRAL CODE: <Text style={styles.bold}>{user.referral_code}</Text></Text>
                     <Text>Version: 1.0.24</Text>
                 </View> */}
 
-        {/* <TouchableOpacity
+            {/* <TouchableOpacity
           style={styles.logoutButton}
           onPress={() => {
             navigation.navigate("Login"), AsyncStorage.removeItem("userData");
@@ -399,9 +427,9 @@ const ProfilePage = () => {
           <Ionicons name="log-out-outline" size={20} color="white" />
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity> */}
+          </View>
+        </ScrollView>
       </View>
-    </ScrollView>
-    </View>
     </KeyboardAvoidingView>
   );
 };
@@ -412,14 +440,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9F9F9",
   },
   mainContainer: {
-    flex: 1, 
+    flex: 1,
     backgroundColor: "#F9F9F9",
   },
   container: {
     padding: 20,
     backgroundColor: "#F9F9F9",
     // height:"auto"
-    flexGrow: 1, 
+    flexGrow: 1,
   },
   input: {
     height: 50,
@@ -462,8 +490,8 @@ const styles = StyleSheet.create({
   },
   optionButton: {
     backgroundColor: "#FFF",
-    paddingHorizontal: 15, 
-    paddingVertical: 10, 
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     borderRadius: 10,
     marginBottom: 10,
     shadowColor: "#000",
@@ -471,19 +499,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 2,
-    alignItems: "center", 
-    justifyContent: "center", 
+    alignItems: "center",
+    justifyContent: "center",
     alignSelf: "center",
-    minWidth: 150, 
-    height: 50, 
+    minWidth: 150,
+    height: 50,
   },
-  
+
   optionText: {
     textAlign: "center",
     fontSize: 16,
     color: "#333",
   },
-  
+
   footer: {
     alignItems: "center",
     marginTop: 30,
@@ -520,15 +548,15 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   optionButton: {
-    flexDirection: 'row',
-   
-    alignItems: 'center',
-    backgroundColor: '#4CAF50', 
+    flexDirection: "row",
+
+    alignItems: "center",
+    backgroundColor: "#4CAF50",
     paddingVertical: 10,
     // paddingHorizontal: 20,
     borderRadius: 8,
     marginBottom: 15,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
@@ -536,43 +564,41 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginLeft: 10, 
-    alignSelf:"center",
-    textAlign:"center"
+    fontWeight: "bold",
+    color: "#fff",
+    marginLeft: 10,
+    alignSelf: "center",
+    textAlign: "center",
   },
   icon: {
-    marginLeft:10,
-    
+    marginLeft: 10,
   },
   textContainer: {
-    marginHorizontal: 20, 
-    marginVertical: 1, 
+    marginHorizontal: 20,
+    marginVertical: 1,
   },
   infoText: {
     fontSize: 16,
-    color: '#333', 
-    lineHeight: 20, 
-    padding:8,
-    // textAlign: 'center', 
-    marginHorizontal: 16, 
-    marginVertical:0, 
-    fontWeight: '400', 
-  
+    color: "#333",
+    lineHeight: 20,
+    padding: 8,
+    // textAlign: 'center',
+    marginHorizontal: 16,
+    marginVertical: 0,
+    fontWeight: "400",
   },
   noteContainer: {
-    backgroundColor: '#F5F5F5', 
-    borderLeftWidth: 4, 
-    borderLeftColor: '#888',
-    padding: 8, 
-    marginVertical: 12, 
-    borderRadius: 4, 
+    backgroundColor: "#F5F5F5",
+    borderLeftWidth: 4,
+    borderLeftColor: "#888",
+    padding: 8,
+    marginVertical: 12,
+    borderRadius: 4,
   },
   noteText: {
-    fontSize: 14, 
-    color: '#444', 
-    lineHeight: 18, 
+    fontSize: 14,
+    color: "#444",
+    lineHeight: 18,
   },
 });
 

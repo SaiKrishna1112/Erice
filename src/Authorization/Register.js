@@ -1,330 +1,507 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Alert,
   StyleSheet,
+  ScrollView,
   ActivityIndicator,
-  ImageBackground,
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
 } from "react-native";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
-import BASE_URL from "../../Config";
+import { TextInput } from "react-native-paper";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
 import { AccessToken } from "../../Redux/action/index";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import BASE_URL from "../../Config";
+const { height, width } = Dimensions.get("window");
+import Icon from "react-native-vector-icons/Ionicons";
+
 const Register = () => {
-  const dispatch = useDispatch();
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [mobileOtpSession, setMobileOtpSession] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [otpSending, setOtpSending] = useState(false);
-  const [mobileError, setMobileError] = useState("");
-  const [otpError, setOtpError] = useState("");
+  const [formData, setFormData] = useState({
+    mobileNumber: "",
+    mobileNumber_error: false,
+    validMobileNumber_error: false,
+    otp: "",
+    otp_error: false,
+    validOtpError: false,
+
+    // showOtp: false,
+    loading: false,
+    // mobileOtpSession: "",
+  });
+  const [showOtp, setShowOtp] = useState(false);
   const navigation = useNavigation();
-  
-  const validateMobileNumber = () => {
-    if (!mobileNumber) {
-      setMobileError("Mobile number is required.")
-      return false;
-    }
-    if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
-      
-      setMobileError("Enter a valid 10-digit mobile number.")
-      return false;
-    }
-    setMobileError(" ");
-    setOtpSending(true);
-    return true;
-  };
-
-
+  const dispatch = useDispatch();
+  const [mobileOtpSession, setMobileOtpSession] = useState("");
 
   const handleSendOtp = async () => {
-   
-    setLoading(true);
-    setMobileError(" ");
-  
-  if (!validateMobileNumber()) return;
+    // if (!validateMobileNumber()) return;
+    if (formData.mobileNumber == "" || formData.mobileNumber == null) {
+      setFormData({ ...formData, mobileNumber_error: true });
+      return;
+    }
+    if (formData.mobileNumber.length != 10) {
+      setFormData({ ...formData, validMobileNumber_error: true });
+      return;
+    }
+    console.log("mobileNumber", formData.mobileNumber);
+    let data = {
+      mobileNumber: formData.mobileNumber,
+      userType: "Register",
+    };
+    console.log({ data });
+    setFormData({ ...formData, loading: true });
     try {
       const response = await axios.post(
-        `${BASE_URL}erice-service/user/login-or-register`,
-        {
-          mobileNumber,
-          userType: "Register",
-        }
+        BASE_URL + `erice-service/user/login-or-register`,
+        data
       );
-      setMobileError("");
-      console.log("register",response.data);
-      
-      if (response.data.mobileOtpSession == null) {
+      console.log("Send Otp", response.data);
+
+      if (response.data.mobileOtpSession) {
+         setMobileOtpSession(response.data.mobileOtpSession);
+        setFormData({
+          ...formData,
+          // showOtp: true,
+          mobileOtpSession: mobileOtpSession,
+          loading: false,
+        });
+        setShowOtp(true);
+        //  setIsLogin(true);
+        //  setResponseMessage("OTP sent successfully.");
+        // setTimeout(() => setResponseMessage(""), 3000);
+      } else {
         Alert.alert("You are already registered, Please login");
         navigation.navigate("Login");
-      } else if (response.data.mobileOtpSession) {
-        setMobileOtpSession(response.data.mobileOtpSession);
-        setIsOtpSent(true);
-        Alert.alert("Success", "OTP sent successfully!");
+        // Alert.alert("Error", "Failed to send OTP. Try again.");
+        // setFormData({ formData, loading: false });
       }
     } catch (error) {
-      Alert.alert("Notice", "This number is already registered. Welcome to homepage.", [
+      Alert.alert("Failed", "You are already registered, Please login", [
         {
           text: "Ok",
-          onPress: () => navigation.navigate("Home", mobileNumber),
+          onPress: () => navigation.navigate("Login"),
           style: "cancel",
         },
       ]);
     } finally {
-      setOtpSending(false);
-      setLoading(false);
+      setFormData({ ...formData, loading: false });
     }
   };
 
-  const handleRegisterOtp = async () => {
-    // setOtpError("");
-    // if (!otp.trim()) {
-    //   setOtpError("OTP is required.");
-    //   return;
-    // }
-    if (otp == "" || otp == null) {
-      setOtpError("OTP is required.");
-      return;
-    }
-    if (otp.length != 6) {
-      setOtpError("Invalid Otp");
-      return;
-    }
+  const handleVerifyOtp = () => {
+    // if (!validateOtp()) return;
+     if (formData.otp == "" || formData.otp == null) {
+       setFormData({ ...formData, otp_error: true });
+       return false;
+     }
+     if (formData.otp.length != 6) {
+       setFormData({ ...formData, validOtpError: true });
+       return false;
+     }
+    //  setLoading(true);
+    setFormData({ formData, loading: true });
 
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `${BASE_URL}erice-service/user/login-or-register`,
-        {
-          mobileNumber,
-          mobileOtpSession,
-          mobileOtpValue: otp,
-          primaryType: "CUSTOMER",
-          userType: "Register",
+    let data = {
+      mobileNumber: formData.mobileNumber,
+      mobileOtpSession: mobileOtpSession,
+      mobileOtpValue: formData.otp,
+      primaryType: "CUSTOMER",
+      userType: "Register",
+      // primaryType: "CUSTOMER",
+    };
+    console.log({ data });
+    axios({
+      method: "post",
+      url: BASE_URL + `erice-service/user/login-or-register`,
+      data: data,
+    })
+      .then(function (response) {
+        console.log(response.data);
+        if (response.data.accessToken != null) {
+          dispatch(AccessToken(response.data));
+          Alert.alert("Success", "Registration successful!");
+          navigation.navigate("Home");
         }
-      );
-
-      
-
-      console.log("register",response.data);
-      
-      if (response.data.accessToken != null) {
-        dispatch(AccessToken(response.data));
-        Alert.alert("Success", "Registration successful!");
-        navigation.navigate("Home");
-      }
-    
-  } catch (error) {
-      setOtpError("Invalid OTP. Please enter the correct OTP.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  const handleMobileNumberChange = (text) => {
-    setMobileNumber(text);
-    if (mobileError) {
-      setMobileError("");
-    }
-    // if (text.length === 10) {
-    //   setMobileError("");
-    // } else {
-    //   setMobileError("Please enter a valid 10-digit mobile number.");
-    // }
+      })
+      .catch(function (error) {
+        console.log(error.response);
+      });
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/Images/OXYRICE.png")}
-      style={styles.container}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior="padding"
     >
-      <View style={styles.formContainer}>
-        <Image
-          source={require("../../assets/Oxyricelogo.png")}
-          style={styles.logo}
-        />
-        <Text style={styles.title}>Register on OxyRice</Text>
-
-        <TextInput
-          style={[styles.input,  mobileError ? { borderWidth: 1 } : null]}
-          placeholder="Enter mobile number"
-          keyboardType="phone-pad"
-          value={mobileNumber}
-          onChangeText={handleMobileNumberChange}
-         
-          editable={!isOtpSent}
-          maxLength={10}
-        />
-        {mobileError && <Text style={styles.errorText}>{mobileError}</Text>}
-
-        {!isOtpSent && (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleSendOtp}
-              disabled={otpSending}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.buttonText}>SEND OTP</Text>
-            </TouchableOpacity>
-            {otpSending && (
-              <ActivityIndicator
-                size="small"
-                color="#fff"
-                style={styles.loader}
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={{ backgroundColor: "#fff", flex: 1 }}>
+          {/* Top Images */}
+          <View>
+            <View>
+              <Image
+                source={require("../../assets/Images/orange.png")}
+                style={styles.orangeImage}
               />
-            )}
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignSelf: "flex-end",
+                marginBottom: 100,
+                justifyContent: "space-between",
+              }}
+            >
+              <View style={styles.oxylogoView}>
+                <Image
+                  source={require("../../assets/Images/logo1.png")}
+                  style={styles.oxyricelogo}
+                />
+              </View>
+              <View style={styles.greenImageView}>
+                <Image
+                  source={require("../../assets/Images/green.png")}
+                  style={styles.greenImage}
+                />
+              </View>
+            </View>
           </View>
-        )}
 
-
-
-
-
-        {isOtpSent && (
-          <>
-            <TextInput
-              style={[styles.input, otpError ? styles.inputError : null]}
-              placeholder="Enter OTP"
-              keyboardType="numeric"
-              value={otp}
-              onChangeText={setOtp}
-              maxLength={6}
+          {/* Login Section */}
+          <View style={styles.logingreenView}>
+            <Image
+              source={require("../../assets/Images/rice.png")}
+              style={styles.riceImage}
             />
-            {otpError && <Text style={styles.errorText}>{otpError}</Text>}
+            <Text style={styles.loginTxt}>Register</Text>
+            <View style={{ marginTop: 130 }}>
+              {/* <TextInput
+                style={styles.input}
+                placeholder="Enter Mobile Number"
+                mode="outlined"
+                value={formData.mobileNumber}
+                dense={true}
+                autoFocus
+                activeOutlineColor="#e87f02"
+                onChangeText={(text) => {
+                  setFormData({
+                    ...formData,
+                    mobileNumber: text,
+                    mobileNumber_error: false,
+                  });
+                }}
+                left={<TextInput.Icon icon="eye" />}
+              /> */}
+              <TextInput
+                style={styles.input}
+                mode="outlined"
+                placeholder="Enter Mobile Number"
+                keyboardType="numeric"
+                dense={true}
+                // autoFocus
+                error={formData.mobileNumber_error}
+                activeOutlineColor={
+                  formData.mobileNumber_error ? "red" : "#e87f02"
+                }
+                value={formData.mobileNumber}
+                maxLength={10}
+                onChangeText={(text) => {
+                  setFormData({
+                    ...formData,
+                    mobileNumber: text,
+                    mobileNumber_error: false,
+                    validMobileNumber_error: false,
+                  });
+                }}
+              />
+              {formData.mobileNumber_error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    alignSelf: "center",
+                  }}
+                >
+                  Mobile Number is mandatory
+                </Text>
+              ) : null}
 
+              {formData.validMobileNumber_error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    alignSelf: "center",
+                  }}
+                >
+                  Invalid Mobile Number
+                </Text>
+              ) : null}
 
-
-            <View style={{alignSelf:"flex-end",paddingRight:5}}>
-              {isOtpSent && !loading && (
-                <TouchableOpacity onPress={handleSendOtp}>
-                  <Text style={styles.resendText}>Resend OTP</Text>
-                </TouchableOpacity>
-               )}
+              {/* Fixed Indian flag and +91 prefix */}
+              <View style={styles.fixedPrefix}>
+                <Image
+                  source={{
+                    uri: "https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/1200px-Flag_of_India.svg.png",
+                  }}
+                  style={styles.flag}
+                />
+                <View style={styles.divider} />
+                <Text style={styles.countryCode}>+91</Text>
               </View>
 
+              {showOtp == false ? (
+                <View>
+                  {formData.loading == false ? (
+                    <View>
+                      <TouchableOpacity
+                        style={styles.otpbtn}
+                        onPress={() => handleSendOtp()}
+                      >
+                        <Text style={styles.Otptxt}>Send OTP</Text>
+                      </TouchableOpacity>
+                      <View
+                        style={{ flexDirection: "row", alignSelf: "center" }}
+                      >
+                        <View>
+                          {/* <TouchableOpacity style={styles.rowbtn}>
+                            <Icon
+                              name="logo-whatsapp"
+                              color="green"
+                              size={24}
+                            />
+                          </TouchableOpacity> */}
+                        </View>
+                        <View>
+                          <TouchableOpacity
+                            style={styles.rowbtn}
+                            onPress={() =>
+                              navigation.navigate("LoginWithPassword")
+                            }
+                          >
+                            {/* <Text>Email</Text> */}
+                            <Icon name="mail-outline" color="green" size={24} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleRegisterOtp}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.buttonText}>REGISTER</Text>
-            </TouchableOpacity>
-          </>
-        )}
+                      {/* <View style={{}} /> */}
+                      {/* Not yet Register */}
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          textAlign: "center",
+                          width: width * 0.5,
+                          alignSelf: "center",
+                          marginTop: 10,
+                        }}
+                      >
+                        <Text style={{ color: "white", fontSize: 16 }}>
+                          Already Registered ?{" "}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => navigation.navigate("Login")}
+                        >
+                          <Text
+                            style={{
+                              color: "#e87f02",
+                              fontWeight: "bold",
+                              fontSize: 16,
+                            }}
+                          >
+                            {" "}
+                            Login{" "}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.otpbtn}>
+                      <ActivityIndicator size="small" color="#fff" />
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View>
+                  <TextInput
+                    style={styles.input1}
+                    placeholder="Enter OTP"
+                    mode="outlined"
+                    value={formData.otp}
+                    dense={true}
+                    maxLength={6}
+                    keyboardType="number-pad"
+                    activeOutlineColor="#e87f02"
+                    autoFocus
+                    onChangeText={(text) => {
+                      setFormData({
+                        ...formData,
+                        otp: text,
+                        otp_error: false,
+                      });
+                    }}
+                  />
 
-        {!isOtpSent && (
-          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-            <View style={{ flexDirection: "row" }}>
-              <Text style={styles.linkText}>Already registered ? </Text>
-              <Text style={styles.linkTextLog}>Log in here</Text>
+                  {formData.otp_error ? (
+                    <Text
+                      style={{
+                        color: "red",
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        alignSelf: "center",
+                      }}
+                    >
+                      OTP is mandatory
+                    </Text>
+                  ) : null}
+
+                  {formData.validOtpError ? (
+                    <Text
+                      style={{
+                        color: "red",
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        alignSelf: "center",
+                      }}
+                    >
+                      Invalid OTP
+                    </Text>
+                  ) : null}
+
+                  {formData.loading == false ? (
+                    <TouchableOpacity
+                      style={styles.otpbtn}
+                      onPress={() => handleVerifyOtp()}
+                    >
+                      <Text style={styles.Otptxt}>Verify OTP</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.otpbtn}>
+                      <ActivityIndicator size="small" color="#fff" />
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
-          </TouchableOpacity>
-        )}
-      </View>
-    </ImageBackground>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
+export default Register;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+  orangeImage: {
+    height: 150,
+    width: 150,
+    marginBottom: -20,
   },
-  formContainer: {
-    backgroundColor: "#FFF",
-    padding: 30,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    alignItems: "center",
-    width: "100%",
-    maxWidth: 400,
-  },
-  logo: {
+  oxyricelogo: {
     width: 200,
-    height: 80,
-    marginBottom: 20,
+    height: 100,
     resizeMode: "contain",
+    marginRight: width / 6,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
-    textAlign: "center",
+  oxylogoView: {
+    height: 1,
+  },
+  greenImage: {
+    height: 100,
+    width: 50,
+  },
+  riceImage: {
+    height: 180,
+    width: 180,
+    alignSelf: "flex-end",
+    marginTop: -95,
+  },
+  logingreenView: {
+    flex: 2,
+    backgroundColor: "#008001",
+    borderTopLeftRadius: 30,
+    // height: height/2,
+  },
+  loginTxt: {
+    color: "white",
+    fontWeight: "500",
+    fontSize: 25,
+    margin: -70,
+    alignSelf: "center",
+  },
+  input1: {
+    borderColor: "orange",
+    width: width * 0.8,
+    alignSelf: "center",
+    height: 45,
+    paddingLeft: 10,
+    margin: 10,
   },
   input: {
-    width: "100%",
-    padding: 15,
+    height: 45,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    marginBottom: 15,
-    backgroundColor: "#FFF",
-  },
-  button: {
-    backgroundColor: "#4CAF50",
-    padding: 15,
-    borderRadius: 10,
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "bold",
+    borderColor: "orange",
+    borderRadius: 5,
+    paddingLeft: width * 0.22, // Add padding to accommodate prefix
     fontSize: 16,
+    alignSelf: "center",
+    width: width * 0.8,
   },
-  linkText: {
-    color: "#4CAF50",
-    marginVertical: 10,
-
-    fontSize: 14,
-  },
-  linkTextLog: {
-    color: "#fd7e14",
-    marginVertical: 10,
-    fontWeight: "bold",
-    textDecorationLine: "underline",
-    fontSize: 14,
-  },
-  buttonContainer: {
-    width: "100%",
+  fixedPrefix: {
+    position: "absolute",
+    left: width / 7,
+    top: 13,
+    flexDirection: "row",
     alignItems: "center",
   },
-  loader: {
-    marginTop: 10,
+  flag: {
+    width: 24,
+    height: 16,
+    marginRight: 5,
   },
-  inputError: {
-    borderColor: "red",
+  divider: {
+    width: 1,
+    height: 20,
+    backgroundColor: "#ccc",
+    marginHorizontal: 8,
   },
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 10,
+  countryCode: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
-  resendText: {
-    color: "#fd7e14",
-    fontSize: 14,
-    textDecorationLine: "underline",
+  otpbtn: {
+    width: width * 0.8,
+    height: 45,
+    backgroundColor: "#e87f02",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    margin: 20,
+  },
+  Otptxt: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  rowbtn: {
+    //   width: width * 0.35,
+    //   height: 45,
+    padding: 5,
+    backgroundColor: "white",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
     margin: 10,
-    // marginRight:30
   },
 });
-
-export default Register;

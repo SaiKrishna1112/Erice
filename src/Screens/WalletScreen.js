@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import BASE_URL from '../../Config';
-
+ const {width,height} = Dimensions.get('window');
 const WalletPage = ({ route }) => {
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
@@ -56,46 +56,22 @@ const WalletPage = ({ route }) => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.headerContainer}>
+  <>
+  <View style={styles.headerContainer}>
   <View style={styles.header}>
     <Text style={styles.walletTitle}>Wallet Balance</Text>
   <Text style={styles.walletAmount}> ₹ {walletAmount || 0}</Text>
   </View>
 </View>
-
+<ScrollView contentContainerStyle={styles.container}>
+  <View>
 {walletTxs.length > 0 ? (
   <FlatList
     data={walletTxs}
     keyExtractor={(item) => item.id}
     renderItem={({ item }) => (
-      // <View style={styles.transactionCard}>
-      //   {/* Wallet Transaction Amount */}
-      //   <Text style={styles.txAmount}>
-      //     Amount: ₹ {item.walletTxAmount}
-      //   </Text>
-
-      //   {/* Order ID */}
-      //   <Text style={styles.txOrder}>
-      //     Order ID: {item.orderId}
-      //   </Text>
-
-      //   {/* Wallet Transaction Description */}
-      //   <Text style={styles.txDesc}>
-      //     Description: {item.walletTxDesc.split('Order ID:')[0].trim()}
-      //   </Text>
-
-      //   {/* Transaction Date */}
-      //   <Text style={styles.txDate}>
-      //     Date: {new Date(item.createdAt).toLocaleDateString()}
-      //   </Text>
-
-      //   {/* Wallet Balance */}
-      //   <Text style={styles.txBalance}>
-      //     Balance: ₹ {item.walletTxBalance}
-      //   </Text>
-      // </View>
-      <View style={styles.transactionCard}>
+      
+  <View style={styles.transactionCard}>
   {/* Header with Transaction Amount */}
   <View style={styles.headerRow}>
     <Text style={styles.txAmountLabel}>Amount:</Text>
@@ -130,14 +106,15 @@ const WalletPage = ({ route }) => {
 ) : (
   <Text style={styles.noTransactions}>No transactions found!</Text>
 )}
-
+  </View>
     </ScrollView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#fd7e14', 
+    backgroundColor: '#A5BFCC', 
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
@@ -148,11 +125,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   header: {
+    width:width*0.4,
     alignItems: 'center',
   },
   walletTitle: {
     fontSize: 18,
-    color: '#fff',
+    color: '#000',
     fontWeight: '600',
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -160,7 +138,7 @@ const styles = StyleSheet.create({
   walletAmount: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#000',
   },
   container: {
     flexGrow: 1,

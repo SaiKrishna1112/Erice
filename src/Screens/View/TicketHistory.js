@@ -147,6 +147,7 @@ console.log({query})
         <>
           {tickets && tickets.length > 0 ? (
             <FlatList
+            showsVerticalScrollIndicator={false}
               data={tickets}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
@@ -402,7 +403,7 @@ const styles = StyleSheet.create({
     backgroundColor:"white",
     padding: 10,
     width: "50%",
-    marginLeft: 190,
+    marginLeft: 150,
   },
   card: {
     borderWidth: 1,
@@ -417,6 +418,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     margin: 8,
+    
     // bottomBorderColor: "black",
     // borderBottomWidth: 0.5,
     // margin: 5,
@@ -428,6 +430,10 @@ const styles = StyleSheet.create({
     // bottomBorderColor: "black",
     // borderBottomWidth: 0.5,
     margin: 8,
+  },
+  value1:{
+    width:width*0.4,
+    color:"#074799"
   },
   label: {
     fontSize: 16,
@@ -494,10 +500,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    // height:"auto"
+    // height:height*0.7
   },
   modalContent: {
     width: 300,
-    height: 300,
+    height: 350,
     backgroundColor: "white",
     borderRadius: 10,
     alignItems: "center",

@@ -3,12 +3,12 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 // Screens imports
-
-import LoginScreen from "../Authorization/Login";
-import LoginWithPassword from "../Authorization/LoginWithPassword";
-
+import Login from "../Authorization/Login";
 import Register from "../Authorization/Register";
-
+// import LoginScreen from "../Authorization/OldLogin";
+// import LoginWithPassword from "../Authorization/OldLoginWithPassword";
+// import Register from "../Authorization/OldRegister";
+import LoginWithPassword from "../Authorization/LoginWithPassword";
 import Refund from "../Screens/View/Refund";
 
 import Tabs from "./BottomTabs";
@@ -32,8 +32,8 @@ import WriteToUs from '../Screens/View/WriteToUs';
 import TicketHistory from '../Screens/View/TicketHistory';
 import TicketHistoryComments from "../Screens/View/TicketHistoryComments";
 import ItemDetails from "../Screens/ItemDetails";
-
-
+import UserCancelledOrderDetails from "../Orders/UserCancelledOrderDetails";
+import UserExchangeOrderDetails from "../Orders/UserExchangeOrderDetails";
 export default function StacksScreens() {
   const Stack = createStackNavigator();
   return (
@@ -51,7 +51,7 @@ export default function StacksScreens() {
     >
       <Stack.Screen
         name="Login"
-        component={LoginScreen}
+        component={Login}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -97,6 +97,8 @@ export default function StacksScreens() {
       <Stack.Screen name="View Comments" component={TicketHistoryComments} />
       <Stack.Screen name="Item Details" component={ItemDetails}/>
       <Stack.Screen name="Refund" component={Refund} />
+      <Stack.Screen name="My Cancelled Item Details" component={UserCancelledOrderDetails} />
+      <Stack.Screen name="My Exchanged Item Details" component={UserExchangeOrderDetails} />
     </Stack.Navigator>
   );
 }

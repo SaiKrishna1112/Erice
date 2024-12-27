@@ -6,8 +6,9 @@ import BASE_URL from '../../../Config';
 import { useNavigation } from '@react-navigation/native';
 import encryptEas from '../../Payments/components/encryptEas';
 import decryptEas from '../../Payments/components/decryptEas';
+import { ScrollView } from 'react-native-gesture-handler';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width,height } = Dimensions.get('window');
 
 const Subscription = () => {
   const userData = useSelector((state) => state.counter);
@@ -144,8 +145,8 @@ function SubscriptionConfirmation(details){
     console.log("==========");
     const data = {
       mid: "1152305",
-      amount: details.amount,
-      // amount:1,
+      // amount: details.amount,
+      amount:1,
       merchantTransactionId: response.data.paymentId,
       transactionDate: new Date(),
       terminalId: "getepay.merchant128638@icici",
@@ -416,6 +417,8 @@ function Requery() {
 
 
   const renderPlan = ({ item }) => (
+    <>
+    <ScrollView>
     <View style={styles.planContainer}>
       <Text style={styles.title}>₹{item.amount}</Text>
       <Text style={styles.text}>Get Amount: ₹{item.getAmount}</Text>
@@ -432,6 +435,8 @@ function Requery() {
       </View>
      }
     </View>
+    </ScrollView>
+    </>
   );
 
   return (
@@ -446,9 +451,9 @@ function Requery() {
               data={subscriptionHistoryData}
               renderItem={renderPlan}
               keyExtractor={(item) => item.planId.toString()}
-              numColumns={2}
+              numColumns={1}
               contentContainerStyle={styles.listContent}
-              columnWrapperStyle={styles.row}
+              // columnWrapperStyle={styles.row}
               showsVerticalScrollIndicator={false} 
               showsHorizontalScrollIndicator={false} 
             />
@@ -482,10 +487,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   planContainer: {
+    alignSelf:"center",
     backgroundColor: '#f9f9f9',
     borderRadius: 10,
     padding: 16,
-    width: (screenWidth / 2) - 24,
+    width: width*0.8,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

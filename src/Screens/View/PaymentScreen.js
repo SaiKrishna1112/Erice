@@ -10,7 +10,7 @@ import {
   Alert,
   TextInput,
   Dimensions,
- 
+  ScrollView,
 } from "react-native";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
@@ -105,7 +105,7 @@ const PaymentDetails = ({ navigation, route }) => {
 
   const confirmPayment = () => {
     if (selectedPaymentMode == null || selectedPaymentMode == "") {
-      Alert.alert("Please select payment mode");
+      Alert.alert("Please select payment method");
     } else {
      placeOrder();
     }
@@ -270,8 +270,8 @@ console.log({selectedPaymentMode})
           console.log("==========");
           const data = {
             mid: "1152305",
-            amount: grandTotalAmount,
-            // amount: 1,
+            // amount: grandTotalAmount,
+            amount: 1,
             merchantTransactionId: response.data.paymentId,
             transactionDate: new Date(),
             terminalId: "getepay.merchant128638@icici",
@@ -609,6 +609,11 @@ console.log({selectedPaymentMode})
   return (
     <View style={styles.container}>
       {/* Apply Coupon Section */}
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
       <View style={styles.card}>
         <View style={{ flexDirection: "row" }}>
           <Text style={styles.cardHeader}>Apply Coupon</Text>
@@ -719,39 +724,7 @@ console.log({selectedPaymentMode})
         </View>
         <View style={styles.divider} />
 
-        {/* {useWallet !=  true && coupenApplied != true ? (
-        <View style={styles.paymentRow}>
-          <Text style={styles.totalLabel}>Grand Total1</Text>
-          <Text style={styles.totalAmount}>₹{totalAmount}</Text>
-        </View>
-        ):null}
-       
-        {useWallet == true &&(
-         
-          <View style={styles.paymentRow}>
-            <Text style={styles.detailsLabelBold}>Grand Total2</Text>
-            <Text style={styles.detailsValueBold}>₹{walletTotal}</Text>
-          </View>
-        ) }
-       
-        {coupenApplied == true && (
-          <View style={styles.paymentRow}>
-            <Text style={styles.detailsLabelBold}>Grand Total3</Text>
-            <Text style={styles.detailsValueBold}>₹{grandTotal}</Text>
-          </View>
-        ) }
-       {coupenApplied == true && useWallet==true && (
-          <View style={styles.paymentRow}>
-          <Text style={styles.detailsLabelBold}>Grand Total4</Text>
-          <Text style={styles.detailsValueBold}>₹{totalAmount-billAmount}</Text>
-        </View>
-       )} */}
-
-
-{/* <View style={styles.paymentRow}>
-    <Text style={styles.detailsLabelBold}>Grand Total</Text>
-    <Text style={styles.detailsValueBold}>₹ {grandTotalAmount}</Text>
-  </View> */}
+     
   <View style={styles.paymentRow}>
           <Text style={styles.detailsLabelBold}>Grand Total</Text>
           <Text style={styles.detailsValueBold}>₹{grandTotalAmount}</Text>
@@ -810,6 +783,7 @@ console.log({selectedPaymentMode})
           </TouchableOpacity>
         )}
       </View>
+      </ScrollView>
     </View>
   );
 };
@@ -857,6 +831,7 @@ const styles = StyleSheet.create({
   totalAmount: { fontSize: 18, fontWeight: "bold", color: "green" },
   paymentHeader: { fontSize: 18, fontWeight: "bold", marginBottom: 16 },
   paymentOptions: {
+    width:width*0.7,
     flexDirection: "row",
     justifyContent: "space-around",
     marginBottom: 16,
@@ -877,10 +852,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    width: "45%",
+    // width: "40%",
+    width:width*0.4,
     backgroundColor: "#c0c0c0",
     borderRadius: 10,
-    width: 180,
+    // width: 180,
     height: 90,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -955,7 +931,8 @@ const styles = StyleSheet.create({
   //   width: width * 0.4,
   // },
   selectedOption: {
-    borderColor: "blue",
+    borderColor: "green",
+    borderWidth:2
   },
   optionText: {
     marginTop: 5,

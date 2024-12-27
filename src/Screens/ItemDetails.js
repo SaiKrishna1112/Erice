@@ -1,5 +1,5 @@
 import React, { useEffect, useState,useLayoutEffect  } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Pressable, Dimensions} from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Pressable, Dimensions,ScrollView} from 'react-native';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { useNavigation } from "@react-navigation/native";
@@ -273,69 +273,13 @@ const increaseCartItem = async (item) => {
         <Image source={{ uri: item.itemImage }} style={styles.detailImage} />
         <Text style={styles.itemName}>{item.itemName.toUpperCase()}</Text>
       </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, padding: 5 }}>
       <View style={styles.descriptionCard}>
   <Text style={styles.descriptionLabel}>Description:</Text>
   <Text style={styles.descriptionText}>{item.itemDescription}</Text>
-</View>
-      {/* <View style={styles.infoContainer}>
-        <View style={styles.row}>
-          <Text style={styles.label}>MRP:</Text>
-          <Text style={styles.value}>Rs.{item.itemMrp}/-</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Weight:</Text>
-          <Text style={styles.value}>
-            {item.quantity} {item.units}
-          </Text>
-        </View>
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.label}>Item Quantity:</Text>
-          <Text style={styles.description}>{item.itemQuantity1}</Text>
-        </View>
-       
-
-{cartItems[item.itemId] || loadingItems[item.itemId] ? ( // Ensure loading state prevents fallback
-  <View style={styles.quantityContainer}>
-    <TouchableOpacity
-      style={styles.quantityButton}
-      onPress={() => handleDecrease(item)}
-      disabled={loadingItems[item.itemId]} // Disable button during loading
-    >
-      <Text style={styles.quantityButtonText}>-</Text>
-    </TouchableOpacity>
-
-    {loadingItems[item.itemId] ? ( // Show loader while updating quantity
-      <ActivityIndicator size="small" color="#000" style={styles.loader} />
-    ) : (
-      <Text style={styles.quantityText}>{cartItems[item.itemId]}</Text>
-    )}
-
-    <TouchableOpacity
-      style={styles.quantityButton}
-      onPress={() => handleIncrease(item)}
-      disabled={loadingItems[item.itemId]} // Disable button during loading
-    >
-      <Text style={styles.quantityButtonText}>+</Text>
-    </TouchableOpacity>
-  </View>
-) : (
-  <TouchableOpacity
-    style={styles.addButton}
-    onPress={() => handleAddToCart(item)}
-    disabled={loadingItems[item.itemId]} 
-  >
-    {loadingItems[item.itemId] ? (
-      <ActivityIndicator size="small" color="#FFF" />
-    ) : (
-      <Text style={styles.addButtonText}>Add to Cart</Text>
-    )}
-    
-  </TouchableOpacity>
-)}
-
-      </View> */}
-      <View style={styles.infoContainer}>
-  {/* Item Info */}
+   </View>
+    <View style={styles.infoContainer}>
+     {/* Item Info */}
   <View style={styles.infoRow}>
   <Text style={styles.label}>Mrp:</Text>
   <Text style={styles.mrpvalue}>₹ {item.itemMrp}/-</Text>
@@ -402,7 +346,9 @@ const increaseCartItem = async (item) => {
       </>
     )}
   </View>
+ 
 </View>
+</ScrollView>
 
 
       <View style={styles.footer}>
@@ -414,11 +360,9 @@ const increaseCartItem = async (item) => {
       <Text style={styles.buttonText}>View Cart</Text>
     </TouchableOpacity>
   </View>
-  {/* <TouchableOpacity onPress={() => navigation.navigate("Checkout")} style={styles.largeButton}>
-    <Text style={styles.buttonText}>CheckOut</Text>
-  </TouchableOpacity> */}
+  
 </View>
-
+ 
     </View>
   );
 };
@@ -432,6 +376,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   actionRow: {
+    height:height/3,
     // flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

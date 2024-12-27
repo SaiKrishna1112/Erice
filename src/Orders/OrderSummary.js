@@ -232,6 +232,7 @@ const OrderSummaryScreen = ({ navigation, route }) => {
               </View>
             </View>
           )}
+          showsVerticalScrollIndicator={false}
         />
       )}
 
