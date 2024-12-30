@@ -693,8 +693,13 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   loader: {
-    marginHorizontal: 10,
+    // marginHorizontal: 10,
     alignSelf: "center",
+    // backgroundColor: "#808080",
+    // padding: 8,
+    borderRadius: 4,
+    // marginHorizontal: 8,
+
   },
   loaderContainer: {
     position: "absolute",

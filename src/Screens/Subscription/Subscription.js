@@ -137,16 +137,26 @@ function SubscriptionConfirmation(details){
     setLoader(false)
     console.log(response.data)
     if(response.data.paymentId==null&&response.data.status==false){
-      // Alert.alert(response.data.message)
-     Alert.alert(response.data.message.replace(/\. /g, '.\n') );
+    //  Alert.alert(response.data.message.replace(/\. /g, '.\n') );
+    Alert.alert(
+      'Subscription Status', 
+      response.data.message.replace(/\. /g, '.\n'), 
+      [
+        {
+          text: 'OK', 
+          onPress: () => console.log('Alert closed'),
+        },
+      ],
+      { cancelable: true }
+    );
     }
     else{
     setTransactionId(response.data.paymentId)
     console.log("==========");
     const data = {
       mid: "1152305",
-      // amount: details.amount,
-      amount:1,
+      amount: details.amount,
+      // amount:1,
       merchantTransactionId: response.data.paymentId,
       transactionDate: new Date(),
       terminalId: "getepay.merchant128638@icici",
@@ -237,6 +247,10 @@ const getepayPortal = async (data) => {
 
         [
           {
+            text: "No",
+            onPress: () => {},
+          },
+          {
             text: "yes",
             onPress: () => {
              
@@ -244,10 +258,10 @@ const getepayPortal = async (data) => {
               setLoader(false)
             },
           },
-          {
-            text: "No",
-            onPress: () => {},
-          },
+          // {
+          //   text: "No",
+          //   onPress: () => {},
+          // },
         ]
       );
     })
@@ -259,7 +273,7 @@ useEffect(() => {
   if (
     paymentStatus == "PENDING" ||
     paymentStatus == "" ||
-    paymentStatus == null
+    paymentStatus == null || paymentStatus == "undefined"
   ) {
     const data = setInterval(() => {
       Requery();
@@ -419,7 +433,23 @@ function Requery() {
   const renderPlan = ({ item }) => (
     <>
     <ScrollView>
-    <View style={styles.planContainer}>
+    {/* <View style={styles.planContainer}>
+      <Text style={styles.title}>₹{item.amount}</Text>
+      <Text style={styles.text}>Get Amount: ₹{item.getAmount}</Text>
+      <Text style={styles.text}>
+      Limit: ₹{item.limitAmount} <Text style={styles.note}>(per month)</Text>
+     </Text>
+     {loader==false?
+      <TouchableOpacity style={styles.button} onPress={() => handleSubscription(item)}>
+        <Text style={styles.buttonText}>Subscribe</Text>
+      </TouchableOpacity>
+      :
+      <View style={styles.button} >
+        <ActivityIndicator size="small" color="white"/>
+      </View>
+     }
+    </View> */}
+     <View style={styles.planContainer}>
       <Text style={styles.title}>₹{item.amount}</Text>
       <Text style={styles.text}>Get Amount: ₹{item.getAmount}</Text>
       <Text style={styles.text}>
@@ -487,17 +517,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   planContainer: {
-    alignSelf:"center",
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f9f9f9', // Light background for better contrast
     borderRadius: 10,
-    padding: 16,
-    width: width*0.8,
-    alignItems: 'center',
+    padding: 15,
+    borderColor: '#ddd',
+    borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowRadius: 5,
+    elevation: 3,
+    marginBottom: 10, // Add spacing between plans
   },
   title: {
     fontSize: 22,
@@ -518,6 +547,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     marginTop: 10,
+    width:width*0.5,
+    alignSelf:"center"
   },
   buttonText: {
     color: '#fff',

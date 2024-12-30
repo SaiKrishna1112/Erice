@@ -2,7 +2,7 @@
   "expo": {
     "name": "OxyRice",
     "slug": "oxyrice",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -21,7 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.oxyrice.oxyrice_customer",
-      "versionCode": 6
+      "versionCode": 7
     },
     "web": {
       "favicon": "./assets/favicon.png"

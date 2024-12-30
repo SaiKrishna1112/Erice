@@ -45,10 +45,10 @@ const Rice = () => {
   const currentScreen = useNavigationState(
     (state) => state.routes[state.index]?.name
   );
-
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     const handleBackPress = () => {
-      if (currentScreen === 'Login') {
+      // if (currentScreen === 'Login') {
         // Custom behavior for Login screen
         Alert.alert(
           'Exit App',
@@ -59,18 +59,18 @@ const Rice = () => {
           ],
           { cancelable: false }
         );
-      } else {
-        // Default behavior for other screens
-        Alert.alert(
-          'Go Back',
-          'Are you sure you want to go back?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'OK', onPress: () => navigation.goBack() },
-          ],
-          { cancelable: false }
-        );
-      }
+      // } else {
+      //   // Default behavior for other screens
+      //   Alert.alert(
+      //     'Go Back',
+      //     'Are you sure you want to go back?',
+      //     [
+      //       { text: 'Cancel', style: 'cancel' },
+      //       { text: 'OK', onPress: () => BackHandler.exitApp() },
+      //     ],
+      //     { cancelable: false }
+      //   );
+      // }
       return true;
     };
 
@@ -81,10 +81,8 @@ const Rice = () => {
     return () => {
       BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
     };
-  }, [currentScreen]);
-
-  return null; // Replace this with your screen/component tree
-};
+  }, [currentScreen])
+)
 
 
 

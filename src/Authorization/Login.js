@@ -21,7 +21,10 @@ import { AccessToken } from "../../Redux/action/index";
 import BASE_URL from "../../Config";
 const { height, width } = Dimensions.get("window");
 import Icon from "react-native-vector-icons/Ionicons";
- 
+import dynamicLinks from '@react-native-firebase/dynamic-links';
+import { initializeApp } from '@react-native-firebase/app';
+
+
 const Login = () => {
   const [formData, setFormData] = useState({
     mobileNumber: "",
@@ -38,6 +41,38 @@ const Login = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [mobileOtpSession,setMobileOtpSession]=useState();
+
+
+
+
+
+
+
+
+  useFocusEffect(
+    useCallback(() => {
+      const checkLoginData = async () => {
+        try {
+          const loginData = await AsyncStorage.getItem("userData");
+          const storedmobilenumber = await AsyncStorage.getItem("mobileNumber");
+          console.log(storedmobilenumber);
+
+          setMobileNumber(storedmobilenumber);
+          if (loginData) {
+            const user = JSON.parse(loginData);
+            if (user.accessToken) {
+              dispatch(AccessToken(user));
+              navigation.navigate("Home");
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching login data", error.response);
+        }
+      };
+
+      checkLoginData();
+    }, [])
+  );
 
   const handleSendOtp = async () => {
     // if (!validateMobileNumber()) return;
@@ -147,6 +182,95 @@ const Login = () => {
         }
       });
   };
+
+
+  const firebaseConfig = {
+    apiKey: 'AIzaSyBIm498LNCbEUlatGp4k6JQXOrrUI0SjFE',
+    authDomain: 'erice-241012.firebaseapp.com',
+    projectId: 'erice-241012',
+    appId: '1:834341780860:android:2a62736e85889c243cb8f9',
+    databaseURL: 'https://erice-241012.firebaseio.com',
+    storageBucket: 'erice-241012.firebasestorage.app',
+    messagingSenderId: '834341780860'
+  };
+
+  
+    initializeApp(firebaseConfig);
+
+
+
+  useEffect(() => {
+		const handleDynamicLink = async () => {
+				
+
+				const initialDynamicLink = await dynamicLinks().getInitialLink();
+				if (initialDynamicLink) {
+						// Handle the initial dynamic link
+						console.log('Initial dynamic link:');
+						console.log('Initial dynamic link:', initialDynamicLink.url);
+						// alert("initialDynamicLink....."+initialDynamicLink.url)
+						const url = initialDynamicLink.url;
+						const regex = /ref=([^&]+)/;
+						const match = url.match(regex);
+
+						if (match && match[1]) {
+								const referralCode = match[1];
+								// setRefCode(referralCode)
+								// refCode=referralCode;
+								console.log(referralCode); 
+								// dispatch(Refcodes(referralCode));// Output: LR1040972
+						} else {
+								console.log("Referral code not found in the URL.");
+						}
+
+				}
+
+				const unsubscribe = dynamicLinks().onLink((link) => {
+						// Handle the incoming dynamic link
+						console.log('Incoming dynamic link:');
+						console.log('Incoming dynamic link:', link.url);
+						// alert("unsubscribe......"+link.url)
+						const url = link.url;
+						const regex = /ref=([^&]+)/;
+						const match = url.match(regex);
+
+						if (match && match[1]) {
+								const referralCode = match[1];
+								// setRefCode(referralCode)
+								refCode=referralCode;
+								console.log(referralCode); 
+						} else {
+								console.log("Referral code not found in the URL.");
+						}
+                                       
+				});
+
+				// Handle app URL scheme deep links
+				Linking.addEventListener('url', (event) => {
+						handleOpenURL(event.url);
+						// alert("event.........."+event.url)
+				});
+
+				return () => {
+						unsubscribe();
+						Linking.removeEventListener('url', handleOpenURL);
+				};
+		};
+
+		handleDynamicLink();
+}, []);
+
+const handleOpenURL = (url) => {
+		// Handle app URL scheme deep links
+		console.log('App URL scheme deep link:');
+		console.log('App URL scheme deep link:', url);
+};
+
+
+
+
+
+
 
   return (
     <KeyboardAvoidingView
@@ -388,6 +512,11 @@ const Login = () => {
                       Invalid OTP
                     </Text>
                   ) : null}
+                     <View style={{alignSelf:"flex-end",marginRight:50}}>
+                        <TouchableOpacity  onPress={() => handleSendOtp()}>
+                        <Text style={{color:"orange",fontWeight:"bold"}}>Resend Otp</Text>
+                        </TouchableOpacity>
+                    </View>
 
                   {formData.loading == false ? (
                     <>
@@ -397,11 +526,7 @@ const Login = () => {
                     >
                       <Text style={styles.Otptxt}>Verify OTP</Text>
                     </TouchableOpacity>
-                    <View style={{marginLeft:270}}>
-                        <TouchableOpacity  onPress={() => handleVerifyOtp()}>
-                        <Text style={{color:"#fff",fontWeight:"bold",textDecorationLine:"underline"}}>Resend Otp</Text>
-                        </TouchableOpacity>
-                    </View>
+                 
                     </>
                   ) : (
                     <View style={styles.otpbtn}>

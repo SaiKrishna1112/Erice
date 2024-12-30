@@ -280,6 +280,7 @@ const OrderDetails = () => {
               <Text style={styles.headerText}>Item Name</Text>
               <Text style={styles.headerText}>Quantity</Text>
               <Text style={styles.headerText}>Price</Text>
+              <Text style={styles.headerText}>Total Price</Text>
             </View>
 
             {/* FlatList */}
@@ -290,11 +291,14 @@ const OrderDetails = () => {
                 <View style={styles.itemRow}>
                   <Text style={styles.itemName}>{item.itemName}</Text>
                   <Text style={styles.itemDetail}>{item.quantity}</Text>
+                  <Text style={styles.itemDetail}>₹{item.price}</Text>
+
                   <Text style={styles.itemDetail}>
                     ₹{item.price * item.quantity}
                   </Text>
                 </View>
               )}
+              ItemSeparatorComponent={() => <View style={styles.separator} />} // Line separator
             />
           </View>
         ) : null}
@@ -404,11 +408,11 @@ const OrderDetails = () => {
                   paddingHorizontal: 20,
                 }}
               >
-                {/* <TouchableOpacity style={styles.cancelButton} onPress={()=>setIsExchangeVisible(true)}>
+                <TouchableOpacity style={styles.cancelButton} onPress={()=>setIsExchangeVisible(true)}>
                 <View>
                   <Text style={styles.cancelButtonText}>Exchange Order</Text>
                 </View>
-              </TouchableOpacity> */}
+              </TouchableOpacity>
                 {isExchangeVisible && (
                   <TouchableOpacity
                     style={styles.cancelButton}
@@ -602,9 +606,10 @@ const styles = StyleSheet.create({
     // padding: 15,
   },
   headerText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: 'bold',
+    fontSize: 14,
+    flex: 1, 
+    textAlign: 'center',
   },
   orderId: {
     color: "#fff",
@@ -637,21 +642,19 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   itemRow: {
-    marginLeft: 15,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
   },
   itemName: {
-    fontSize: 16,
-    flex: 2,
-    color: "#000",
+    fontSize: 14,
+    flex: 1, 
+    textAlign: 'center',
   },
   itemDetail: {
-    fontSize: 16,
-    flex: 1,
+    fontSize: 14,
+    flex: 1, 
+    textAlign: 'center',
   },
   totalSection: {
     backgroundColor: "#fff",
@@ -690,12 +693,9 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    backgroundColor: "#f2f2f2",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
   },
   headerText: {
     flex: 1,
@@ -916,6 +916,11 @@ const styles = StyleSheet.create({
   checkboxTick: {
     color: "white",
     fontSize: 16,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#e0e0e0', // Light gray line
+    marginHorizontal: 10, // Optional: Add margins for spacing
   },
 });
 

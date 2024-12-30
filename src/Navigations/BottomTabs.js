@@ -259,9 +259,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     bottom: 10,
     height: 60,
-    width: width * 1,
+    width: width*1,
     alignSelf: "center",
-    borderRadius: 20,
+    // borderRadius: 20,
     backgroundColor: "#03843b",
     borderTopColor: "transparent",
     shadowColor: COLORS.dark,
@@ -269,6 +269,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
+    alignContent:"center"
   },
   tabIconContainer: {
     alignItems: "center",

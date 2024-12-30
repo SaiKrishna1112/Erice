@@ -270,8 +270,8 @@ console.log({selectedPaymentMode})
           console.log("==========");
           const data = {
             mid: "1152305",
-            // amount: grandTotalAmount,
-            amount: 1,
+            amount: grandTotalAmount,
+            // amount: 1,
             merchantTransactionId: response.data.paymentId,
             transactionDate: new Date(),
             terminalId: "getepay.merchant128638@icici",

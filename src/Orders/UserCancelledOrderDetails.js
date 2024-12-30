@@ -45,13 +45,15 @@ const UserCancelledOrderDetails = () => {
 
 const renderItem = ({ item }) => (
   <View style={styles.itemContainer}>
+    
     <Text style={styles.itemName}>{item.itemName}</Text>
+    <Text>orderId : {item.orderId}</Text>
     <Text>Price: ₹{item.itemPrice}</Text>
     <Text>Quantity: {item.itemQuantity}</Text>
     <Text>Weight: {item.itemWeight} Kg</Text>
-    <TouchableOpacity  style={styles.reOrderButton}onPress={()=>navigation.navigate("Rice")} > 
+    {/* <TouchableOpacity  style={styles.reOrderButton}onPress={()=>navigation.navigate("Rice")} > 
       <Text style={{color:"#fff",fontWeight:"bold"}}>ReOrder</Text>
-    </TouchableOpacity>
+    </TouchableOpacity> */}
     {/* <Text>Status: {item.orderStatus}</Text> */}
   </View>
 );

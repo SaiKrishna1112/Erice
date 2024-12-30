@@ -11,6 +11,8 @@ import Register from "../Authorization/Register";
 import LoginWithPassword from "../Authorization/LoginWithPassword";
 import Refund from "../Screens/View/Refund";
 
+// import ShareLinks from "../Referral Links/ShareLinks";
+
 import Tabs from "./BottomTabs";
 import RiceProductDetails from "../Screens/RiceProductDetails";
 import ProductView from "../Components/productsDesign/ProductView";
@@ -27,7 +29,7 @@ import AddAddress from "../Screens/Address/AddAddress";
 import CartScreen from "../Screens/View/CartScreen";
 import OrderSummary from "../../src/Orders/OrderSummary";
 import PaymentDetails from "../Screens/View/PaymentScreen";
-import OrderDetails from "../../src/Orders/OrderDetails";
+import OrderDetails from "../Orders/OrderDetails-New";
 import WriteToUs from '../Screens/View/WriteToUs';
 import TicketHistory from '../Screens/View/TicketHistory';
 import TicketHistoryComments from "../Screens/View/TicketHistoryComments";
@@ -64,6 +66,9 @@ export default function StacksScreens() {
         component={Register}
         options={{ headerShown: false }}
       />
+
+      {/* <Stack.Screen name="ShareLinks" component={ShareLinks} /> */}
+      
       <Stack.Screen
         name="Home"
         component={Tabs}

@@ -32,6 +32,9 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../Config";
+import ShareLinks from "../../src/Referral Links/ShareLinks"
+
+
 const ProfilePage = () => {
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
@@ -116,7 +119,7 @@ const ProfilePage = () => {
           customer_name: response.data.name,
           customer_email: response.data.email,
           customer_mobile: response.data.mobileNumber,
-          user_mobile: response.data.alterMobileNumber,
+          user_mobile: response.data.alterMobileNumber.trim(" "),
           //   customer_address: response.data.address,
           //  customer_flatNo:response.data.flatNo,
           //  customer_landmark:response.data.landMark,
@@ -411,8 +414,7 @@ const ProfilePage = () => {
               {/* <TouchableOpacity style={styles.optionButton} onPress={onShare}>
                         <Text style={styles.optionText}>Refer & Share App Link</Text>
                     </TouchableOpacity> */}
-            </View>
-
+            </View>            
             {/* <View style={styles.footer}>
                     <Text>MY REFERRAL CODE: <Text style={styles.bold}>{user.referral_code}</Text></Text>
                     <Text>Version: 1.0.24</Text>
@@ -430,13 +432,16 @@ const ProfilePage = () => {
           </View>
         </ScrollView>
       </View>
+      <View style={{top:-80,flex:0.2}}>
+      <ShareLinks/>
+      </View>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   outerContainer: {
-    flex: 1, // Ensures it uses the full screen
+    flex: 1, 
     backgroundColor: "#F9F9F9",
   },
   mainContainer: {
@@ -513,7 +518,7 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    alignItems: "center",
+    // alignItems: "center",
     marginTop: 30,
     backgroundColor: "#FFF",
     padding: 10,

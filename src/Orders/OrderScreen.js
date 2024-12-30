@@ -157,7 +157,6 @@ const OrderScreen = () => {
           showsHorizontalScrollIndicator={false} 
         />
       )}
-      {/* <Footer navigation={navigation} /> */}
       <View style={styles.footer}>
       <TouchableOpacity
         style={styles.footerButton}
