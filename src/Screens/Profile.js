@@ -20,6 +20,7 @@ import {
   Easing,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 // import { Ionicons } from "@expo/vector-icons";
@@ -32,8 +33,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../Config";
-import ShareLinks from "../../src/Referral Links/ShareLinks"
-
+import ShareLinks from "../../src/Referral Links/ShareLinks";
 
 const ProfilePage = () => {
   const userData = useSelector((state) => state.counter);
@@ -68,6 +68,7 @@ const ProfilePage = () => {
   const [isInitiallySaved, setIsInitiallySaved] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const [profileData, setProfileData] = useState();
+  const [isLoading, setIsLoading] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -167,7 +168,7 @@ const ProfilePage = () => {
     //   );
     //   return;
     // }
-
+    setIsLoading(true);
     try {
       const response = await axios.patch(
         BASE_URL + "erice-service/user/profileUpdate",
@@ -199,6 +200,7 @@ const ProfilePage = () => {
 
         // Mark profile as saved and show success alert
         setIsProfileSaved(true);
+        setIsLoading(false);
         Alert.alert("Success", "Profile saved successfully");
 
         console.log("Profile form data:", profileForm);
@@ -278,22 +280,13 @@ const ProfilePage = () => {
       <View style={styles.mainContainer}>
         <ScrollView contentContainerStyle={styles.container}>
           <View>
-            {/* <TextInput
-          style={styles.input}
-          placeholder="Enter your name"
-          value={profileForm?.customer_name || ""}
-          onChangeText={(text) => {
-            setProfileForm({ ...profileForm, customer_name: text });
-            setErrors({ ...errors, customer_name: "" });
-          }}
-        /> */}
             <TextInput
               style={styles.input}
               placeholder="Enter your name"
               value={profileForm?.customer_name || ""}
               onChangeText={(text) => {
                 // Allow only alphabetic characters
-                const alphabeticText = text.replace(/[^a-zA-Z]/g, ""); 
+                const alphabeticText = text.replace(/[^a-zA-Z]/g, "");
                 setProfileForm({
                   ...profileForm,
                   customer_name: alphabeticText,
@@ -374,7 +367,7 @@ const ProfilePage = () => {
                 registered number can’t be reached.
               </Text>
             </View>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={{
                 backgroundColor: "#007bff",
                 padding: 10,
@@ -389,7 +382,30 @@ const ProfilePage = () => {
                   ? "Save Profile"
                   : "Save Profile"}
               </Text>
+            </TouchableOpacity> */}
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#007bff",
+                padding: 10,
+                borderRadius: 5,
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: 5,
+              }}
+              onPress={handleProfileSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={{ color: "white", fontSize: 16 }}>
+                  {isProfileSaved || isInitiallySaved
+                    ? "Save Profile"
+                    : "Save Profile"}
+                </Text>
+              )}
             </TouchableOpacity>
+
             <View style={styles.optionContainer}>
               <TouchableOpacity
                 style={styles.optionButton}
@@ -414,7 +430,7 @@ const ProfilePage = () => {
               {/* <TouchableOpacity style={styles.optionButton} onPress={onShare}>
                         <Text style={styles.optionText}>Refer & Share App Link</Text>
                     </TouchableOpacity> */}
-            </View>            
+            </View>
             {/* <View style={styles.footer}>
                     <Text>MY REFERRAL CODE: <Text style={styles.bold}>{user.referral_code}</Text></Text>
                     <Text>Version: 1.0.24</Text>
@@ -432,8 +448,8 @@ const ProfilePage = () => {
           </View>
         </ScrollView>
       </View>
-      <View style={{top:-80,flex:0.2}}>
-      <ShareLinks/>
+      <View style={{ top: -80, flex: 0.2 }}>
+        <ShareLinks />
       </View>
     </KeyboardAvoidingView>
   );
@@ -441,7 +457,7 @@ const ProfilePage = () => {
 
 const styles = StyleSheet.create({
   outerContainer: {
-    flex: 1, 
+    flex: 1,
     backgroundColor: "#F9F9F9",
   },
   mainContainer: {

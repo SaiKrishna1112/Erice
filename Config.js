@@ -1,5 +1,5 @@
 const config=(value)=>{
-    var userStage="test"
+    var userStage="test1"
 	var BASE_URL;
  if(userStage=="test1"){
 	//Live

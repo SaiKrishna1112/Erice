@@ -148,6 +148,7 @@ const OrderScreen = () => {
       {orders.length === 0 ? (
         <Text style={styles.noOrdersText}>No orders found!</Text>
       ) : (
+        <>
         <FlatList
           data={orders}
           renderItem={renderOrder}
@@ -156,7 +157,7 @@ const OrderScreen = () => {
           showsVerticalScrollIndicator={false} 
           showsHorizontalScrollIndicator={false} 
         />
-      )}
+      
       <View style={styles.footer}>
       <TouchableOpacity
         style={styles.footerButton}
@@ -171,7 +172,10 @@ const OrderScreen = () => {
         <Text style={styles.footerButtonText}>Exchanged Items</Text>
       </TouchableOpacity>
     </View>
+    </>
+    )}
     </View>
+
   );
 };
 

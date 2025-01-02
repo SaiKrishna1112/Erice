@@ -38,8 +38,15 @@ const LoginWithPassword = () => {
   const [showOtp, setShowOtp] = useState(false);
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const[secureText,setSecureText]=useState(true)
+
+  const toggleSecureText=()=>{
+    setSecureText(!secureText)
+  }
 
   const handleLogin = async () => {
+  
+
     if (formData.email == "" || formData.email == null) {
       setFormData({ ...formData, email_error: true });
       return false;
@@ -49,8 +56,8 @@ const LoginWithPassword = () => {
       formData.email.includes(".com") ||
       formData.email.includes(".in")
     ) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
+      const emailRegex = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+      if (emailRegex.test(formData.email==false)) {
         setFormData({ ...formData, validemail_error: true });
         return false;
       }
@@ -61,10 +68,13 @@ const LoginWithPassword = () => {
 
       //   setLoading(true);
       setFormData({ ...formData, loading: true });
+     
       var data = {
-        email: formData.email,
-        password: formData.password,
+        email: formData.email.replace(/\s+/g, ''),
+        password: formData.password.replace(/\s+/g,''),
       };
+
+      console.log({data})
       axios({
         method: "post",
         url: `${BASE_URL}erice-service/user/userEmailPassword`,
@@ -177,7 +187,7 @@ const LoginWithPassword = () => {
                 style={styles.input1}
                 placeholder="Enter Email"
                 mode="outlined"
-                value={formData.email}
+                value={formData.email.trim(' ')}
                 dense={true}
                 // autoFocus
                 activeOutlineColor="#e87f02"
@@ -235,10 +245,15 @@ const LoginWithPassword = () => {
                 style={styles.input1}
                 placeholder="Enter Password"
                 mode="outlined"
-                value={formData.password}
+                value={formData.password.trim(' ')}
                 dense={true}
                 activeOutlineColor="#e87f02"
-                right={<TextInput.Icon icon="eye" />}
+                secureTextEntry={secureText}
+                right={<TextInput.Icon
+                         icon={secureText ? "eye-off" : "eye"}
+                         onPress={toggleSecureText}
+                         forceTextInputFocus={false} 
+                         />}
                 onChangeText={(text) => {
                   setFormData({
                     ...formData,

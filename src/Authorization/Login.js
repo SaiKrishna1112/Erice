@@ -44,20 +44,20 @@ const Login = () => {
 
 
 
-
-
-
-
-
   useFocusEffect(
     useCallback(() => {
       const checkLoginData = async () => {
         try {
           const loginData = await AsyncStorage.getItem("userData");
           const storedmobilenumber = await AsyncStorage.getItem("mobileNumber");
+          console.log("logindata",loginData);
+          
           console.log(storedmobilenumber);
 
-          setMobileNumber(storedmobilenumber);
+          // setMobileNumber(storedmobilenumber);
+          setFormData({...formData,mobileNumber:storedmobilenumber})
+          console.log("mobileNumber", formData.mobileNumber);
+
           if (loginData) {
             const user = JSON.parse(loginData);
             if (user.accessToken) {
@@ -207,7 +207,7 @@ const Login = () => {
 				if (initialDynamicLink) {
 						// Handle the initial dynamic link
 						console.log('Initial dynamic link:');
-						console.log('Initial dynamic link:', initialDynamicLink.url);
+						console.log('Initial dynamic link1:', initialDynamicLink.url);
 						// alert("initialDynamicLink....."+initialDynamicLink.url)
 						const url = initialDynamicLink.url;
 						const regex = /ref=([^&]+)/;
@@ -216,8 +216,10 @@ const Login = () => {
 						if (match && match[1]) {
 								const referralCode = match[1];
 								// setRefCode(referralCode)
-								// refCode=referralCode;
-								console.log(referralCode); 
+								var refCode=referralCode;
+								console.log({refCode}); 
+                navigation.navigate('RegisterScreen',{refCode:refCode})
+
 								// dispatch(Refcodes(referralCode));// Output: LR1040972
 						} else {
 								console.log("Referral code not found in the URL.");
@@ -227,8 +229,7 @@ const Login = () => {
 
 				const unsubscribe = dynamicLinks().onLink((link) => {
 						// Handle the incoming dynamic link
-						console.log('Incoming dynamic link:');
-						console.log('Incoming dynamic link:', link.url);
+						console.log('Incoming dynamic link2:', link.url);
 						// alert("unsubscribe......"+link.url)
 						const url = link.url;
 						const regex = /ref=([^&]+)/;
@@ -237,8 +238,9 @@ const Login = () => {
 						if (match && match[1]) {
 								const referralCode = match[1];
 								// setRefCode(referralCode)
-								refCode=referralCode;
-								console.log(referralCode); 
+								var refCode=referralCode;
+								console.log({refCode}); 
+                navigation.navigate('RegisterScreen',{refCode:refCode})
 						} else {
 								console.log("Referral code not found in the URL.");
 						}

@@ -293,7 +293,7 @@ console.log({selectedPaymentMode})
             bankId: "",
             txnType: "single",
             productType: "IPG",
-            txnNote: "Live Txn",
+            txnNote: "Rice Order In Live",
             vpa: "Getepay.merchant129014@icici",
           };
           console.log({ data });

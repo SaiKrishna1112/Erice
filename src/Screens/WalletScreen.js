@@ -24,7 +24,7 @@ const WalletPage = ({ route }) => {
     const data = { customerId: customerId};
     try {
       const response = await axios.post(
-        BASE_URL + 'erice-service/wallet/customerWalletData',
+        BASE_URL +'erice-service/wallet/customerWalletData',
         data,
         {
           headers: {
@@ -34,7 +34,7 @@ const WalletPage = ({ route }) => {
       );
 
       const { walletAmount, walletTransactions } = response.data;
-      console.log(response.data);
+      console.log("wallet transactions",response.data);
       setLoading(false)
       setWalletAmount(walletAmount);
       setWalletTxs(walletTransactions);
@@ -65,7 +65,7 @@ const WalletPage = ({ route }) => {
 </View>
 <ScrollView contentContainerStyle={styles.container}>
   <View>
-{walletTxs.length > 0 ? (
+{/* {walletTxs.length > 0 ? ( */}
   <FlatList
     data={walletTxs}
     keyExtractor={(item) => item.id}
@@ -103,9 +103,9 @@ const WalletPage = ({ route }) => {
 
     )}
   />
-) : (
-  <Text style={styles.noTransactions}>No transactions found!</Text>
-)}
+{/* // ) : (
+//   <Text style={styles.noTransactions}>No transactions found!</Text>
+// )} */}
   </View>
     </ScrollView>
     </>

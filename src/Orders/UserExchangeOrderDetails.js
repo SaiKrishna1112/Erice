@@ -51,14 +51,11 @@ const [exchangedItems,setExchangedItems]=useState([])
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
-      {/* <Text style={styles.itemName}>{item.itemName}</Text> */}
-      {/* <Text>Price: ₹{item.itemPrice}</Text> */}
-      <Text>ItemId: {item.itemId}</Text>
-      {/* <Text>Weight: {item.itemWeight} Kg</Text>
-      <TouchableOpacity  style={styles.reOrderButton}onPress={()=>navigation.navigate("Rice")} >
-        <Text style={{color:"#fff"}}>Reorder</Text>
-      </TouchableOpacity> */}
-      {/* <Text>Status: {item.orderStatus}</Text> */}
+      <Text style={styles.itemName}>{item.itemName}</Text>
+      <Text>OrderId: ₹{item.orderId}</Text>
+      <Text>ItemPrice: {item.itemPrice}</Text>
+      <Text>Exchange Reason: {item.reason}</Text>
+    
     </View>
   );
 
@@ -77,7 +74,7 @@ const [exchangedItems,setExchangedItems]=useState([])
           contentContainerStyle={styles.list}
         />
       ) : (
-        <Text style={styles.noDataText}>No cancelled items to display.</Text>
+        <Text style={styles.noDataText}>No Exchanged items to display.</Text>
       )}
     </View>
   );

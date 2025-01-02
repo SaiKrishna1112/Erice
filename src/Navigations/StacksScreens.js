@@ -29,7 +29,7 @@ import AddAddress from "../Screens/Address/AddAddress";
 import CartScreen from "../Screens/View/CartScreen";
 import OrderSummary from "../../src/Orders/OrderSummary";
 import PaymentDetails from "../Screens/View/PaymentScreen";
-import OrderDetails from "../Orders/OrderDetails-New";
+import OrderDetails from "../Orders/OrderDetails";
 import WriteToUs from '../Screens/View/WriteToUs';
 import TicketHistory from '../Screens/View/TicketHistory';
 import TicketHistoryComments from "../Screens/View/TicketHistoryComments";

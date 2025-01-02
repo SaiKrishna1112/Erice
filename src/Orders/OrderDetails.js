@@ -15,8 +15,9 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
+import Icon from "react-native-vector-icons/Ionicons"
 import { useSelector } from "react-redux";
-import Checkbox from "expo-checkbox"; // Assuming you're using expo-checkbox
+import Checkbox from "expo-checkbox"; 
 import BASE_URL from "../../Config";
 
 const { width, height } = Dimensions.get("window");
@@ -24,7 +25,7 @@ const OrderDetails = () => {
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
   const customerId = userData.userId;
-  const [orderstatus, setOrderStatus] = useState("");
+  const [orderstatus, setOrderStatus] = useState();
   const [orderData, setOrderData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsmodelVisible] = useState(false);
@@ -37,8 +38,87 @@ const OrderDetails = () => {
   const [selectedCancelItems, setSelectedCancelItems] = useState({});
   const [hideCancelbtn, setHideCancelBtn] = useState(false);
   const [isExchangeComplete, setIsExchangeComplete] = useState(false);
+  const [comments, setComments] = useState()
+  const[orderFeedback,setOrderFeedback]=useState('')
 
-  // console.log("varam", order_id);
+
+ const emojis = [
+   { emoji: "😡", label: "Very Bad", color: "#FFB3B3", value: "POOR" },
+   { emoji: "😟", label: "Bad", color: "#FFD9B3", value: "BELOWAVERAGE" },
+   { emoji: "🙂", label: "Average", color: "#FFFFB3", value: "AVERAGE" },
+   { emoji: "😃", label: "Good", color: "#D9FFB3", value: "GOOD" },
+   { emoji: "🤩", label: "Excellent", color: "#B3FFB3", value: "EXCELLENT" },
+ ];
+
+ const [selectedEmoji, setSelectedEmoji] = useState(null);
+
+ const handleEmojiPress = (index) => {
+   setSelectedEmoji(index);
+   console.log("Selected emoji:", emojis[index].value);
+ };
+let selectedLabel = "";
+  const handleSubmit = () => {
+    if (selectedEmoji === null || selectedEmoji === undefined) {
+      Alert.alert("Feedback Required", "Please select an emoji to proceed.");
+       } else {
+          selectedLabel = emojis[selectedEmoji].value;
+         console.log("Selected feedback:", selectedLabel);
+        //  Alert.alert("Feedback Submitted", `You selected: ${selectedLabel}`);
+    }
+    console.log(comments)
+  
+    let data = {
+      comments: comments,
+      feedbackStatus: selectedLabel,
+      feedback_user_id: customerId,
+      orderid: order_id,
+    };
+    console.log({ data })
+    
+    axios({
+      method: "post",
+      url: BASE_URL + "erice-service/checkout/submitfeedback",
+      data: data,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        console.log(response.data);
+        Alert.alert("Success", "Feedback submitted successfully!");
+        getOrderDetails()
+        // navigation.navigate("Home");
+      })
+      .catch((error) => {
+        console.log(error.response);
+        Alert.alert("Error", "Failed to submit feedback.");
+      });
+    
+  }
+
+  useEffect(() => {
+    feedbackGet()
+  }, [])
+
+const feedbackGet = async () => {
+ 
+  axios({
+    method: "get",
+    url: BASE_URL + `erice-service/checkout/feedback?feedbackUserId=${customerId}&orderid=${order_id}`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((response) => {
+      console.log("feedbackGet", response.data);
+      setOrderFeedback(response.data);
+    })
+    .catch((error) => {
+      console.log(error.response);
+    });
+}
+
+
 
   useEffect(() => {
     getOrderDetails();
@@ -62,33 +142,19 @@ const OrderDetails = () => {
 
       const orderStatus = response.data[0].orderstatus;
       setOrderStatus(orderStatus);
-
+      console.log("order status",orderStatus);
+      
       console.log("Fetched order details:", response.data);
       // console.log("Order status (direct from response):", orderStatus);
     } catch (error) {
       // console.error("Error fetching order details:", error.response);
-    }
+    } 
   };
 
-  // for exchange item
-
-  // const toggleExchangeItemSelection = (id) => {
-  //   setSelectedCancelItems((prev) => ({
-  //     ...prev,
-  //     [id]: prev[id]
-  //       ? { ...prev[id], checked: !prev[id].checked }
-  //       : { checked: true, reason: "" },
-  //   }));
-  // };
-  // const handleExchangeReason = (id, text,quantity) => {
-  //   setSelectedCancelItems((prev) => ({
-  //     ...prev,
-  //     [id]: { ...prev[id], reason: text ,quantity:quantity},
-  //   }));
-  // };
+  
 
   const toggleExchangeItemSelection = (id, quantity) => {
-    console.log("quntity", quantity);
+    // console.log("quntity", quantity);
 
     setSelectedCancelItems((prev) => ({
       ...prev,
@@ -120,7 +186,7 @@ const OrderDetails = () => {
       return;
     }
 
-    console.log("Cancel Data:", result);
+    // console.log("Cancel Data:", result);
 
     const data = {
       exchangeListItemRequest: result,
@@ -129,7 +195,8 @@ const OrderDetails = () => {
       type: "exchange",
       userId: customerId,
     };
-    console.log("exchange data", data);
+    // console.log("exchange data", data);
+    setLoading(true)
     axios({
       url: `${BASE_URL}erice-service/order/exchangeOrder`,
       method: "patch",
@@ -140,7 +207,7 @@ const OrderDetails = () => {
       data: data,
     })
       .then((res) => {
-        console.log("response", res);
+        console.log(" exchange response", res);
         Alert.alert("Success", res.data.type, [
           {
             text: "OK",
@@ -149,9 +216,10 @@ const OrderDetails = () => {
         ]);
 
         getOrderDetails();
+        setLoading(false)
       })
       .catch((err) => {
-        console.log("error cancel", err.response);
+        // console.log("error cancel", err.response);
       });
   };
 
@@ -218,12 +286,13 @@ const OrderDetails = () => {
     }
 
     // console.log("cancel Data:", result);
+    setLoading(true)
     const data = {
       userId: customerId,
       refundDtoList: result,
     };
 
-    // console.log({ data });
+    console.log({ data });
 
     axios({
       url: `${BASE_URL}erice-service/order/user_cancel_orderBasedOnItemId`,
@@ -235,6 +304,7 @@ const OrderDetails = () => {
       data: data,
     })
       .then((res) => {
+        
         console.log("response", res.data);
         Alert.alert("Success", res.data.message, [
           {
@@ -244,6 +314,7 @@ const OrderDetails = () => {
         ]);
         setIsmodelVisible(false)
         getOrderDetails();
+        setLoading(false)
       })
       .catch((err) => {
         console.log("error cancel", err.response);
@@ -272,42 +343,134 @@ const OrderDetails = () => {
         </View>
 
         {/* Order Items */}
+        <Text style={styles.sectionTitle}>Order Items</Text>
+
         {orderItems.length > 0 ? (
-          <>
-         <Text style={styles.sectionTitle}>Order Items</Text>
-          <View style={styles.section}>
-            {/* Header Row */}
-            <View style={styles.headerRow}>
-              <Text style={styles.headerText}>Item Name</Text>
-              <Text style={styles.headerText}>Quantity</Text>
-              <Text style={styles.headerText}>Price</Text>
-              <Text style={styles.headerText}>Total Price</Text>
+          <View>
+            <View style={styles.section}>
+              
+               <View style={styles.headerRow}>
+                            <Text style={styles.headerText}>Item Name</Text>
+                            <Text style={styles.headerText}>Qty</Text>
+                            <Text style={styles.headerText}>Price</Text>
+                            <Text style={styles.headerText}>Total</Text>
+                          </View>
+
+              
+              <FlatList
+                            data={orderItems}
+                            keyExtractor={(item, index) => index.toString()}
+                            renderItem={({ item }) => (
+                              <View style={styles.itemRow}>
+                                <Text style={styles.itemName}>{item.itemName}</Text>
+                                <Text style={styles.itemDetail}>{item.quantity}</Text>
+                                <Text style={styles.itemDetail}>₹{item.price/item.quantity}</Text>
+              
+                                <Text style={styles.itemDetail}>
+                                  ₹{item.price}
+                                </Text>
+                              </View>
+                            )}
+                            ItemSeparatorComponent={() => <View style={styles.separator} />} 
+                          />
             </View>
-
-            {/* FlatList */}
-            <FlatList
-              data={orderItems}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <View style={styles.itemRow}>
-                  <Text style={styles.itemName}>{item.itemName}</Text>
-                  <Text style={styles.itemDetail}>{item.quantity}</Text>
-                  <Text style={styles.itemDetail}>₹{item.price}</Text>
-
-                  <Text style={styles.itemDetail}>
-                    ₹{item.price * item.quantity}
-                  </Text>
-                </View>
-              )}
-              ItemSeparatorComponent={() => <View style={styles.separator} />} // Line separator
-            />
           </View>
-          </>
+        ) : null}
+
+        {/* Feedback */}
+        {orderstatus === "4" ? (
+          <View>
+            {orderFeedback.length < 0 ? (
+              <View>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+                >
+                  Rate your order Experience{" "} 
+                </Text>
+                <View style={styles.section}>
+                  <View>
+                    {/* <Text style={styles.inputLabel}>Rate your experience</Text> */}
+                    <View style={styles.emojiContainer}>
+                      {emojis.map((item, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.emojiBox,
+                            selectedEmoji === index && {
+                              backgroundColor: item.color,
+                            },
+                          ]}
+                          onPress={() => handleEmojiPress(index)}
+                        >
+                          <Text style={styles.emoji}>{item.emoji}</Text>
+                          <Text style={styles.emojiLabel}>{item.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter your feedback (Optional)"
+                        value={comments}
+                        multiline={true}
+                        onChangeText={(text) => setComments(text)}
+                        noOfLines={4}
+                        scrollEnabled="true"
+                      />
+
+                      {selectedEmoji != null ? (
+                        <TouchableOpacity
+                          onPress={handleSubmit}
+                          style={styles.sendBtn}
+                        >
+                          {/* <Text
+                    style={{ fontSize: 18, fontWeight: "bold", color: "green" }}
+                  >
+                    POST
+                  </Text> */}
+                          <Icon name="send" size={20} color="white" />
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={styles.ViewSendBtn}>
+                          <Icon name="send" size={18} color="white" />
+                        </View>
+                      )}
+                    </View>
+                    {/* <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleSubmit}
+            >
+              <Text style={styles.submitButtonText}>Submit</Text>
+            </TouchableOpacity> */}
+                  </View>
+                </View>
+              </View>
+            ) : (
+              // <Text>{orderstatus}</Text>
+              <View>
+                   <Text
+                  style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+                >
+                  Rate your order Experience{" "} 
+                </Text>
+              <View style={styles.section}>
+              
+                <Text>Already you have submitted feedback</Text>
+             </View>
+             </View>
+            )}
+          </View>
         ) : null}
 
         {/* Billing Details */}
-        <>
         <Text style={styles.sectionTitle}>Billing Details</Text>
+
         <View style={styles.section}>
           <Text style={styles.detailText}>
             Customer Name:{" "}
@@ -327,7 +490,7 @@ const OrderDetails = () => {
             {orderDetails.address}
           </Text>
         </View>
-        </>
+
         {/* Grand Total */}
         <View style={styles.totalSection}>
           {/* Subtotal */}
@@ -360,7 +523,6 @@ const OrderDetails = () => {
             <Text style={styles.grandTotalValue}>₹{granttotal}</Text>
           </View>
         </View>
-        
       </ScrollView>
 
       {orderstatus === "6" ? (
@@ -437,9 +599,9 @@ const OrderDetails = () => {
             style={styles.cancelButton}
             onPress={() => navigation.navigate("Rice")}
           >
-            <View>
+            {/* <View>
               <Text style={styles.cancelButtonText}>Reorder</Text>
-            </View>
+            </View> */}
           </TouchableOpacity>
         )}
 
@@ -450,12 +612,6 @@ const OrderDetails = () => {
           <Text style={styles.cancelButtonText}>Write To Us</Text>
         </TouchableOpacity>
 
-        {/* <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.navigate("User Cancelled Order Details")}
-        >
-          <Text style={styles.cancelButtonText}>Cancellation</Text>
-        </TouchableOpacity> */}
       </View>
 
       {isModalVisible && (
@@ -510,6 +666,23 @@ const OrderDetails = () => {
                 >
                   <Text style={styles.buttonText}>Submit</Text>
                 </TouchableOpacity>
+                {loading && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "rgba(255, 255, 255, 0.7)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderRadius: 10,
+                }}
+              >
+                <ActivityIndicator size="large" color="#000" />
+              </View>
+            )}
               </View>
             </View>
           </View>
@@ -585,6 +758,28 @@ const OrderDetails = () => {
                 >
                   <Text style={styles.buttonText}>Submit</Text>
                 </TouchableOpacity>
+                {loading && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "rgba(255, 255, 255, 0.7)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderRadius: 10,
+                }}
+              >
+                <ActivityIndicator size="large" color="#000" />
+              </View>
+            )}
+            {/* {loading && (
+          <View style={styles.loaderOverlay}>
+            <ActivityIndicator size="large" color="#000" />
+          </View>
+        )} */}
               </View>
             </View>
           </View>
@@ -609,28 +804,24 @@ const styles = StyleSheet.create({
     // backgroundColor: "#4CAF50",
     // padding: 15,
   },
-  headerText: {
-    // width:2,
-    fontWeight: 'bold',
-    fontSize: 14,
-    flex: 1, 
-    textAlign: 'center',
-  },
+
+ 
   orderId: {
     color: "#fff",
     fontSize: 14,
     marginTop: 5,
   },
   section: {
-    backgroundColor: "#fff",
+    backgroundColor: "#dcdcdc",
     borderRadius: 8,
-    padding: 15,
+    padding: 10,
     marginBottom: 20,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
     elevation: 3,
+    width: width * 0.9,
   },
   sectionTitle: {
     fontSize: 18,
@@ -647,21 +838,46 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
+    marginLeft: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
   },
   itemName: {
-    fontSize: 14,
-    flex: 1, 
-    textAlign: 'center',
+    paddingLeft:1,
+    fontSize: 13,
+    flex: 1.5,
+    color: "#000",
+    width:width*0.3,
+   
   },
   itemDetail: {
-    fontSize: 14,
-    flex: 1, 
-    textAlign: 'center',
+    fontSize: 15,
+    flex: 1,
+    marginLeft:15,
+    justifyContent:"center",
+    alignSelf:"center"
   },
-  totalSection: {
+  // totalSection: {
+  //   backgroundColor: "#dcdcdc",
+  //   borderRadius: 8,
+  //   padding: 15,
+  //   shadowColor: "#000",
+  //   shadowOpacity: 0.1,
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowRadius: 5,
+  //   elevation: 3,
+  //   flexDirection: "row",
+  //   justifyContent: "space-between",
+  // },
+  totalText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#4CAF50",
+  },
+  feebacksection: {
     backgroundColor: "#fff",
     borderRadius: 8,
     padding: 15,
@@ -670,13 +886,65 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
     elevation: 3,
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: "#fff",
+    width: width * 0.7,
+    // height: 40,
+  },
+  sendBtn: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    width: width * 0.1,
+    height: 40,
+  },
+  ViewSendBtn: {
+    backgroundColor: "#808080",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    width: width * 0.1,
+    height: 40,
+    marginRight:5
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: "top",
+  },
+  emojiContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginVertical: 10,
   },
-  totalText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#4CAF50",
+  emojiBox: {
+    // width: 65,
+    // height: 65,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    padding: 7,
+  },
+  emoji: {
+    fontSize: 32,
+  },
+  emojiLabel: {
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 5,
   },
   cancelButton: {
     backgroundColor: "red",
@@ -691,6 +959,7 @@ const styles = StyleSheet.create({
     width: width * 0.4,
     alignSelf: "center",
     justifyContent: "center",
+    alignItems: "center",
   },
   totalAmount: {
     fontSize: 18,
@@ -698,23 +967,33 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    backgroundColor: "#f2f2f2",
   },
   headerText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
     color: "#333",
-    width:width*0.3,
-    
+    // marginLeft:5,
+    // marginRight:25
+  },
+  headerText1: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#333",
   },
   totalSection: {
     marginVertical: 20,
     padding: 15,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#dcdcdc",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -722,6 +1001,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -881,13 +1161,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  // modalContainer: {
-  //   backgroundColor: "#fff",
-  //   marginHorizontal: 20,
-  //   borderRadius: 10,
-  //   padding: 20,
-  //   elevation: 5,
-  // },
+  
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -926,7 +1200,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#e0e0e0', 
+    backgroundColor: '#A6AEBF', 
     marginHorizontal: 10, 
   },
 });

@@ -22,7 +22,8 @@ import BASE_URL from "../../Config";
 const { height, width } = Dimensions.get("window");
 import Icon from "react-native-vector-icons/Ionicons";
 
-const Register = () => {
+const Register = ({route}) => {
+  
   const [formData, setFormData] = useState({
     mobileNumber: "",
     mobileNumber_error: false,
@@ -30,7 +31,7 @@ const Register = () => {
     otp: "",
     otp_error: false,
     validOtpError: false,
-
+    refCode:"",
     // showOtp: false,
     loading: false,
     // mobileOtpSession: "",
@@ -39,6 +40,19 @@ const Register = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [mobileOtpSession, setMobileOtpSession] = useState("");
+
+
+
+useEffect(()=>{
+  console.log("route",route.params)
+if(route.params?.refCode){
+  setFormData({...formData, refCode:route.params?.refCode})
+}
+else{
+  setFormData({...formData, refCode:""})
+}
+},[])
+
 
   const handleSendOtp = async () => {
     // if (!validateMobileNumber()) return;
@@ -114,7 +128,7 @@ const Register = () => {
       mobileOtpValue: formData.otp,
       primaryType: "CUSTOMER",
       userType: "Register",
-      // primaryType: "CUSTOMER",
+      referrerid: formData.refCode,
     };
     console.log({ data });
     axios({
@@ -124,6 +138,8 @@ const Register = () => {
     })
       .then(function (response) {
         console.log(response.data);
+        setFormData({ formData, loading: false });
+
         if (response.data.accessToken != null) {
           dispatch(AccessToken(response.data));
           Alert.alert("Success", "Registration successful!");
@@ -131,7 +147,9 @@ const Register = () => {
         }
       })
       .catch(function (error) {
-        console.log(error.response);
+        console.log(error.response.data);
+        setFormData({ formData, loading: false });
+Alert.alert("Failed,")
       });
   };
 
