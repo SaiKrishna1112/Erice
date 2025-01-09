@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   Modal,
   Dimensions,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
@@ -19,7 +19,7 @@ import { useSelector } from "react-redux";
 import { Checkbox } from "react-native-paper";
 import BASE_URL from "../../Config";
 
-const {width,height} = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 const OrderDetails = () => {
   const userData = useSelector((state) => state.counter);
   const token = userData.accessToken;
@@ -71,15 +71,11 @@ const OrderDetails = () => {
 
   const handleExchangeOrder = () => {
     setIsExchangeVisible(true);
-   
   };
 
   const handlecancelOrder = () => {
-   setIsmodelVisible(true);
+    setIsmodelVisible(true);
   };
-
-
-
 
   const toggleCancelItemSelection = (itemId) => {
     if (selectedCancelItems.includes(itemId)) {
@@ -89,18 +85,16 @@ const OrderDetails = () => {
     }
   };
 
-
-  // for exchange item 
+  // for exchange item
   const toggleItemSelection = (item) => {
     setSelectedItems((prevSelected) => {
       const updatedItems = prevSelected.includes(item)
         ? prevSelected.filter((i) => i !== item)
         : [...prevSelected, item];
-      console.log('Updated selectedItems:', updatedItems);
+      console.log("Updated selectedItems:", updatedItems);
       return updatedItems;
     });
   };
-  
 
   const handleConfirmExchange = () => {
     console.log("Selected Items for Exchange:", selectedItems);
@@ -115,14 +109,14 @@ const OrderDetails = () => {
       );
       return;
     }
-  
+
     try {
       const response = await fetch(
-        BASE_URL+'erice-service/order/user_cancel_orderBasedOnItemId',
+        BASE_URL + "erice-service/order/user_cancel_orderBasedOnItemId",
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             selectedItemIds: selectedCancelItems,
@@ -132,8 +126,7 @@ const OrderDetails = () => {
           }),
         }
       );
-  
-      
+
       if (response.data.status === true) {
         Alert.alert("Success", response.data.message, [
           {
@@ -147,10 +140,10 @@ const OrderDetails = () => {
       } else {
         Alert.alert("Success", response.data.message, [
           {
-            text: "OK", 
+            text: "OK",
             onPress: () => {
-              setIsmodelVisible(false); 
-              navigation.navigate("My Orders"); 
+              setIsmodelVisible(false);
+              navigation.navigate("My Orders");
             },
           },
         ]);
@@ -163,15 +156,6 @@ const OrderDetails = () => {
       );
     }
   };
-
-
-
-
-
-
-
-
-
 
   const cancelOrder = async (order_id, cancelReason, customerId) => {
     try {
@@ -204,10 +188,10 @@ const OrderDetails = () => {
       } else {
         Alert.alert("Success", response.data.message, [
           {
-            text: "OK", // On press of OK, navigate to the orders page
+            text: "OK", 
             onPress: () => {
-              setIsmodelVisible(false); // Close the modal
-              navigation.navigate("My Orders"); // Replace "Orders" with your actual screen name
+              setIsmodelVisible(false);
+              navigation.navigate("My Orders"); 
             },
           },
         ]);
@@ -245,13 +229,14 @@ const OrderDetails = () => {
     landMark,
     address,
     pinCode,
+    couponValue,
+    walletAmount,
+    subtotal,
   } = orderDetails;
-  console.log("Order details",orderDetails);
-  
+  console.log("Order details", orderDetails);
 
   return (
     <>
-       
       <ScrollView style={styles.container}>
         {/* Header */}
         <View style={styles.receiptHeader}>
@@ -326,7 +311,7 @@ const OrderDetails = () => {
           {/* Subtotal */}
           <View style={styles.row}>
             <Text style={styles.label}>Sub Total:</Text>
-            <Text style={styles.value}>₹{granttotal}</Text>
+            <Text style={styles.value}>₹{subtotal}</Text>
           </View>
 
           {/* Delivery Fee */}
@@ -334,7 +319,20 @@ const OrderDetails = () => {
             <Text style={styles.label}>Delivery Fee:</Text>
             <Text style={styles.value}>₹0.00</Text>
           </View>
-
+          {/* coupen value */}
+          {couponValue != null && couponValue != 0 && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Coupon Value:</Text>
+              <Text style={styles.value}>-₹{couponValue}</Text>
+            </View>
+          )}
+          {/* wallet amount */}
+          {walletAmount != null && walletAmount != 0 && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Wallet Amount:</Text>
+              <Text style={styles.value}>-₹{walletAmount}</Text>
+            </View>
+          )}
           {/* Payment Type */}
           <View style={styles.row}>
             <Text style={styles.label}>Payment Type:</Text>
@@ -355,7 +353,7 @@ const OrderDetails = () => {
         </View>
       </ScrollView>
 
-      {orderstatus === "6" ? (
+      {/* {orderstatus === "6" ? (
         <View style={styles.footer}>
           <TouchableOpacity
             style={styles.cancelButton}
@@ -385,17 +383,17 @@ const OrderDetails = () => {
               flexDirection: "row",
               marginHorizontal: 5,
               justifyContent: "space-between",
-              paddingHorizontal:20
+              paddingHorizontal: 20,
             }}
           >
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => handlecancelOrder()}
               
             >
               <Text style={styles.cancelButtonText}>Cancel Order</Text>
             </TouchableOpacity>
-           
+            */}
           </View>
         ) : null}
 
@@ -410,58 +408,56 @@ const OrderDetails = () => {
       </TouchableOpacity>
     </View>
   ) : null} */}
-   <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => navigation.navigate("Write To Us")}
-            >
-              <Text style={styles.cancelButtonText}>Write To Us</Text>
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => navigation.navigate("Write To Us")}
+        >
+          <Text style={styles.cancelButtonText}>Write To Us</Text>
+        </TouchableOpacity>
       </View>
 
-
-       {isModalVisible && (
+      {isModalVisible && (
         //  <KeyboardAvoidingView>
-          <View style={styles.modalContainer}>
-            <View style={styles.modal}>
-              <Text style={styles.modalTitle}>Cancel Reason</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Please enter  a reason"
-                multiline={true}  
-                numberOfLines={4} 
-
-                value={cancelReason}
-                onChangeText={(text) => setCancelReason(text)}
-              />
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={styles.cancelButtonModal}
-                  onPress={() => setIsmodelVisible(false)} // Close the modal
-                >
-                  <Text style={styles.cancelButtonTextModal}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.submitButtonModal}
-                  onPress={() => {
-                    if (!cancelReason.trim()) {
-                      Alert.alert(
-                        "Sorry",
-                        "Please provide a reason for cancelling the order."
-                      );
-                      return;
-                    }
-                    cancelOrder(order_id, cancelReason, customerId);
-                  }}
-                >
-                  <Text style={styles.submitButtonText}>Submit</Text>
-                </TouchableOpacity>
-              </View>
+        <View style={styles.modalContainer}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitle}>Cancel Reason</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Please enter  a reason"
+              multiline={true}
+              numberOfLines={4}
+              value={cancelReason}
+              onChangeText={(text) => setCancelReason(text)}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButtonModal}
+                onPress={() => setIsmodelVisible(false)} // Close the modal
+              >
+                <Text style={styles.cancelButtonTextModal}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButtonModal}
+                onPress={() => {
+                  if (!cancelReason.trim()) {
+                    Alert.alert(
+                      "Sorry",
+                      "Please provide a reason for cancelling the order."
+                    );
+                    return;
+                  }
+                  cancelOrder(order_id, cancelReason, customerId);
+                }}
+              >
+                <Text style={styles.submitButtonText}>Submit</Text>
+              </TouchableOpacity>
             </View>
           </View>
+        </View>
         // </KeyboardAvoidingView>
-      )}  
+      )}
 
-{/* {isModalVisible && (
+      {/* {isModalVisible && (
   <Modal visible={isModalVisible} transparent animationType="slide">
     <View style={styles.overlay}>
       <View style={styles.modalContainer}>
@@ -518,7 +514,7 @@ const OrderDetails = () => {
   </Modal>
 )} */}
 
- {orderstatus === "4" ? (
+      {orderstatus === "4" ? (
         <View style={styles.footer1}>
           <TouchableOpacity
             style={styles.cancelButton}
@@ -532,52 +528,51 @@ const OrderDetails = () => {
         </View>
       ) : null}
 
-      
-
       {isExchangeVisible && (
-  <Modal visible={isExchangeVisible} transparent animationType="slide">
-    <View style={styles.overlay}>
-      <View style={styles.modalContainer}>
-        <Text style={styles.modalTitle}>Select Items to Exchange</Text>
-        <FlatList
-          data={orderItems}
-          keyExtractor={(item, index) => index.toString()}
-          // keyExtractor={(item)=>item.toString()}
-          renderItem={({ item }) => (
-           
-            
-            <View style={styles.itemRow}>
-              <Checkbox
-        status={selectedCancelItems.includes(item.itemId) ? 'checked' : 'unchecked'}
-       onPress={() => toggleCancelItemSelection(item.itemId)}
-       color="blue" />
-              <Text style={styles.itemName}>{item.itemName}</Text>
-              <Text style={styles.itemDetail}>{item.quantity}</Text>
-              <Text style={styles.itemDetail}>₹{item.price}</Text>
+        <Modal visible={isExchangeVisible} transparent animationType="slide">
+          <View style={styles.overlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Select Items to Exchange</Text>
+              <FlatList
+                data={orderItems}
+                keyExtractor={(item, index) => index.toString()}
+                // keyExtractor={(item)=>item.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.itemRow}>
+                    <Checkbox
+                      status={
+                        selectedCancelItems.includes(item.itemId)
+                          ? "checked"
+                          : "unchecked"
+                      }
+                      onPress={() => toggleCancelItemSelection(item.itemId)}
+                      color="blue"
+                    />
+                    <Text style={styles.itemName}>{item.itemName}</Text>
+                    <Text style={styles.itemDetail}>{item.quantity}</Text>
+                    <Text style={styles.itemDetail}>₹{item.price}</Text>
+                  </View>
+                )}
+              />
+
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.cancelButton1}
+                  onPress={() => setIsExchangeVisible(false)}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleConfirmExchange}
+                >
+                  <Text style={styles.buttonText}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          )}
-        />
-
-         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.cancelButton1}
-            onPress={() => setIsExchangeVisible(false)}
-          >
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={handleConfirmExchange}
-          >
-            <Text style={styles.buttonText}>Confirm</Text>
-          </TouchableOpacity>
-        </View>
-        
-      </View>
-    </View>
-  </Modal>
-)}
-
+          </View>
+        </Modal>
+      )}
     </>
   );
 };
@@ -646,7 +641,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 16,
     flex: 2,
-    color:"#000"
+    color: "#000",
   },
   itemDetail: {
     fontSize: 16,
@@ -781,57 +776,56 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     position: "absolute",
-    
-    alignSelf:"center",
+
+    alignSelf: "center",
     backgroundColor: "#fff",
-     borderRadius: 10,
+    borderRadius: 10,
     padding: 10,
     elevation: 5,
-    marginTop:height*0.3,
-    width:width*0.9,
-    height:"auto",
-    
+    marginTop: height * 0.3,
+    width: width * 0.9,
+    height: "auto",
   },
   modal: {
     // backgroundColor: "#c0c0c0",
     padding: 30,
     borderRadius: 15,
-    width: width*0.85,
+    width: width * 0.85,
     // elevation:5,
     alignItems: "center",
     alignSelf: "center",
     justifyContent: "center",
   },
   modalTitle: {
-    marginTop:10,
+    marginTop: 10,
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 25,
   },
   modalInput: {
-    width: width*0.7,
-    height: height/8,
+    width: width * 0.7,
+    height: height / 8,
     // borderColor: "white",
     borderWidth: 1.5,
     borderRadius: 10,
-   padding:10,
+    padding: 10,
     fontSize: 18,
     marginBottom: 25,
   },
-  modalInput1:{
-    width: width*0.8,
-    height: height/20,
+  modalInput1: {
+    width: width * 0.8,
+    height: height / 20,
     borderColor: "#ccc",
     borderWidth: 1.5,
     borderRadius: 10,
-   padding:10,
+    padding: 10,
     fontSize: 18,
     marginBottom: 25,
   },
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-around",
-    width:width*0.8
+    width: width * 0.8,
   },
   cancelButtonModal: {
     // backgroundColor: "grey",
@@ -841,12 +835,12 @@ const styles = StyleSheet.create({
     // flex: 1,
     // marginRight: 15, // Increased space between buttons
     // alignItems: "center",
-    backgroundColor:"grey",
-    width:width*0.35,
-    padding:5,
-    borderRadius:10,
-    alignItems:"center",
-    justifyContent:"center",
+    backgroundColor: "grey",
+    width: width * 0.35,
+    padding: 5,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
     // marginRight:10
   },
   submitButtonModal: {
@@ -855,12 +849,12 @@ const styles = StyleSheet.create({
     // borderRadius: 10,
     // flex: 1,
     // alignItems: "center",
-    backgroundColor:"#4caf50",
-    width:width*0.35,
-    padding:5,
-    borderRadius:10,
-    alignItems:"center",
-    justifyContent:"center",
+    backgroundColor: "#4caf50",
+    width: width * 0.35,
+    padding: 5,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   submitButtonText: {
     color: "#fff",
@@ -907,11 +901,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   checkboxSelected: {
-    backgroundColor: 'blue', 
-    borderColor: 'blue', 
+    backgroundColor: "blue",
+    borderColor: "blue",
   },
   checkboxTick: {
-    color: 'white', // Color of the tick mark
+    color: "white", // Color of the tick mark
     fontSize: 16,
   },
 });

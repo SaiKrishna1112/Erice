@@ -1,6 +1,7 @@
 import React from 'react';
 import { Appbar, Menu } from 'react-native-paper';
 import { getHeaderTitle } from '@react-navigation/elements';
+import { Alert } from "react-native";
 import { DrawerActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -27,6 +28,33 @@ export default function CustomNavigationBar({
     navigation.navigate("Login")
   }
 
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout Confirmation",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Logout cancelled"),
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("userData");
+              navigation.navigate("Login");
+            } catch (error) {
+              console.error("Error clearing user data:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <Appbar.Header>
       {/* {back ?  */}
@@ -37,9 +65,10 @@ export default function CustomNavigationBar({
       {!back ? (
 							<>
 							<Appbar.Action icon="logout" onPress={() => {
-          AsyncStorage.removeItem("userData"); 
-          navigation.navigate("Login"); 
-        }} />
+          // AsyncStorage.removeItem("userData"); 
+          // navigation.navigate("Login"); 
+          handleLogout()
+              }} />
      
         {/* <Menu
           visible={visible}

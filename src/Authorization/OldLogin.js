@@ -239,19 +239,7 @@ const LoginPage = () => {
           />
           <Text style={styles.title}>Login to OxyRice</Text>
 
-          {/* <TextInput
-            style={[styles.input, errors.mobileNumber && styles.inputError]}
-            placeholder="Enter Mobile Number"
-            keyboardType="phone-pad"
-            value={mobileNumber}
-            maxLength={10}
-            // onChangeText={setMobileNumber}
-           editable={!isOtpSent}
-            onChangeText={(text) => {
-              setMobileNumber(text); 
-              setErrors((prev) => ({ ...prev, mobileNumber: "" })); 
-            }}
-            /> */}
+          
           <View style={styles.mobileInputContainer}>
             <View style={styles.flagInputWrapper}>
               <Text style={styles.flagEmoji}>🇮🇳</Text>

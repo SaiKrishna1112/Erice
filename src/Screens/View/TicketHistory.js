@@ -356,12 +356,7 @@ console.log({query})
 
               {/* Action Buttons */}
               <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={styles.submitbtn}
-                  onPress={() => cancelTicketConfirm(ticketId, query)}
-                >
-                  <Text style={{color:"white"}}>yes</Text>
-                </TouchableOpacity>
+              
 
                 <TouchableOpacity
                   style={styles.submitbtn1}
@@ -371,6 +366,13 @@ console.log({query})
                   }}
                 >
                   <Text style={{color:"white"}}>No</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.submitbtn}
+                  onPress={() => cancelTicketConfirm(ticketId, query)}
+                >
+                  <Text style={{color:"white"}}>yes</Text>
                 </TouchableOpacity>
               </View>
             </View>

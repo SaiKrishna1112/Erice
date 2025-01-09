@@ -68,6 +68,7 @@ import { COLORS } from "../../assets/theme/theme";
 const { width, height } = Dimensions.get("window");
 import Icon from "react-native-vector-icons/FontAwesome";
 import BASE_URL from "../../Config";
+import { getCoordinates } from "../Screens/Address/LocationService";
 
 const CheckOut = ({ navigation, route }) => {
   // console.log("from cartscreen", route.params);
@@ -187,23 +188,32 @@ const CheckOut = ({ navigation, route }) => {
   // useEffect(()=>{
   //   fetchOrderAddress()
   // },[])
-  const handlePlaceOrder = () => {
+  let alertShown = false;
+  const handlePlaceOrder = async() => {
     console.log({ grandTotal });
     console.log("locationdata==================================", locationData);
    console.log("addresslist",addressList);
-   
-    if ((locationData.address == "" || locationData.address == null) &&( addressList == null||addressList.length==0)) {
+   const value = locationData.address + "," + locationData.landMark + "," + locationData.pincode;
+   if(value != null || value != ""){
+   await getCoordinates(value);
+   } else{
+    Alert.alert("Please add Address")
+   }
+    if (!alertShown && (locationData.address == "" || locationData.address == null) &&( addressList == null||addressList.length==0)) {
      
       Alert.alert(
         "Address is Mandatory",
         "Please select an address / Add new address before proceeding.",
         [{ text: "OK" }]
-      );
+        );
+      alertShown = true;
     } else if (grandTotal == 0 || grandTotal == null) {
       //  Alert.alert("Please add items to cart",
       //   [{text:"OK"}]
       //  )
       setGrandStatus(true);
+      Alert.alert("Please add items to cart", [{ text: "OK" }]);
+
     } else {
       navigation.navigate("Order Summary", { addressData: locationData });
     }

@@ -54,6 +54,8 @@ else{
 },[])
 
 
+
+
   const handleSendOtp = async () => {
     // if (!validateMobileNumber()) return;
     if (formData.mobileNumber == "" || formData.mobileNumber == null) {
@@ -87,16 +89,15 @@ else{
           loading: false,
         });
         setShowOtp(true);
-        //  setIsLogin(true);
-        //  setResponseMessage("OTP sent successfully.");
-        // setTimeout(() => setResponseMessage(""), 3000);
+        
       } else {
         Alert.alert("You are already registered, Please login");
         navigation.navigate("Login");
-        // Alert.alert("Error", "Failed to send OTP. Try again.");
-        // setFormData({ formData, loading: false });
+        
       }
     } catch (error) {
+      console.log(error.response);
+      
       Alert.alert("Failed", "You are already registered, Please login", [
         {
           text: "Ok",
@@ -120,7 +121,7 @@ else{
        return false;
      }
     //  setLoading(true);
-    setFormData({ formData, loading: true });
+    setFormData({ ...formData, loading: true });
 
     let data = {
       mobileNumber: formData.mobileNumber,
@@ -138,7 +139,7 @@ else{
     })
       .then(function (response) {
         console.log(response.data);
-        setFormData({ formData, loading: false });
+        setFormData({ ...formData, loading: false });
 
         if (response.data.accessToken != null) {
           dispatch(AccessToken(response.data));
@@ -147,8 +148,8 @@ else{
         }
       })
       .catch(function (error) {
-        console.log(error.response.data);
-        setFormData({ formData, loading: false });
+        console.log(error.response);
+        setFormData({ ...formData, loading: false });
 Alert.alert("Failed,")
       });
   };
@@ -199,23 +200,7 @@ Alert.alert("Failed,")
             />
             <Text style={styles.loginTxt}>Register</Text>
             <View style={{ marginTop: 130 }}>
-              {/* <TextInput
-                style={styles.input}
-                placeholder="Enter Mobile Number"
-                mode="outlined"
-                value={formData.mobileNumber}
-                dense={true}
-                autoFocus
-                activeOutlineColor="#e87f02"
-                onChangeText={(text) => {
-                  setFormData({
-                    ...formData,
-                    mobileNumber: text,
-                    mobileNumber_error: false,
-                  });
-                }}
-                left={<TextInput.Icon icon="eye" />}
-              /> */}
+            
               <TextInput
                 style={styles.input}
                 mode="outlined"

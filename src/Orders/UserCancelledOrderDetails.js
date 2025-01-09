@@ -45,24 +45,20 @@ const UserCancelledOrderDetails = () => {
 
 const renderItem = ({ item }) => (
   <View style={styles.itemContainer}>
-    
+    {/* <TouchableOpacity onPress={()=>navigation.navigate("Order Details",{order_id :orderId})}> */}
     <Text style={styles.itemName}>{item.itemName}</Text>
     <Text>orderId : {item.orderId}</Text>
     <Text>Price: ₹{item.itemPrice}</Text>
     <Text>Quantity: {item.itemQuantity}</Text>
     <Text>Weight: {item.itemWeight} Kg</Text>
-    {/* <TouchableOpacity  style={styles.reOrderButton}onPress={()=>navigation.navigate("Rice")} > 
-      <Text style={{color:"#fff",fontWeight:"bold"}}>ReOrder</Text>
-    </TouchableOpacity> */}
-    {/* <Text>Status: {item.orderStatus}</Text> */}
+    {/* </TouchableOpacity> */}
+    
   </View>
 );
 
 return (
   <View style={styles.container}>
-    {/* <TouchableOpacity style={styles.button} onPress={()=>getUserCancelledItems()}>
-      <Text style={styles.buttonText}>User Cancelled Items</Text>
-    </TouchableOpacity> */}
+   
 
     {cancelledItems.length > 0 ? (
       <FlatList

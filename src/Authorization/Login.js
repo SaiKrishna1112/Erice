@@ -21,8 +21,8 @@ import { AccessToken } from "../../Redux/action/index";
 import BASE_URL from "../../Config";
 const { height, width } = Dimensions.get("window");
 import Icon from "react-native-vector-icons/Ionicons";
-import dynamicLinks from '@react-native-firebase/dynamic-links';
-import { initializeApp } from '@react-native-firebase/app';
+// import dynamicLinks from '@react-native-firebase/dynamic-links';
+// import { initializeApp } from '@react-native-firebase/app';
 
 
 const Login = () => {
@@ -47,6 +47,8 @@ const Login = () => {
   useFocusEffect(
     useCallback(() => {
       const checkLoginData = async () => {
+        console.log("expo");
+        
         try {
           const loginData = await AsyncStorage.getItem("userData");
           const storedmobilenumber = await AsyncStorage.getItem("mobileNumber");
@@ -56,7 +58,7 @@ const Login = () => {
 
           // setMobileNumber(storedmobilenumber);
           setFormData({...formData,mobileNumber:storedmobilenumber})
-          console.log("mobileNumber", formData.mobileNumber);
+          console.log("mobileNumber sravani", formData.mobileNumber);
 
           if (loginData) {
             const user = JSON.parse(loginData);
@@ -71,10 +73,35 @@ const Login = () => {
       };
 
       checkLoginData();
+      // getVersion();
     }, [])
   );
 
+
+
+   const getVersion = async ()=>{
+    
+      try {
+       const response = await axios.get(BASE_URL+"erice-service/user/getAllVersions",{
+        method:"get",
+        headers:{
+         "Content-Type":"application/json"
+        },
+        params : {
+          userType:"CUSTOMER",
+         versionType :"ANDROID"
+       }
+       });
+        console.log("Version response:", response.data);
+    
+      } catch (error) {
+        console.error("Error fetching version:", error);
+      }
+    }
+
+
   const handleSendOtp = async () => {
+    // setShowOtp(true)
     // if (!validateMobileNumber()) return;
     if (formData.mobileNumber == "" || formData.mobileNumber == null) {
       setFormData({ ...formData, mobileNumber_error: true });
@@ -102,19 +129,18 @@ const Login = () => {
          setMobileOtpSession(response.data.mobileOtpSession);
         setFormData({
             ...formData,
-          // showOtp: true,
-        //   mobileOtpSession:response.data.mobileOtpSession,
+        
           loading: false,
         });
         setShowOtp(true);
-        //  setIsLogin(true);
-        //  setResponseMessage("OTP sent successfully.");
-        // setTimeout(() => setResponseMessage(""), 3000);
+       
       } else {
         Alert.alert("Error", "Failed to send OTP. Try again.");
-        // setFormData({ formData, loading: false });
+       
       }
     } catch (error) {
+      console.log(error);
+      setShowOtp(false);
       Alert.alert("Sorry", "You not register,Please signup");
       //   setFormData({ formData, loading: false });
 
@@ -127,7 +153,6 @@ const Login = () => {
   };
 
   const handleVerifyOtp = () => {
-    // if (!validateOtp()) return;
     if (formData.otp == "" || formData.otp == null) {
       setFormData({ ...formData, otp_error: true });
       return false;
@@ -152,15 +177,15 @@ const Login = () => {
       url: BASE_URL + `erice-service/user/login-or-register`,
       data: data,
     })
-      .then((response) => {
+      .then(async(response) => {
         console.log("response", response.data);
         setFormData({ ...formData, loading: false });
        setShowOtp(false)
         if (response.data.accessToken != null) {
           if (response.data.primaryType == "CUSTOMER") {
             dispatch(AccessToken(response.data));
-            AsyncStorage.setItem("userData", JSON.stringify(response.data));
-            // await AsyncStorage.setItem('mobileNumber',mobileNumber)
+            await AsyncStorage.setItem("userData", JSON.stringify(response.data));
+            await AsyncStorage.setItem('mobileNumber',formData.mobileNumber)
             // await AsyncStorage.setItem("userData", JSON.stringify(response.data));
             Alert.alert("Success", "Login successful!");
             navigation.navigate("Home");
@@ -195,78 +220,78 @@ const Login = () => {
   };
 
   
-    initializeApp(firebaseConfig);
+    // initializeApp(firebaseConfig);
 
 
 
-  useEffect(() => {
-		const handleDynamicLink = async () => {
+//   useEffect(() => {
+// 		const handleDynamicLink = async () => {
 				
 
-				const initialDynamicLink = await dynamicLinks().getInitialLink();
-				if (initialDynamicLink) {
-						// Handle the initial dynamic link
-						console.log('Initial dynamic link:');
-						console.log('Initial dynamic link1:', initialDynamicLink.url);
-						// alert("initialDynamicLink....."+initialDynamicLink.url)
-						const url = initialDynamicLink.url;
-						const regex = /ref=([^&]+)/;
-						const match = url.match(regex);
+// 				const initialDynamicLink = await dynamicLinks().getInitialLink();
+// 				if (initialDynamicLink) {
+// 						// Handle the initial dynamic link
+// 						console.log('Initial dynamic link:');
+// 						console.log('Initial dynamic link1:', initialDynamicLink.url);
+// 						// alert("initialDynamicLink....."+initialDynamicLink.url)
+// 						const url = initialDynamicLink.url;
+// 						const regex = /ref=([^&]+)/;
+// 						const match = url.match(regex);
 
-						if (match && match[1]) {
-								const referralCode = match[1];
-								// setRefCode(referralCode)
-								var refCode=referralCode;
-								console.log({refCode}); 
-                navigation.navigate('RegisterScreen',{refCode:refCode})
+// 						if (match && match[1]) {
+// 								const referralCode = match[1];
+// 								// setRefCode(referralCode)
+// 								var refCode=referralCode;
+// 								console.log({refCode}); 
+//                 navigation.navigate('RegisterScreen',{refCode:refCode})
 
-								// dispatch(Refcodes(referralCode));// Output: LR1040972
-						} else {
-								console.log("Referral code not found in the URL.");
-						}
+// 								// dispatch(Refcodes(referralCode));// Output: LR1040972
+// 						} else {
+// 								console.log("Referral code not found in the URL.");
+// 						}
 
-				}
+// 				}
 
-				const unsubscribe = dynamicLinks().onLink((link) => {
-						// Handle the incoming dynamic link
-						console.log('Incoming dynamic link2:', link.url);
-						// alert("unsubscribe......"+link.url)
-						const url = link.url;
-						const regex = /ref=([^&]+)/;
-						const match = url.match(regex);
+// 				const unsubscribe = dynamicLinks().onLink((link) => {
+// 						// Handle the incoming dynamic link
+// 						console.log('Incoming dynamic link2:', link.url);
+// 						// alert("unsubscribe......"+link.url)
+// 						const url = link.url;
+// 						const regex = /ref=([^&]+)/;
+// 						const match = url.match(regex);
 
-						if (match && match[1]) {
-								const referralCode = match[1];
-								// setRefCode(referralCode)
-								var refCode=referralCode;
-								console.log({refCode}); 
-                navigation.navigate('RegisterScreen',{refCode:refCode})
-						} else {
-								console.log("Referral code not found in the URL.");
-						}
+// 						if (match && match[1]) {
+// 								const referralCode = match[1];
+// 								// setRefCode(referralCode)
+// 								var refCode=referralCode;
+// 								console.log({refCode}); 
+//                 navigation.navigate('RegisterScreen',{refCode:refCode})
+// 						} else {
+// 								console.log("Referral code not found in the URL.");
+// 						}
                                        
-				});
+// 				});
 
-				// Handle app URL scheme deep links
-				Linking.addEventListener('url', (event) => {
-						handleOpenURL(event.url);
-						// alert("event.........."+event.url)
-				});
+// 				// Handle app URL scheme deep links
+// 				Linking.addEventListener('url', (event) => {
+// 						handleOpenURL(event.url);
+// 						// alert("event.........."+event.url)
+// 				});
 
-				return () => {
-						unsubscribe();
-						Linking.removeEventListener('url', handleOpenURL);
-				};
-		};
+// 				return () => {
+// 						unsubscribe();
+// 						Linking.removeEventListener('url', handleOpenURL);
+// 				};
+// 		};
 
-		handleDynamicLink();
-}, []);
+// 		handleDynamicLink();
+// }, []);
 
-const handleOpenURL = (url) => {
-		// Handle app URL scheme deep links
-		console.log('App URL scheme deep link:');
-		console.log('App URL scheme deep link:', url);
-};
+// const handleOpenURL = (url) => {
+// 		// Handle app URL scheme deep links
+// 		console.log('App URL scheme deep link:');
+// 		console.log('App URL scheme deep link:', url);
+// };
 
 
 
@@ -320,23 +345,7 @@ const handleOpenURL = (url) => {
             />
             <Text style={styles.loginTxt}>Login</Text>
             <View style={{ marginTop: 130 }}>
-              {/* <TextInput
-                style={styles.input}
-                placeholder="Enter Mobile Number"
-                mode="outlined"
-                value={formData.mobileNumber}
-                dense={true}
-                autoFocus
-                activeOutlineColor="#e87f02"
-                onChangeText={(text) => {
-                  setFormData({
-                    ...formData,
-                    mobileNumber: text,
-                    mobileNumber_error: false,
-                  });
-                }}
-                left={<TextInput.Icon icon="eye" />}
-              /> */}
+              
               <TextInput
                 style={styles.input}
                 mode="outlined"
@@ -350,6 +359,7 @@ const handleOpenURL = (url) => {
                 }
                 value={formData.mobileNumber}
                 maxLength={10}
+                editable={!showOtp}
                 onChangeText={(text) => {
                   setFormData({
                     ...formData,

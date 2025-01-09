@@ -15,6 +15,8 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { Ionicons } from "react-native-vector-icons";
 import BASE_URL from "../../../Config";
+import { getDistance } from "geolib";
+
 const AddressBook = ({ route }) => {
   const navigation = useNavigation();
   const [errors, setErrors] = useState({});
@@ -25,6 +27,9 @@ const AddressBook = ({ route }) => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedType, setSelectedType] = useState("");
+  const [coordinates, setCoordinates] = useState(null);
+  const [isWithinStatus, setIsWithinStatus] = useState(false);
+  const [distance, setDistance] = useState();
   const [newAddress, setNewAddress] = useState({
     customerId: customerId,
     flatNo: "",
@@ -39,8 +44,14 @@ const AddressBook = ({ route }) => {
   useFocusEffect(
     useCallback(() => {
       fetchOrderAddress();
+      // getCoordinates();
     }, [])
   );
+
+  const centralPosition = {
+    Latitude: 17.4752533,
+    Longitude: 78.3847054,
+  };
 
   const validateFields = () => {
     const newErrors = {};
@@ -109,6 +120,14 @@ const AddressBook = ({ route }) => {
 
       if (response && response.data) {
         setAddressList(response.data);
+        const value =
+          response.data[0].address +
+          " " +
+          response.data[0].pincode +
+          " " +
+          response.data[0].landMark;
+        console.log("location values", value);
+        // getCoordinates(value);
       } else {
         console.warn("API returned empty or invalid data");
         setAddressList([]);
@@ -121,40 +140,179 @@ const AddressBook = ({ route }) => {
     }
   };
 
+  // Function to check if a position is within the radius
+  const isWithinRadius = (coord1, coord2, radius = 20000) => {
+    console.log("coord1", coord1);
+    console.log("coord2", coord2);
+
+    const toRad = (value) => (value * Math.PI) / 180; // Converts degrees to radians
+
+    const R = 6371e3; // Earth's radius in meters
+
+    // Normalize property names for coord2 (handles inconsistent casing)
+    const lat2 = coord2.latitude || coord2.Latitude;
+    const lon2 = coord2.longitude || coord2.Longitude;
+
+    if (!lat2 || !lon2) {
+      console.error("Invalid coord2: missing latitude or longitude.");
+      return false;
+    }
+
+    const lat1 = toRad(coord1.latitude);
+    const lat2Rad = toRad(lat2);
+    const deltaLat = toRad(lat2 - coord1.latitude);
+    const deltaLon = toRad(lon2 - coord1.longitude);
+
+    // Haversine formula
+    const a =
+      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+      Math.cos(lat1) *
+        Math.cos(lat2Rad) *
+        Math.sin(deltaLon / 2) *
+        Math.sin(deltaLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distance = R * c; // Distance in meters
+    console.log("Calculated Distance (meters):", distance);
+
+    // Check if the distance is within the radius
+    const isWithin = distance <= radius;
+    console.log("Is within radius:", isWithin);
+    setIsWithinStatus(isWithin);
+    setDistance(distance);
+    return { isWithin, distance };
+  };
+
+  const getCoordinates = async (data) => {
+    console.log("data cor", data);
+
+    const API_KEY = "AIzaSyAM29otTWBIAefQe6mb7f617BbnXTHtN0M";
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+      data
+    )}&key=${API_KEY}`;
+
+    try {
+      const response = await axios.get(url);
+      console.log("coordinates response:", response.data);
+
+      if (response.data.status === "OK") {
+        const location = response.data.results[0].geometry.location;
+
+        console.log("coordinates:", coordinates);
+
+        const { isWithin, distance } = isWithinRadius(
+          {
+            latitude: response.data.results[0].geometry.location.lat,
+            longitude: response.data.results[0].geometry.location.lng,
+          },
+          centralPosition,
+          20000
+        );
+
+        const distanceInKm = (distance / 1000).toFixed(2);
+        if (isWithin) {
+          // Alert.alert('we can deliver to this address because it is within 20km radius');
+          setCoordinates(location);
+        } else {
+          // Alert.alert("Sorry",`We cannot deliver to this address because your distance is ${distanceInKm} km, which is not within the 20 km radius.`);
+          Alert.alert(
+            "Sorry",
+            `We cannot deliver to this address because your distance is above  20 km, which is not within the 20 km radius.`
+          );
+        }
+      } else {
+        console.error("Error fetching coordinates:", response.data.status);
+      }
+    } catch (error) {
+      console.error("Error making the API call:", error);
+    }
+    return coordinates;
+  };
+
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
+    const value =
+      address.address + "," + address.landMark + "," + address.pincode;
+    console.log({ value });
+    getCoordinates(value);
   };
 
   const saveAddress = async () => {
     if (!validateFields()) {
-      return; // Exit if validation fails
+      return;
     }
-    try {
-      const data = {
-        method: "post",
-        url: BASE_URL + "erice-service/user/addAddress",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        data: {
-          address: newAddress.address,
-          addressType: selectedType,
-          customerId: customerId,
-          flatNo: newAddress.flatNo,
-          landMark: newAddress.landMark,
-          latitude: "",
-          longitude: "",
-          pincode: newAddress.pincode,
-        },
-      };
+    const value =
+      newAddress.address + "," + newAddress.landMark + "," + newAddress.pincode;
+    console.log("value for saving api", value);
 
-      const response = await axios(data);
-      console.log("Added address:", response.data);
-      Alert.alert("Address saved successfully");
-      fetchOrderAddress();
-      setModalVisible(false);
-    } catch (error) {
-      console.error("Error adding address:", error);
+    // const response = await getCoordinates(value);
+    getCoordinates(value);
+
+    //   const data = {
+    //     method: "post",
+    //     url: BASE_URL + "erice-service/user/addAddress",
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //     data: {
+    //       address: newAddress.address,
+    //       addressType: selectedType,
+    //       customerId: customerId,
+    //       flatNo: newAddress.flatNo,
+    //       landMark: newAddress.landMark,
+    //       latitude: "",
+    //       longitude: "",
+    //       pincode: newAddress.pincode,
+    //     },
+    //   };
+
+    //   const response = await axios(data);
+    //   console.log("Added address:", response.data);
+    //   Alert.alert("Address saved successfully");
+    //   fetchOrderAddress();
+    //   setModalVisible(false);
+    // } catch (error) {
+    //   console.error("Error adding address:", error);
+    // }
+    // console.log({location});
+    console.log("isWithinStatus", { isWithinStatus });
+
+    if (isWithinStatus == true) {
+      console.log("Address saved as it is within the radius.");
+
+      try {
+        const data = {
+          method: "post",
+          url: BASE_URL + "erice-service/user/addAddress",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          data: {
+            address: newAddress.address,
+            addressType: selectedType,
+            customerId: customerId,
+            flatNo: newAddress.flatNo,
+            landMark: newAddress.landMark,
+            latitude: coordinates.lat,
+            longitude: coordinates.lng,
+            pincode: newAddress.pincode,
+          },
+        };
+        console.log("data", data);
+
+        const response = await axios(data);
+        console.log("Added address:", response.data);
+        Alert.alert("Address saved successfully");
+        fetchOrderAddress();
+        setModalVisible(false);
+        setIsWithinStatus(false);
+        setCoordinates(null);
+      } catch (error) {
+        console.error("Error adding address:", error);
+      }
+    } else {
+      console.log("Address not saved as it is outside the radius.");
+      // Alert.alert("Sorry",`We cannot deliver to this address because your distance is ${distance} km, which is not within the 20 km radius.`);
     }
   };
 
@@ -185,96 +343,109 @@ const AddressBook = ({ route }) => {
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
-        <View>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View>
-              <Text style={styles.title}>Your Delivery Addresses</Text>
-
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => handleAddAddress()}
-              >
-                <Text style={styles.addButtonText}>Add +</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* <ScrollView> */}
-            {addressList.length > 0 ? (
-              addressList
-                .slice(-4)
-                .reverse()
-                .map((address, index) => {
-                  return (
-                    <View>
-                      <TouchableOpacity
-                        key={index}
-                        style={[
-                          styles.addressRow,
-                          selectedAddress &&
-                            selectedAddress.id === address.id &&
-                            styles.selectedAddress,
-                        ]}
-                        onPress={() => handleAddressSelect(address)}
-                      >
-                        <View style={styles.radioButtonContainer}>
-                          <TouchableOpacity
-                            style={[
-                              styles.radioButton,
-                              selectedAddress &&
-                                selectedAddress.id === address.id &&
-                                styles.radioButtonSelected,
-                            ]}
-                          />
-                          
-                          <Text style={styles.addressText}>
-                          <Text style={styles.label}>Address: </Text>
-                            <Text style={styles.value}>
-                              {address.address}
-                            </Text>
-                            {"\n"}
-                            <Text style={styles.label}>Flat No: </Text>
-                            <Text style={styles.value}>{address.flatNo}</Text>
-                            {"\n"}
-
-                            <Text style={styles.label}>Landmark: </Text>
-                            <Text style={styles.value}>{address.landMark}</Text>
-                            {"\n"}
-
-                           
-                            <Text style={styles.label}>Address Type: </Text>
-                            <Text style={styles.value}>
-                              {address.addressType}
-                            </Text>
-                            {"\n"}
-                           
-                            <Text style={styles.label}>Pinode: </Text>
-                            <Text style={styles.value}>{address.pincode}</Text>
-                            {"\n"}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })
-            ) : (
-              <View style={styles.noDeliveryRow}>
-                <Text style={styles.noDeliveryText}>
-                  No address found. Add a new address above.
-                </Text>
+        <>
+          <View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.noteText}>
+        <Text style={styles.noteLabel}>Note:</Text> Order will be delivered within a 20 km radius only
+      </Text>            
+      <Text style={styles.title}>Your Delivery Addresses</Text>
+              <View>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => handleAddAddress()}
+                >
+                  <Text style={styles.addButtonText}>Add +</Text>
+                </TouchableOpacity>
               </View>
-            )}
 
-            {addressList.length != 0 ? (
-              <TouchableOpacity
-                style={styles.button1}
-                onPress={() => handleSendAddress(selectedAddress)}
-              >
-                <Text style={styles.addButtonText}>SUBMIT ADDRESS</Text>
-              </TouchableOpacity>
-            ) : null}
-          </ScrollView>
-          {/* </ScrollView> */}
-        </View>
+              {/* <ScrollView> */}
+              {addressList.length > 0 ? (
+                addressList
+                  .slice(-4)
+                  .reverse()
+                  .map((address, index) => {
+                    return (
+                      <View>
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.addressRow,
+                            selectedAddress &&
+                              selectedAddress.id === address.id &&
+                              styles.selectedAddress,
+                          ]}
+                          onPress={() => handleAddressSelect(address)}
+                        >
+                          <View style={styles.radioButtonContainer}>
+                            <TouchableOpacity
+                              style={[
+                                styles.radioButton,
+                                selectedAddress &&
+                                  selectedAddress.id === address.id &&
+                                  styles.radioButtonSelected,
+                              ]}
+                            />
+
+                            <Text style={styles.addressText}>
+                              <Text style={styles.label}>Address: </Text>
+                              <Text style={styles.value}>
+                                {address.address}
+                              </Text>
+                              {"\n"}
+                              <Text style={styles.label}>Flat No: </Text>
+                              <Text style={styles.value}>{address.flatNo}</Text>
+                              {"\n"}
+
+                              <Text style={styles.label}>Landmark: </Text>
+                              <Text style={styles.value}>
+                                {address.landMark}
+                              </Text>
+                              {"\n"}
+
+                              <Text style={styles.label}>Address Type: </Text>
+                              <Text style={styles.value}>
+                                {address.addressType}
+                              </Text>
+                              {"\n"}
+
+                              <Text style={styles.label}>Pinode: </Text>
+                              <Text style={styles.value}>
+                                {address.pincode}
+                              </Text>
+                              {"\n"}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })
+              ) : (
+                <View style={styles.noDeliveryRow}>
+                  <Text style={styles.noDeliveryText}>
+                    No address found. Add a new address above.
+                  </Text>
+                </View>
+              )}
+
+              {addressList.length != 0 ? (
+                <TouchableOpacity
+                  style={styles.button1}
+                  onPress={() => handleSendAddress(selectedAddress)}
+                >
+                  <Text style={styles.addButtonText}>SUBMIT ADDRESS</Text>
+                </TouchableOpacity>
+              ) : null}
+            </ScrollView>
+            {/* </ScrollView> */}
+          </View>
+
+          {/* <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Order will be delivered within 20 km radius only
+            </Text>
+          </View> */}
+        </>
       )}
 
       <Modal
@@ -412,7 +583,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#343a40",
     marginBottom: 8,
-    textAlign: "left",
+    textAlign:"center"
   },
   addressRow: {
     backgroundColor: "#ffffff",
@@ -533,7 +704,7 @@ const styles = StyleSheet.create({
   button1: {
     padding: 10,
     marginTop: 10,
-    marginBottom:20,
+    marginBottom: 20,
 
     backgroundColor: "#007bff",
     paddingVertical: 8,
@@ -557,8 +728,34 @@ const styles = StyleSheet.create({
     color: "#555",
   },
   value: {
-    color: "#000", // Dark color for actual address values
+    color: "#000", 
   },
+  footer: {
+    position: "absolute",
+    bottom: 10,
+    width: "100%",
+    backgroundColor: "#f8f8f8",
+    padding: 10,
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+  },
+  footerText: {
+    color: "#333",
+    fontSize: 14,
+  },
+  noteText:{
+    fontSize: 15,
+  color: '#555', 
+  // fontStyle: 'italic', 
+  marginBottom: 10, 
+  lineHeight: 20, 
+  alignSelf:"center",
+  fontWeight:"bold"
+  },
+  noteLabel:{
+    color:"red"
+  }
 });
 
 export default AddressBook;

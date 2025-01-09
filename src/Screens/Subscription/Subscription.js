@@ -34,9 +34,10 @@ const Subscription = () => {
   const [paymentStatus, setPaymentStatus] = useState();
   const [loader, setLoader] = useState(false);
   const [loadingPlanId, setLoadingPlanId] = useState(null);
-  const [status, setStatus] = useState(false);
+  const [status, setStatus] = useState(true);
+  const [noteResponse, setNoteResponse] = useState();
   const navigation = useNavigation();
-
+// var status
   const [profileForm, setProfileForm] = useState({
     customer_name: "",
     customer_email: "",
@@ -92,6 +93,7 @@ const Subscription = () => {
   };
 
   const getSubscription = async () => {
+    setLoading(true)
     const data = {
       url:
         BASE_URL +
@@ -108,8 +110,10 @@ const Subscription = () => {
 
     try {
       const response = await axios(data);
+      setLoading(false)
       console.log("get subscription", response.data);
       setStatus(response.data.status);
+      setNoteResponse(response.data.message);
       // console.log("status", status);
     } catch (error) {
       console.error("Error fetching subscription details:", error);
@@ -205,8 +209,8 @@ const Subscription = () => {
           console.log("==========");
           const data = {
             mid: "1152305",
-            amount: details.amount,
-            // amount:1,
+            // amount: details.amount,
+            amount:1,
             merchantTransactionId: response.data.paymentId,
             transactionDate: new Date(),
             terminalId: "getepay.merchant128638@icici",
@@ -321,7 +325,7 @@ const Subscription = () => {
       paymentStatus == "PENDING" ||
       paymentStatus == "" ||
       paymentStatus == null ||
-      paymentStatus == "undefined"
+      paymentStatus == "undefined" 
     ) {
       const data = setInterval(() => {
         Requery();
@@ -333,14 +337,15 @@ const Subscription = () => {
   }, [paymentStatus, paymentId]);
 
   function Requery() {
-    console.log("requery", paymentId, paymentStatus);
+    // console.log("requery", paymentId, paymentStatus);
 
     // setLoading(false);
     if (
       paymentStatus === "PENDING" ||
       paymentStatus === "" ||
       paymentStatus === null ||
-      paymentStatus === undefined
+      paymentStatus === undefined 
+      // paymentStatus==="FAILED"
     ) {
       // console.log("Before.....",paymentId)
 
@@ -397,15 +402,15 @@ const Subscription = () => {
         .then((result) => {
           // console.log("PaymentResult : ", result);
           var resultobj = JSON.parse(result);
-          console.log(resultobj);
+          // console.log(resultobj);
           // setStatus(resultobj);
           if (resultobj.response != null) {
-            console.log("Requery ID result", paymentId);
+            // console.log("Requery ID result", paymentId);
             var responseurl = resultobj.response;
-            console.log({ responseurl });
+            // console.log({ responseurl });
             var data = decryptEas(responseurl);
             data = JSON.parse(data);
-            console.log("Payment Result", data);
+            // console.log("Payment Result", data);
             setPaymentStatus(data.paymentStatus);
             console.log("paymentStatus", data.paymentStatus);
             if (
@@ -478,20 +483,19 @@ const Subscription = () => {
             Limit: ₹{item.limitAmount}{" "}
             <Text style={styles.note}>(per month)</Text>
           </Text>
-          {/* {loader==false?
-      <TouchableOpacity style={styles.button} onPress={() => handleSubscription(item)}>
-        <Text style={styles.buttonText}>Subscribe</Text>
-      </TouchableOpacity>
-      :
-      <View style={styles.button} >
-        <ActivityIndicator size="small" color="white"/>
-      </View>
-     } */}
           {loader === false ? (
             <TouchableOpacity
-              style={[styles.button, { opacity: status ? 1 : 0.5 }]}
-              onPress={() => status && handleSubscription(item)}
-              disabled={!status}
+              style={[
+                styles.button,
+                {
+                  opacity: status ? 0.5 : 1,
+                  backgroundColor:  "#fd7e14" ,
+                },
+              ]}
+              onPress={() => handleSubscription(item)}
+              disabled={status}
+              // {status==true?disabled:""}
+              
             >
               <Text style={styles.buttonText}>Subscribe</Text>
             </TouchableOpacity>
@@ -512,6 +516,12 @@ const Subscription = () => {
       ) : (
         <>
           <Text style={styles.header}>Subscription Plans</Text>
+          <View style={styles.noteContainer}>
+          <Text style={styles.noteText}>
+          <Text style={styles.noteLabel}>Note: </Text>
+          {noteResponse}
+        </Text>
+          </View> 
           {subscriptionHistoryData.length > 0 ? (
             <FlatList
               data={subscriptionHistoryData}
@@ -553,7 +563,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   planContainer: {
-    backgroundColor: "#f9f9f9", // Light background for better contrast
+    backgroundColor: "#f9f9f9", 
     borderRadius: 10,
     padding: 15,
     borderColor: "#ddd",
@@ -603,6 +613,32 @@ const styles = StyleSheet.create({
     color: "#777",
     marginLeft: 4,
     fontStyle: "italic",
+  },
+  noteContainer: {
+    backgroundColor: '#f7f7f7', 
+    padding: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    width:width*0.9,
+    marginBottom:10,
+    alignSelf:"center"
+  },
+  noteText: {
+    fontSize: 16, 
+    color: '#333333', 
+    // fontFamily: 'Arial', 
+    lineHeight: 24,
+    // textAlign: 'left',
+    alignSelf:"center",
+    fontWeight: 'bold', 
+  },
+  noteLabel: {
+    color: 'red', 
+    fontWeight: 'bold', 
   },
 });
 

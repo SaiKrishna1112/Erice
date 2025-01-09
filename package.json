@@ -10,8 +10,6 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
-    "@react-native-firebase/app": "^21.6.1",
-    "@react-native-firebase/dynamic-links": "^21.6.1",
     "@react-native-picker/picker": "^2.9.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/material-bottom-tabs": "^6.2.29",
@@ -27,7 +25,9 @@
     "expo-location": "~17.0.1",
     "expo-status-bar": "~1.12.1",
     "expo-updates": "~0.25.27",
+    "firebase": "^11.1.0",
     "formdata-node": "^6.0.3",
+    "geolib": "^3.3.4",
     "lottie-react-native": "6.7.0",
     "react": "18.2.0",
     "react-native": "0.74.5",

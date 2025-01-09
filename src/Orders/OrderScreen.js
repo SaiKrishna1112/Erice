@@ -158,7 +158,7 @@ const OrderScreen = () => {
           showsHorizontalScrollIndicator={false} 
         />
       
-      <View style={styles.footer}>
+      {/* <View style={styles.footer}>
       <TouchableOpacity
         style={styles.footerButton}
         onPress={() => navigation.navigate("My Cancelled Item Details")}
@@ -171,7 +171,7 @@ const OrderScreen = () => {
       >
         <Text style={styles.footerButtonText}>Exchanged Items</Text>
       </TouchableOpacity>
-    </View>
+    </View> */}
     </>
     )}
     </View>

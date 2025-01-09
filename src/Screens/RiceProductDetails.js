@@ -11,7 +11,12 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect, useLayoutEffect,useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import Animated from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
@@ -34,19 +39,19 @@ const RiceProductDetails = ({ route, navigation }) => {
   const [categoryImage, setCategoryIamge] = useState();
   const [loadingItems, setLoadingItems] = useState({});
   const [cartData, setCartData] = useState([]);
-  const[loader,setLoader]=useState(false)
+  const [loader, setLoader] = useState(false);
 
   const [error, setError] = useState();
- 
+
   useEffect(() => {
     setItems(route.params.details.itemsResponseDtoList);
     setCategoryIamge(route.params.image);
   }, []);
-  const handleAdd = async(item)=>{
+  const handleAdd = async (item) => {
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
     await handleAddToCart(item);
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
-  }
+  };
 
   const handleIncrease = async (item) => {
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
@@ -60,25 +65,23 @@ const RiceProductDetails = ({ route, navigation }) => {
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
   };
 
- 
-   useFocusEffect(
-      useCallback(() => {
-        fetchCartItems();
-      }, [])
-    );
-  
- 
+  useFocusEffect(
+    useCallback(() => {
+      fetchCartItems();
+    }, [])
+  );
+
   const fetchCartItems = async () => {
     try {
       const response = await axios.get(
-        BASE_URL +`erice-service/cart/customersCartItems?customerId=${customerId}`,
+        BASE_URL +
+          `erice-service/cart/customersCartItems?customerId=${customerId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-    
 
       const cartData = response.data;
       const cartItemsMap = cartData.reduce((acc, item) => {
@@ -86,7 +89,7 @@ const RiceProductDetails = ({ route, navigation }) => {
 
         return acc;
       }, {});
-     
+
       setCartItems(cartItemsMap);
       setCartCount(cartData.length);
       setCartData(response.data);
@@ -142,22 +145,22 @@ const RiceProductDetails = ({ route, navigation }) => {
         }
       );
       // setLoader(false)
-      if(response.data.errorMessage=="Item added to cart successfully"){
+      if (response.data.errorMessage == "Item added to cart successfully") {
         Alert.alert("Success", "Item added to cart successfully");
         setCartItems((prevCartItems) => ({
           ...prevCartItems,
           [item.itemId]: 1,
         }));
         UpdateCartCount(cartCount + 1);
-        fetchCartItems();  
-      }
-      else{
-              setLoader(false);
+        fetchCartItems();
+      } else {
+        setLoader(false);
+        console.log("adding item to customer",response);
+        
         Alert.alert("Alert", response.data.errorMessage);
       }
-     
     } catch (error) {
-      setLoader(false)
+      setLoader(false);
       console.error("Error adding item to cart:", error);
     }
   };
@@ -187,8 +190,6 @@ const RiceProductDetails = ({ route, navigation }) => {
         ...prevCartItems,
         [item.itemId]: newQuantity,
       }));
-      
-     
     } catch (error) {
       console.error("Error incrementing item quantity:", error.response);
     }
@@ -208,8 +209,7 @@ const RiceProductDetails = ({ route, navigation }) => {
         return updatedCartItems;
       });
       try {
-
-         const response = await axios.delete(
+        const response = await axios.delete(
           BASE_URL + "erice-service/cart/remove",
           {
             data: {
@@ -226,7 +226,6 @@ const RiceProductDetails = ({ route, navigation }) => {
         fetchCartItems();
       } catch (error) {
         // console.log(error.response);
-        
       }
     } else {
       const data = {
@@ -260,35 +259,38 @@ const RiceProductDetails = ({ route, navigation }) => {
     return (
       <Animated.View key={item.itemId}>
         <View style={styles.productContainer}>
-          
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Item Details", { item })}
-            >
-              <Image
-                source={{ uri: item.itemImage }}
-                style={styles.productImage}
-              />
-            </TouchableOpacity>
-          
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Item Details", { item })}
+          >
+            <Image
+              source={{ uri: item.itemImage }}
+              style={styles.productImage}
+            />
+          </TouchableOpacity>
+
           <View>
             <Text>{item.priceMrp}</Text>
             <Text style={styles.productName}>{item.itemName}</Text>
-          
-      {route.params.details.categoryName === "Sample Rice" ? (
-        <Text style={styles.productPrice}> ₹ {item.itemPrice}</Text>
-       ) : (
-       <>
-   <Text style={styles.mrpText}>
-  MRP: ₹ <Text style={styles.crossedPrice}>{item.itemMrp}/-</Text>
-</Text>
-<Text style={styles.discountPercentage}>
-  ({Math.round(((item.itemMrp - item.itemPrice) / item.itemMrp) * 100)}% OFF)
-</Text>
-    <Text style={styles.productPrice}> ₹ {item.itemPrice}/-</Text>
-      </>
-)}
-      
-        
+
+            {route.params.details.categoryName === "Sample Rice" ? (
+              <Text style={styles.productPrice}> ₹ {item.itemPrice}</Text>
+            ) : (
+              <>
+                <Text style={styles.mrpText}>
+                  MRP: ₹{" "}
+                  <Text style={styles.crossedPrice}>{item.itemMrp}/-</Text>
+                </Text>
+                <Text style={styles.discountPercentage}>
+                  (
+                  {Math.round(
+                    ((item.itemMrp - item.itemPrice) / item.itemMrp) * 100
+                  )}
+                  % OFF)
+                </Text>
+                <Text style={styles.productPrice}> ₹ {item.itemPrice}/-</Text>
+              </>
+            )}
+
             <Text style={styles.productWeight}>
               {item.quantity} {item.units}
             </Text>
@@ -338,11 +340,10 @@ const RiceProductDetails = ({ route, navigation }) => {
                   <TouchableOpacity
                     style={styles.addButton}
                     onPress={() => handleAdd(item)}
-                    
                   >
                     {/* <Text style={styles.addButtonText}>Add to Cart</Text> */}
                     <Text style={styles.addButtonText}>
-                    {loadingItems[item.itemId] ? "Adding..." : "Add to Cart"}
+                      {loadingItems[item.itemId] ? "Adding..." : "Add to Cart"}
                     </Text>
                   </TouchableOpacity>
                 ) : (
@@ -360,16 +361,17 @@ const RiceProductDetails = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-       <Image
-          // source={require("../../assets/Images/1.jpg")}
-          source={{ uri: categoryImage }}
-          style={styles.banner}
-        />
-       {route.params.details.categoryName=="Sample Rice"? 
-                <Text style={styles.noteText}>Note : Only one free sample is allowed per user.</Text>:null}
+      <Image
+        // source={require("../../assets/Images/1.jpg")}
+        source={{ uri: categoryImage }}
+        style={styles.banner}
+      />
+      {route.params.details.categoryName == "Sample Rice" ? (
+        <Text style={styles.noteText}>
+          Note : Only one free sample is allowed per user.
+        </Text>
+      ) : null}
       <ScrollView>
-       
-               
         <FlatList
           data={items}
           keyExtractor={(item) => item.itemId.toString()}
@@ -387,7 +389,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   banner: {
     width: width,
-    height:250,
+    height: 250,
     // resizeMode: "cover",
     marginVertical: 10,
   },
@@ -405,33 +407,33 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
     flexDirection: "row",
-    alignItems:"center"
+    alignItems: "center",
   },
   productImage: {
     height: height / 8,
     width: width * 0.25,
-    justifyContent:"center",
+    justifyContent: "center",
     alignSelf: "center",
     margin: 5,
     marginRight: 30,
     // marginTop:20
   },
   productName: {
-    width:width*0.6,
+    width: width * 0.6,
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
   },
-noteText:{
-  alignSelf:"center",
-  color:"red",
-  marginBottom:5,
-  fontWeight:"bold",
-  fontSize:16,
-  width:width*0.8,
-  textAlign:"center"
-},
-  
+  noteText: {
+    alignSelf: "center",
+    color: "red",
+    marginBottom: 5,
+    fontWeight: "bold",
+    fontSize: 16,
+    width: width * 0.8,
+    textAlign: "center",
+  },
+
   productPrice: {
     fontSize: 16,
     color: "#388E3C",
@@ -483,18 +485,17 @@ noteText:{
     marginHorizontal: 15,
   },
   mrpText: {
-    fontSize: 16, 
-    fontWeight: 'normal', 
-    color: '#888', 
-    textDecorationColor: '#D32F2F', 
-    textDecorationStyle: 'solid', 
-    marginBottom: 5, 
-    paddingRight: 10, 
-  
+    fontSize: 16,
+    fontWeight: "normal",
+    color: "#888",
+    textDecorationColor: "#D32F2F",
+    textDecorationStyle: "solid",
+    marginBottom: 5,
+    paddingRight: 10,
   },
   crossedPrice: {
-    textDecorationLine: 'line-through', 
-    color: '#D32F2F', 
-    marginRight: 5, 
+    textDecorationLine: "line-through",
+    color: "#D32F2F",
+    marginRight: 5,
   },
 });

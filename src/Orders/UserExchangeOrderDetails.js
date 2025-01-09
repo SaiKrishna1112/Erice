@@ -23,6 +23,7 @@ const UserExchangeOrderDetails = () => {
   const customerId = userData.userId;
   //  const [cancelledItems,setCancelledItems] = useState([])
   const navigation = useNavigation();
+  const [orderId,setOrderId] = useState()
   console.log(customerId);
 const [exchangedItems,setExchangedItems]=useState([])
   useFocusEffect(
@@ -43,6 +44,9 @@ const [exchangedItems,setExchangedItems]=useState([])
       });
 
       console.log("Response Data:", response.data);
+      setOrderId(response.data[0].orderId)
+      console.log("order id",response.data.orderId);
+      
       setExchangedItems(response.data)
     } catch (error) {
       console.error("Error fetching canceled items:", error);
@@ -51,11 +55,12 @@ const [exchangedItems,setExchangedItems]=useState([])
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
+      {/* <TouchableOpacity onPress={()=>navigation.navigate("Order Details",{order_id :orderId})}>  */}
       <Text style={styles.itemName}>{item.itemName}</Text>
-      <Text>OrderId: ₹{item.orderId}</Text>
+      <Text>OrderId: {item.orderId}</Text>
       <Text>ItemPrice: {item.itemPrice}</Text>
       <Text>Exchange Reason: {item.reason}</Text>
-    
+      {/* </TouchableOpacity>  */}
     </View>
   );
 

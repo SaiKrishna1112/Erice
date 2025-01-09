@@ -79,10 +79,12 @@ const WalletPage = ({ route }) => {
   </View>
 
   {/* Transaction Details */}
+  {item.orderId!=null || "" ?(
   <View style={styles.detailRow}>
     <Text style={styles.label}>Order ID:</Text>
     <Text style={styles.value}>{item.orderId}</Text>
   </View>
+   ) :null}  
   <View style={styles.detailRow}>
     <Text style={styles.label}>Description:</Text>
     <Text style={styles.value}>

@@ -20,7 +20,7 @@ import * as Location from "expo-location";
 import BASE_URL from "../../../Config";
 const { height, width } = Dimensions.get("window");
 import { useNavigationState } from '@react-navigation/native';
-
+import { isWithinRadius } from "../Address/LocationService";
 
 const Rice = () => {
   const userData = useSelector((state) => state.counter);
@@ -32,14 +32,17 @@ const Rice = () => {
   const [loading, setLoading] = useState(false);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
-  const [user,setUser] = useState();
+  const [user,setUser] = useState({
+    latitude: 0,
+    longitude: 0, 
+  });
 
   // Request location permission when the component is focused
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     requestLocationPermission();
-  //   }, [])
-  // );
+  useFocusEffect(
+    useCallback(() => {
+      requestLocationPermission();
+    }, [])
+  );
 
 
   const currentScreen = useNavigationState(
@@ -106,28 +109,34 @@ useFocusEffect(
     }
   };
 
-  // useEffect(() => {
-  //   const checkPermission = async () => {
-  //     const { status } = await Location.getForegroundPermissionsAsync();
-  //     if (status === "granted") {
-  //       setHasLocationPermission(true);
-  //       setLoading(false);
-  //     } else {
-  //       requestLocationPermission();
-  //     }
-  //   };
+  useEffect(() => {
+    const checkPermission = async () => {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      console.log("Location Permission Status:", status);
+      if (status === "granted") {
+        setHasLocationPermission(true);
+        setLoading(false);
+      } else {
+        requestLocationPermission();
+      }
+    };
 
-  //   checkPermission();
-  // }, []);
+    checkPermission();
+  }, []);
 
    // Get and log the latitude and longitude
    const getLocation = async () => {
     try {
       const location = await Location.getCurrentPositionAsync({});
-      console.log("Latitude:", location.coords.latitude);  
-      console.log("Longitude:", location.coords.longitude); 
+      // console.log("Latitude1:", location.coords.latitude);  
+      // console.log("Longitude1:", location.coords.longitude); 
+       setUser({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
     } catch (error) {
       console.error("Error getting location", error);
+      return null;
     }
   };
   // Fetch categories when permission is granted
@@ -135,19 +144,28 @@ useFocusEffect(
     useCallback(() => {
       // if (hasLocationPermission) {
         getAllCategories();
-        // getLocation();  
+        getLocation();
+        const { isWithin, distance } = isWithinRadius(user,20000);
+        console.log("Is within radius:", isWithin);
+        console.log("Distance:", distance);
+        
         // Latitude: 17.4752533
         // Longitude: 78.3847054
-      
+      // }
+      // else{
+      //   requestLocationPermission();
+      // }
     }, [])
   );
 
+
+ 
   
   const getAllCategories = () => {
     setLoading(true);
     axios
       .get(BASE_URL + "erice-service/user/showItemsForCustomrs", {
-        headers: { Authorization: `Bearer ${token}` },
+        // headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
         console.log("rice",response.data);

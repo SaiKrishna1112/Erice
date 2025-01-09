@@ -81,14 +81,18 @@ const LoginWithPassword = () => {
         data: data,
       })
         .then(function (response) {
-          console.log(response.data);
+          console.log("userEmailPassword",response.data);
           setFormData({ ...formData, loading: false });
           if (response.data.accessToken) {
             // await AsyncStorage.setItem("accessToken", response.data.token);
+            if (response.data.primaryType == "CUSTOMER") {
 
             dispatch(AccessToken(response.data));
             Alert.alert("Success", response.data.status);
-            navigation.navigate("Home");
+            navigation.navigate("Home")} 
+            else {
+              Alert.alert("Error",`You have logged in as ${response.data.primaryType} , Please login as Customer`);
+            }
           } else {
             Alert.alert("Error", "Invalid credentials. Please try again.");
           }

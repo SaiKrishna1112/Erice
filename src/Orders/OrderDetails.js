@@ -15,9 +15,9 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
-import Icon from "react-native-vector-icons/Ionicons"
+import Icon from "react-native-vector-icons/Ionicons";
 import { useSelector } from "react-redux";
-import Checkbox from "expo-checkbox"; 
+import Checkbox from "expo-checkbox";
 import BASE_URL from "../../Config";
 
 const { width, height } = Dimensions.get("window");
@@ -38,43 +38,42 @@ const OrderDetails = () => {
   const [selectedCancelItems, setSelectedCancelItems] = useState({});
   const [hideCancelbtn, setHideCancelBtn] = useState(false);
   const [isExchangeComplete, setIsExchangeComplete] = useState(false);
-  const [comments, setComments] = useState()
-  const[orderFeedback,setOrderFeedback]=useState('')
+  const [comments, setComments] = useState();
+  const [orderFeedback, setOrderFeedback] = useState([]);
+  console.log("order id",order_id);
+  
+  const emojis = [
+    { emoji: "😡", label: "Very Bad", color: "#FFB3B3", value: "POOR" },
+    { emoji: "😟", label: "Bad", color: "#FFD9B3", value: "BELOWAVERAGE" },
+    { emoji: "🙂", label: "Average", color: "#FFFFB3", value: "AVERAGE" },
+    { emoji: "😃", label: "Good", color: "#D9FFB3", value: "GOOD" },
+    { emoji: "🤩", label: "Excellent", color: "#B3FFB3", value: "EXCELLENT" },
+  ];
 
+  const [selectedEmoji, setSelectedEmoji] = useState(null);
 
- const emojis = [
-   { emoji: "😡", label: "Very Bad", color: "#FFB3B3", value: "POOR" },
-   { emoji: "😟", label: "Bad", color: "#FFD9B3", value: "BELOWAVERAGE" },
-   { emoji: "🙂", label: "Average", color: "#FFFFB3", value: "AVERAGE" },
-   { emoji: "😃", label: "Good", color: "#D9FFB3", value: "GOOD" },
-   { emoji: "🤩", label: "Excellent", color: "#B3FFB3", value: "EXCELLENT" },
- ];
-
- const [selectedEmoji, setSelectedEmoji] = useState(null);
-
- const handleEmojiPress = (index) => {
-   setSelectedEmoji(index);
-   console.log("Selected emoji:", emojis[index].value);
- };
-let selectedLabel = "";
+  const handleEmojiPress = (index) => {
+    setSelectedEmoji(index);
+    console.log("Selected emoji:", emojis[index].value);
+  };
+  let selectedLabel = "";
   const handleSubmit = () => {
     if (selectedEmoji === null || selectedEmoji === undefined) {
       Alert.alert("Feedback Required", "Please select an emoji to proceed.");
-       } else {
-          selectedLabel = emojis[selectedEmoji].value;
-         console.log("Selected feedback:", selectedLabel);
-        //  Alert.alert("Feedback Submitted", `You selected: ${selectedLabel}`);
+    } else {
+      selectedLabel = emojis[selectedEmoji].value;
+      console.log("Selected feedback:", selectedLabel);
     }
-    console.log(comments)
-  
+    console.log(comments);
+
     let data = {
       comments: comments,
       feedbackStatus: selectedLabel,
       feedback_user_id: customerId,
       orderid: order_id,
     };
-    console.log({ data })
-    
+    console.log({ data });
+
     axios({
       method: "post",
       url: BASE_URL + "erice-service/checkout/submitfeedback",
@@ -84,41 +83,40 @@ let selectedLabel = "";
       },
     })
       .then((response) => {
-        console.log(response.data);
+        console.log("feedback submitted response", response.data);
         Alert.alert("Success", "Feedback submitted successfully!");
-        getOrderDetails()
+        getOrderDetails();
         // navigation.navigate("Home");
       })
       .catch((error) => {
         console.log(error.response);
         Alert.alert("Error", "Failed to submit feedback.");
       });
-    
-  }
+  };
 
   useEffect(() => {
-    feedbackGet()
-  }, [])
+    // handleSubmit()
+    // feedbackGet();
+  }, []);
 
-const feedbackGet = async () => {
- 
-  axios({
-    method: "get",
-    url: BASE_URL + `erice-service/checkout/feedback?feedbackUserId=${customerId}&orderid=${order_id}`,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((response) => {
-      console.log("feedbackGet", response.data);
-      setOrderFeedback(response.data);
+  const feedbackGet = async () => {
+    axios({
+      method: "get",
+      url:
+        BASE_URL +
+        `erice-service/checkout/feedback?feedbackUserId=${customerId}&orderid=${order_id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
-    .catch((error) => {
-      console.log(error.response);
-    });
-}
-
-
+      .then((response) => {
+        console.log("feedbackGet", response.data);
+        setOrderFeedback(response.data);
+      })
+      .catch((error) => {
+        console.log(error.response);
+      });
+  };
 
   useEffect(() => {
     getOrderDetails();
@@ -132,7 +130,6 @@ const feedbackGet = async () => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      
     };
 
     try {
@@ -142,16 +139,13 @@ const feedbackGet = async () => {
 
       const orderStatus = response.data[0].orderstatus;
       setOrderStatus(orderStatus);
-      console.log("order status",orderStatus);
-      
+      console.log("order status", orderStatus);
+
       console.log("Fetched order details:", response.data);
-      // console.log("Order status (direct from response):", orderStatus);
     } catch (error) {
       // console.error("Error fetching order details:", error.response);
-    } 
+    }
   };
-
-  
 
   const toggleExchangeItemSelection = (id, quantity) => {
     // console.log("quntity", quantity);
@@ -176,10 +170,10 @@ const feedbackGet = async () => {
       .filter(([_, value]) => value.checked)
       .map(([key, value]) => ({
         itemId: key,
-        cancelReason: value.reason,
+        reason: value.reason,
       }));
 
-    const hasEmptyReasons = result.some((item) => !item.cancelReason);
+    const hasEmptyReasons = result.some((item) => !item.reason);
 
     if (hasEmptyReasons) {
       Alert.alert("Error", "Please provide a reason for Exchange.");
@@ -196,7 +190,7 @@ const feedbackGet = async () => {
       userId: customerId,
     };
     // console.log("exchange data", data);
-    setLoading(true)
+    setLoading(true);
     axios({
       url: `${BASE_URL}erice-service/order/exchangeOrder`,
       method: "patch",
@@ -214,9 +208,9 @@ const feedbackGet = async () => {
             onPress: () => navigation.navigate("My Exchanged Item Details"),
           },
         ]);
-
+        setIsExchangeVisible(false);
         getOrderDetails();
-        setLoading(false)
+        setLoading(false);
       })
       .catch((err) => {
         // console.log("error cancel", err.response);
@@ -224,7 +218,11 @@ const feedbackGet = async () => {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <View style={styles.centeredContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
   }
 
   const orderDetails = orderData.length > 0 ? orderData[0] : null;
@@ -247,6 +245,9 @@ const feedbackGet = async () => {
     landMark,
     address,
     pinCode,
+    couponValue,
+    walletAmount,
+    subtotal,
   } = orderDetails;
   // console.log("Order details",orderDetails);
 
@@ -286,7 +287,7 @@ const feedbackGet = async () => {
     }
 
     // console.log("cancel Data:", result);
-    setLoading(true)
+    setLoading(true);
     const data = {
       userId: customerId,
       refundDtoList: result,
@@ -304,7 +305,6 @@ const feedbackGet = async () => {
       data: data,
     })
       .then((res) => {
-        
         console.log("response", res.data);
         Alert.alert("Success", res.data.message, [
           {
@@ -312,9 +312,9 @@ const feedbackGet = async () => {
             onPress: () => navigation.navigate("My Cancelled Item Details"),
           },
         ]);
-        setIsmodelVisible(false)
+        setIsmodelVisible(false);
         getOrderDetails();
-        setLoading(false)
+        setLoading(false);
       })
       .catch((err) => {
         console.log("error cancel", err.response);
@@ -343,36 +343,35 @@ const feedbackGet = async () => {
         </View>
 
         {/* Order Items */}
-        <Text style={styles.sectionTitle}>Order Items</Text>
-
+        {orderItems.length > 0 ? (
+          <Text style={styles.sectionTitle}>Order Items</Text>
+        ) : null}
         {orderItems.length > 0 ? (
           <View>
             <View style={styles.section}>
-              
-               <View style={styles.headerRow}>
-                            <Text style={styles.headerText}>Item Name</Text>
-                            <Text style={styles.headerText}>Qty</Text>
-                            <Text style={styles.headerText}>Price</Text>
-                            <Text style={styles.headerText}>Total</Text>
-                          </View>
+              <View style={styles.headerRow}>
+                <Text style={styles.headerText}>Item Name</Text>
+                <Text style={styles.headerText}>Qty</Text>
+                <Text style={styles.headerText}>Price</Text>
+                <Text style={styles.headerText}>Total</Text>
+              </View>
 
-              
               <FlatList
-                            data={orderItems}
-                            keyExtractor={(item, index) => index.toString()}
-                            renderItem={({ item }) => (
-                              <View style={styles.itemRow}>
-                                <Text style={styles.itemName}>{item.itemName}</Text>
-                                <Text style={styles.itemDetail}>{item.quantity}</Text>
-                                <Text style={styles.itemDetail}>₹{item.price/item.quantity}</Text>
-              
-                                <Text style={styles.itemDetail}>
-                                  ₹{item.price}
-                                </Text>
-                              </View>
-                            )}
-                            ItemSeparatorComponent={() => <View style={styles.separator} />} 
-                          />
+                data={orderItems}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.itemRow}>
+                    <Text style={styles.itemName}>{item.itemName}</Text>
+                    <Text style={styles.itemDetail}>{item.quantity}</Text>
+                    <Text style={styles.itemDetail}>
+                      ₹{item.price / item.quantity}
+                    </Text>
+
+                    <Text style={styles.itemDetail}>₹{item.price}</Text>
+                  </View>
+                )}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
+              />
             </View>
           </View>
         ) : null}
@@ -380,12 +379,12 @@ const feedbackGet = async () => {
         {/* Feedback */}
         {orderstatus === "4" ? (
           <View>
-            {orderFeedback.length < 0 ? (
+            {orderFeedback.length === 0 ? (
               <View>
                 <Text
                   style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
                 >
-                  Rate your order Experience{" "} 
+                  Rate your order Experience{" "}
                 </Text>
                 <View style={styles.section}>
                   <View>
@@ -429,11 +428,7 @@ const feedbackGet = async () => {
                           onPress={handleSubmit}
                           style={styles.sendBtn}
                         >
-                          {/* <Text
-                    style={{ fontSize: 18, fontWeight: "bold", color: "green" }}
-                  >
-                    POST
-                  </Text> */}
+                       
                           <Icon name="send" size={20} color="white" />
                         </TouchableOpacity>
                       ) : (
@@ -454,22 +449,21 @@ const feedbackGet = async () => {
             ) : (
               // <Text>{orderstatus}</Text>
               <View>
-                   <Text
+                <Text
                   style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
                 >
-                  Rate your order Experience{" "} 
+                  Rate your order Experience{" "}
                 </Text>
-              <View style={styles.section}>
-              
-                <Text>Already you have submitted feedback</Text>
-             </View>
-             </View>
+                <View style={styles.section}>
+                  <Text>Already you have submitted feedback</Text>
+                </View>
+              </View>
             )}
           </View>
         ) : null}
 
-        {/* Billing Details */}
-        <Text style={styles.sectionTitle}>Billing Details</Text>
+        {/* Address Details */}
+        <Text style={styles.sectionTitle}>Address Details</Text>
 
         <View style={styles.section}>
           <Text style={styles.detailText}>
@@ -491,26 +485,41 @@ const feedbackGet = async () => {
           </Text>
         </View>
 
-        {/* Grand Total */}
+        {/* Billing Details */}
+        <Text style={styles.sectionTitle}>Billing Details</Text>
         <View style={styles.totalSection}>
           {/* Subtotal */}
           <View style={styles.row}>
             <Text style={styles.label}>Sub Total:</Text>
-            <Text style={styles.value}>₹{granttotal}</Text>
+            <Text style={styles.value}>₹{subtotal}</Text>
           </View>
 
           {/* Delivery Fee */}
           <View style={styles.row}>
             <Text style={styles.label}>Delivery Fee:</Text>
-            <Text style={styles.value}>₹0.00</Text>
+            <Text style={styles.value}>+₹0.00</Text>
           </View>
 
+          
+          {/* coupen value */}
+          {(couponValue != null && couponValue !=0) && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Coupon Value:</Text>
+              <Text style={styles.value}>-₹{couponValue}</Text>
+            </View>
+          )}
+          {/* wallet amount */}
+          {(walletAmount != null && walletAmount!=0)&& (
+            <View style={styles.row}>
+              <Text style={styles.label}>Wallet Amount:</Text>
+              <Text style={styles.value}>-₹{walletAmount}</Text>
+            </View>
+          )}
           {/* Payment Type */}
           <View style={styles.row}>
             <Text style={styles.label}>Payment Type:</Text>
             <Text style={styles.value}>{payment == 2 ? "ONLINE" : "COD"}</Text>
           </View>
-
           {/* Order Status */}
           <View style={styles.row}>
             <Text style={styles.label}>Order Status:</Text>
@@ -542,7 +551,7 @@ const feedbackGet = async () => {
           padding: 10,
         }}
       >
-        {orderstatus !== "6" ? (
+        {orderstatus !== "6" && orderItems.length != 0 && (
           <View>
             {orderstatus == 1 || orderstatus == 2 || orderstatus == 3 ? (
               // ["1", "2", "3"].includes(orderstatus) && (
@@ -574,11 +583,14 @@ const feedbackGet = async () => {
                   paddingHorizontal: 20,
                 }}
               >
-                <TouchableOpacity style={styles.cancelButton} onPress={()=>setIsExchangeVisible(true)}>
-                <View>
-                  <Text style={styles.cancelButtonText}>Exchange Order</Text>
-                </View>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setIsExchangeVisible(true)}
+                >
+                  <View>
+                    <Text style={styles.cancelButtonText}>Exchange Order</Text>
+                  </View>
+                </TouchableOpacity>
                 {isExchangeVisible && (
                   <TouchableOpacity
                     style={styles.cancelButton}
@@ -594,15 +606,6 @@ const feedbackGet = async () => {
               </View>
             ) : null}
           </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.navigate("Rice")}
-          >
-            {/* <View>
-              <Text style={styles.cancelButtonText}>Reorder</Text>
-            </View> */}
-          </TouchableOpacity>
         )}
 
         <TouchableOpacity
@@ -611,7 +614,6 @@ const feedbackGet = async () => {
         >
           <Text style={styles.cancelButtonText}>Write To Us</Text>
         </TouchableOpacity>
-
       </View>
 
       {isModalVisible && (
@@ -667,22 +669,22 @@ const feedbackGet = async () => {
                   <Text style={styles.buttonText}>Submit</Text>
                 </TouchableOpacity>
                 {loading && (
-              <View
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: "rgba(255, 255, 255, 0.7)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: 10,
-                }}
-              >
-                <ActivityIndicator size="large" color="#000" />
-              </View>
-            )}
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: "rgba(255, 255, 255, 0.7)",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: 10,
+                    }}
+                  >
+                    <ActivityIndicator size="large" color="#000" />
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -759,27 +761,22 @@ const feedbackGet = async () => {
                   <Text style={styles.buttonText}>Submit</Text>
                 </TouchableOpacity>
                 {loading && (
-              <View
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: "rgba(255, 255, 255, 0.7)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: 10,
-                }}
-              >
-                <ActivityIndicator size="large" color="#000" />
-              </View>
-            )}
-            {/* {loading && (
-          <View style={styles.loaderOverlay}>
-            <ActivityIndicator size="large" color="#000" />
-          </View>
-        )} */}
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: "rgba(255, 255, 255, 0.7)",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: 10,
+                    }}
+                  >
+                    <ActivityIndicator size="large" color="#000" />
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -805,7 +802,6 @@ const styles = StyleSheet.create({
     // padding: 15,
   },
 
- 
   orderId: {
     color: "#fff",
     fontSize: 14,
@@ -846,32 +842,20 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ddd",
   },
   itemName: {
-    paddingLeft:1,
+    paddingLeft: 15,
     fontSize: 13,
     flex: 1.5,
     color: "#000",
-    width:width*0.3,
-   
+    width: width * 0.3,
   },
   itemDetail: {
     fontSize: 15,
     flex: 1,
-    marginLeft:15,
-    justifyContent:"center",
-    alignSelf:"center"
+    marginLeft: 15,
+    justifyContent: "center",
+    alignSelf: "center",
   },
-  // totalSection: {
-  //   backgroundColor: "#dcdcdc",
-  //   borderRadius: 8,
-  //   padding: 15,
-  //   shadowColor: "#000",
-  //   shadowOpacity: 0.1,
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowRadius: 5,
-  //   elevation: 3,
-  //   flexDirection: "row",
-  //   justifyContent: "space-between",
-  // },
+
   totalText: {
     fontSize: 18,
     fontWeight: "bold",
@@ -916,7 +900,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: width * 0.1,
     height: 40,
-    marginRight:5
+    marginRight: 5,
   },
   textArea: {
     height: 100,
@@ -1161,7 +1145,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  
+
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -1200,8 +1184,14 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#A6AEBF', 
-    marginHorizontal: 10, 
+    backgroundColor: "#A6AEBF",
+    marginHorizontal: 10,
+  },
+  centeredContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
 });
 

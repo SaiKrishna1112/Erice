@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "OxyRice",
-    "slug": "oxyrice",
-    "version": "1.0.8",
+    "slug": "OxyRice",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,7 +13,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.oxyrice.customer"
+      "bundleIdentifier": "com.oxyrice.customer",
+      "buildNumber": "5"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,9 +34,7 @@
       "url": "https://u.expo.dev/5a84fd6f-6ba0-45a1-92c2-dfd6caa52e85"
     },
     "extra": {
-      "eas": {
-        "projectId": "76f305d7-221e-4ac9-aad9-e454152cb432"
-      }
+      
     }
   }
 }
