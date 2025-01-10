@@ -15,6 +15,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { Ionicons } from "react-native-vector-icons";
 import BASE_URL from "../../../Config";
+import { isWithinRadius,getCoordinates } from "./LocationService";
 import { getDistance } from "geolib";
 
 const AddressBook = ({ route }) => {
@@ -48,10 +49,6 @@ const AddressBook = ({ route }) => {
     }, [])
   );
 
-  const centralPosition = {
-    Latitude: 17.4752533,
-    Longitude: 78.3847054,
-  };
 
   const validateFields = () => {
     const newErrors = {};
@@ -120,14 +117,6 @@ const AddressBook = ({ route }) => {
 
       if (response && response.data) {
         setAddressList(response.data);
-        const value =
-          response.data[0].address +
-          " " +
-          response.data[0].pincode +
-          " " +
-          response.data[0].landMark;
-        console.log("location values", value);
-        // getCoordinates(value);
       } else {
         console.warn("API returned empty or invalid data");
         setAddressList([]);
@@ -140,95 +129,6 @@ const AddressBook = ({ route }) => {
     }
   };
 
-  // Function to check if a position is within the radius
-  const isWithinRadius = (coord1, coord2, radius = 20000) => {
-    console.log("coord1", coord1);
-    console.log("coord2", coord2);
-
-    const toRad = (value) => (value * Math.PI) / 180; // Converts degrees to radians
-
-    const R = 6371e3; // Earth's radius in meters
-
-    // Normalize property names for coord2 (handles inconsistent casing)
-    const lat2 = coord2.latitude || coord2.Latitude;
-    const lon2 = coord2.longitude || coord2.Longitude;
-
-    if (!lat2 || !lon2) {
-      console.error("Invalid coord2: missing latitude or longitude.");
-      return false;
-    }
-
-    const lat1 = toRad(coord1.latitude);
-    const lat2Rad = toRad(lat2);
-    const deltaLat = toRad(lat2 - coord1.latitude);
-    const deltaLon = toRad(lon2 - coord1.longitude);
-
-    // Haversine formula
-    const a =
-      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-      Math.cos(lat1) *
-        Math.cos(lat2Rad) *
-        Math.sin(deltaLon / 2) *
-        Math.sin(deltaLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    const distance = R * c; // Distance in meters
-    console.log("Calculated Distance (meters):", distance);
-
-    // Check if the distance is within the radius
-    const isWithin = distance <= radius;
-    console.log("Is within radius:", isWithin);
-    setIsWithinStatus(isWithin);
-    setDistance(distance);
-    return { isWithin, distance };
-  };
-
-  const getCoordinates = async (data) => {
-    console.log("data cor", data);
-
-    const API_KEY = "AIzaSyAM29otTWBIAefQe6mb7f617BbnXTHtN0M";
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-      data
-    )}&key=${API_KEY}`;
-
-    try {
-      const response = await axios.get(url);
-      console.log("coordinates response:", response.data);
-
-      if (response.data.status === "OK") {
-        const location = response.data.results[0].geometry.location;
-
-        console.log("coordinates:", coordinates);
-
-        const { isWithin, distance } = isWithinRadius(
-          {
-            latitude: response.data.results[0].geometry.location.lat,
-            longitude: response.data.results[0].geometry.location.lng,
-          },
-          centralPosition,
-          20000
-        );
-
-        const distanceInKm = (distance / 1000).toFixed(2);
-        if (isWithin) {
-          // Alert.alert('we can deliver to this address because it is within 20km radius');
-          setCoordinates(location);
-        } else {
-          // Alert.alert("Sorry",`We cannot deliver to this address because your distance is ${distanceInKm} km, which is not within the 20 km radius.`);
-          Alert.alert(
-            "Sorry",
-            `We cannot deliver to this address because your distance is above  20 km, which is not within the 20 km radius.`
-          );
-        }
-      } else {
-        console.error("Error fetching coordinates:", response.data.status);
-      }
-    } catch (error) {
-      console.error("Error making the API call:", error);
-    }
-    return coordinates;
-  };
-
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
     const value =
@@ -238,48 +138,18 @@ const AddressBook = ({ route }) => {
   };
 
   const saveAddress = async () => {
+    
     if (!validateFields()) {
       return;
     }
     const value =
       newAddress.address + "," + newAddress.landMark + "," + newAddress.pincode;
     console.log("value for saving api", value);
+      const { status,isWithin, distanceInKm,coord1 } =await getCoordinates(value);
+      console.log({status,isWithin,distanceInKm,coord1});
 
-    // const response = await getCoordinates(value);
-    getCoordinates(value);
-
-    //   const data = {
-    //     method: "post",
-    //     url: BASE_URL + "erice-service/user/addAddress",
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //     data: {
-    //       address: newAddress.address,
-    //       addressType: selectedType,
-    //       customerId: customerId,
-    //       flatNo: newAddress.flatNo,
-    //       landMark: newAddress.landMark,
-    //       latitude: "",
-    //       longitude: "",
-    //       pincode: newAddress.pincode,
-    //     },
-    //   };
-
-    //   const response = await axios(data);
-    //   console.log("Added address:", response.data);
-    //   Alert.alert("Address saved successfully");
-    //   fetchOrderAddress();
-    //   setModalVisible(false);
-    // } catch (error) {
-    //   console.error("Error adding address:", error);
-    // }
-    // console.log({location});
-    console.log("isWithinStatus", { isWithinStatus });
-
-    if (isWithinStatus == true) {
+    if (isWithin == true && coord1) {
       console.log("Address saved as it is within the radius.");
-
       try {
         const data = {
           method: "post",
@@ -293,8 +163,8 @@ const AddressBook = ({ route }) => {
             customerId: customerId,
             flatNo: newAddress.flatNo,
             landMark: newAddress.landMark,
-            latitude: coordinates.lat,
-            longitude: coordinates.lng,
+            latitude: coord1.latitude,
+            longitude: coord1.longitude,
             pincode: newAddress.pincode,
           },
         };
@@ -303,15 +173,33 @@ const AddressBook = ({ route }) => {
         const response = await axios(data);
         console.log("Added address:", response.data);
         Alert.alert("Address saved successfully");
-        fetchOrderAddress();
         setModalVisible(false);
+        setNewAddress({
+          address: "",
+          flatNo: "",
+          landMark: "",
+          pincode: "",
+        });
+        setSelectedType("");
+        setCoordinates(null);
         setIsWithinStatus(false);
         setCoordinates(null);
+        fetchOrderAddress();
       } catch (error) {
         console.error("Error adding address:", error);
       }
     } else {
       console.log("Address not saved as it is outside the radius.");
+      // alert("Address not saved. It is outside the allowed distance.");
+      setNewAddress({
+        address: "",
+        flatNo: "",
+        landMark: "",
+        pincode: "",
+      });
+      setSelectedType("");
+      setCoordinates(null);
+      setIsWithinStatus(false);
       // Alert.alert("Sorry",`We cannot deliver to this address because your distance is ${distance} km, which is not within the 20 km radius.`);
     }
   };
@@ -335,7 +223,20 @@ const AddressBook = ({ route }) => {
       return;
     }
     console.log("Location Data:", locationdata);
+    const value =
+    locationdata.address + "," + locationdata.landMark + "," + locationdata.pincode;
+    console.log("value for saving api", value);
+      const { status,isWithin, distanceInKm,coord1 } =await getCoordinates(value);
+      console.log({status,isWithin,distanceInKm,coord1});
+  if(isWithin == true && coord1){
+    console.log("Address saved as it is within the radius.");
     navigation.navigate("Checkout", { locationdata });
+  }else{
+    console.log("Address not saved as it is outside the radius.");
+    Alert.alert("Sorry",`We cannot deliver to this address because your distance is ${distanceInKm} km, which is not within the 20 km radius.`);
+  }
+ 
+    // navigation.navigate("Checkout", { locationdata });
   };
 
   return (

@@ -17,6 +17,8 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { Checkbox } from "react-native-paper";
+import Icon from "react-native-vector-icons/Ionicons";
+
 import BASE_URL from "../../Config";
 
 const { width, height } = Dimensions.get("window");
@@ -35,6 +37,8 @@ const OrderDetails = () => {
   const { order_id, status } = route.params;
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectedCancelItems, setSelectedCancelItems] = useState([]);
+  const [comments, setComments] = useState();
+   const [orderFeedback, setOrderFeedback] = useState([]);
   // console.log("route",route.params.new_Order_Id);
 
   console.log("varam", order_id);
@@ -68,6 +72,85 @@ const OrderDetails = () => {
       console.error("Error fetching order details:", error.response);
     }
   };
+
+  const emojis = [
+    { emoji: "😡", label: "Very Bad", color: "#FFB3B3", value: "POOR" },
+    { emoji: "😟", label: "Bad", color: "#FFD9B3", value: "BELOWAVERAGE" },
+    { emoji: "🙂", label: "Average", color: "#FFFFB3", value: "AVERAGE" },
+    { emoji: "😃", label: "Good", color: "#D9FFB3", value: "GOOD" },
+    { emoji: "🤩", label: "Excellent", color: "#B3FFB3", value: "EXCELLENT" },
+  ];
+
+  const [selectedEmoji, setSelectedEmoji] = useState(null);
+
+  const handleEmojiPress = (index) => {
+    setSelectedEmoji(index);
+    console.log("Selected emoji:", emojis[index].value);
+  };
+  let selectedLabel = "";
+  const handleSubmit = () => {
+    if (selectedEmoji === null || selectedEmoji === undefined) {
+      Alert.alert("Feedback Required", "Please select an emoji to proceed.");
+    } else {
+      selectedLabel = emojis[selectedEmoji].value;
+      console.log("Selected feedback:", selectedLabel);
+    }
+    console.log(comments);
+
+    let data = {
+      comments: comments,
+      feedbackStatus: selectedLabel,
+      feedback_user_id: customerId,
+      orderid: order_id,
+    };
+    console.log({ data });
+
+    axios({
+      method: "post",
+      url: BASE_URL + "erice-service/checkout/submitfeedback",
+      data: data,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        console.log("feedback submitted response", response.data);
+        Alert.alert("Success", "Feedback submitted successfully!");
+        getOrderDetails();
+        // navigation.navigate("Home");
+      })
+      .catch((error) => {
+        console.log(error.response);
+        Alert.alert("Error", "Failed to submit feedback.");
+      });
+  };
+
+  useEffect(() => {
+    // handleSubmit()
+    feedbackGet();
+  }, []);
+
+  const feedbackGet = async () => {
+    axios({
+      method: "get",
+      url:
+        BASE_URL +
+        `erice-service/checkout/feedback?feedbackUserId=${customerId}&orderid=${order_id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        console.log("feedbackGet", response.data);
+        setOrderFeedback(response.data);
+      })
+      .catch((error) => {
+        console.log(error.response);
+      });
+  };
+
+
+
 
   const handleExchangeOrder = () => {
     setIsExchangeVisible(true);
@@ -262,9 +345,10 @@ const OrderDetails = () => {
             <Text style={styles.sectionTitle}>Order Items</Text>
             {/* Header Row */}
             <View style={styles.headerRow}>
-              <Text style={styles.headerText}>Item Name</Text>
-              <Text style={styles.headerText}>Quantity</Text>
-              <Text style={styles.headerText}>Price</Text>
+               <Text style={styles.headerText}>Item Name</Text>
+                              <Text style={styles.headerText}>Qty</Text>
+                              <Text style={styles.headerText}>Price</Text>
+                              <Text style={styles.headerText}>Total</Text>
             </View>
 
             {/* FlatList */}
@@ -274,19 +358,107 @@ const OrderDetails = () => {
               renderItem={({ item }) => (
                 <View style={styles.itemRow}>
                   <Text style={styles.itemName}>{item.itemName}</Text>
-                  <Text style={styles.itemDetail}>{item.quantity}</Text>
-                  <Text style={styles.itemDetail}>
-                    ₹{item.price * item.quantity}
-                  </Text>
+                                     <Text style={styles.itemDetail}>{item.quantity}</Text>
+                                     <Text style={styles.itemDetail}>
+                                       ₹{item.price / item.quantity}
+                                     </Text>
+                <Text style={styles.itemDetail}>₹{item.price}</Text>
                 </View>
               )}
             />
           </View>
         ) : null}
+        
+                {/* Feedback */}
+                {orderstatus === "4" ? (
+                  <View>
+                    {orderFeedback.length === 0 ? (
+                      <View>
+                        <Text
+                          style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+                        >
+                          Rate your order Experience{" "}
+                        </Text>
+                        <View style={styles.section}>
+                          <View>
+                            {/* <Text style={styles.inputLabel}>Rate your experience</Text> */}
+                            <View style={styles.emojiContainer}>
+                              {emojis.map((item, index) => (
+                                <TouchableOpacity
+                                  key={index}
+                                  style={[
+                                    styles.emojiBox,
+                                    selectedEmoji === index && {
+                                      backgroundColor: item.color,
+                                    },
+                                  ]}
+                                  onPress={() => handleEmojiPress(index)}
+                                >
+                                  <Text style={styles.emoji}>{item.emoji}</Text>
+                                  <Text style={styles.emojiLabel}>{item.label}</Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <TextInput
+                                style={styles.input}
+                                placeholder="Enter your feedback (Optional)"
+                                value={comments}
+                                multiline={true}
+                                onChangeText={(text) => setComments(text)}
+                                noOfLines={4}
+                                scrollEnabled="true"
+                              />
+        
+                              {selectedEmoji != null ? (
+                                <TouchableOpacity
+                                  onPress={handleSubmit}
+                                  style={styles.sendBtn}
+                                >
+                               
+                                  <Icon name="send" size={20} color="white" />
+                                </TouchableOpacity>
+                              ) : (
+                                <View style={styles.ViewSendBtn}>
+                                  <Icon name="send" size={18} color="white" />
+                                </View>
+                              )}
+                            </View>
+                            {/* <TouchableOpacity
+                      style={styles.submitButton}
+                      onPress={handleSubmit}
+                    >
+                      <Text style={styles.submitButtonText}>Submit</Text>
+                    </TouchableOpacity> */}
+                          </View>
+                        </View>
+                      </View>
+                    ) : (
+                     
+                      <View>
+                        <Text
+                          style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+                        >
+                          Rate your order Experience{" "}
+                        </Text>
+                        <View style={styles.section}>
+                          <Text>Already you have submitted feedback</Text>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                ) : null}
 
-        {/* Billing Details */}
+        {/* Address Details */}
+        <Text style={styles.sectionTitle}>Billing Details</Text>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Billing Details</Text>
+          
           <Text style={styles.detailText}>
             Customer Name:{" "}
             <Text style={styles.detailValue}>{customerName}</Text>
@@ -307,7 +479,7 @@ const OrderDetails = () => {
         </View>
 
         {/* Grand Total */}
-        <View style={styles.totalSection}>
+        <View style={styles.section}>
           {/* Subtotal */}
           <View style={styles.row}>
             <Text style={styles.label}>Sub Total:</Text>
@@ -639,14 +811,18 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ddd",
   },
   itemName: {
-    fontSize: 16,
-    flex: 2,
+    paddingLeft: 15,
+    fontSize: 13,
+    flex: 1.5,
     color: "#000",
+    width: width * 0.3,
   },
   itemDetail: {
-    fontSize: 16,
+    fontSize: 15,
     flex: 1,
-    // textAlign: 'right',
+    marginLeft: 15,
+    justifyContent: "center",
+    alignSelf: "center",
   },
   totalSection: {
     backgroundColor: "#fff",
@@ -828,13 +1004,7 @@ const styles = StyleSheet.create({
     width: width * 0.8,
   },
   cancelButtonModal: {
-    // backgroundColor: "grey",
-    // padding: 10, // Increased padding for the button
-    // borderRadius: 10,
-    // color: "#fff",
-    // flex: 1,
-    // marginRight: 15, // Increased space between buttons
-    // alignItems: "center",
+    
     backgroundColor: "grey",
     width: width * 0.35,
     padding: 5,
@@ -844,11 +1014,7 @@ const styles = StyleSheet.create({
     // marginRight:10
   },
   submitButtonModal: {
-    // backgroundColor: "#4caf50",
-    // padding: 15, // Increased padding for the button
-    // borderRadius: 10,
-    // flex: 1,
-    // alignItems: "center",
+    
     backgroundColor: "#4caf50",
     width: width * 0.35,
     padding: 5,
@@ -907,6 +1073,76 @@ const styles = StyleSheet.create({
   checkboxTick: {
     color: "white", // Color of the tick mark
     fontSize: 16,
+  },
+  section: {
+    backgroundColor: "#dcdcdc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 3,
+    width: width * 0.9,
+  },
+  emojiContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 10,
+  },
+  emojiBox: {
+    // width: 65,
+    // height: 65,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    padding: 7,
+  },
+  emoji: {
+    fontSize: 32,
+  },
+  emojiLabel: {
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 5,
+  },
+  inputLabel: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: "#fff",
+    width: width * 0.7,
+    // height: 40,
+  },
+  sendBtn: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    width: width * 0.1,
+    height: 40,
+  },
+  ViewSendBtn: {
+    backgroundColor: "#808080",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    width: width * 0.1,
+    height: 40,
+    marginRight: 5,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: "top",
   },
 });
 

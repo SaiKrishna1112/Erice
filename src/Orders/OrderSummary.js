@@ -8,12 +8,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Dimensions
 } from "react-native";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import BASE_URL from "../../Config";
+const {width, height} = Dimensions.get("window");
 const OrderSummaryScreen = ({ navigation, route }) => {
   console.log("Order Summary",route)
  
@@ -197,7 +199,7 @@ const OrderSummaryScreen = ({ navigation, route }) => {
     <Text style={styles.flatNoText}>{address.flatNo}</Text>
   </View>
   {/* <View style={styles.addressDetailsContainer}> */}
-  <View style={{flexDirection:"row"}}>
+  <View style={{flexDirection:"row",width:width*0.8}}>
     <Text style={styles.addressDetails}>{address.landMark} ,</Text>
     <Text style={styles.addressDetails}> {address.address} ,</Text>
     <Text style={styles.addressDetails}> {address.pincode}</Text>
@@ -325,6 +327,7 @@ const styles = StyleSheet.create({
     // flex:1
   },
   addressSection: {
+    width:width*0.9,
     padding: 15,
     margin: 10,
     borderWidth: 1,

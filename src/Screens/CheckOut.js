@@ -194,30 +194,33 @@ const CheckOut = ({ navigation, route }) => {
     console.log("locationdata==================================", locationData);
    console.log("addresslist",addressList);
    const value = locationData.address + "," + locationData.landMark + "," + locationData.pincode;
-   if(value != null || value != ""){
-   await getCoordinates(value);
-   } else{
-    Alert.alert("Please add Address")
-   }
-    if (!alertShown && (locationData.address == "" || locationData.address == null) &&( addressList == null||addressList.length==0)) {
+   if (!alertShown && (locationData.address == "" || locationData.address == null) &&( addressList == null||addressList.length==0)) {
      
-      Alert.alert(
-        "Address is Mandatory",
-        "Please select an address / Add new address before proceeding.",
-        [{ text: "OK" }]
-        );
-      alertShown = true;
-    } else if (grandTotal == 0 || grandTotal == null) {
-      //  Alert.alert("Please add items to cart",
-      //   [{text:"OK"}]
-      //  )
+    Alert.alert(
+      "Address is Mandatory",
+      "Please select an address / Add new address before proceeding.",
+      [{ text: "OK", onPress: () => navigation.navigate("Address Book") }]
+      );
+    alertShown = true;
+    return false
+  }
+   if(value != null || value != ""){
+    const { status,isWithin, distanceInKm,coord1 }  = await getCoordinates(value);
+  // console.log("results for checkout",results);
+  if(isWithin == true){
+    console.log("within radius");
+    if (grandTotal == 0 || grandTotal == null) {
       setGrandStatus(true);
-      Alert.alert("Please add items to cart", [{ text: "OK" }]);
-
+      return false;
     } else {
       navigation.navigate("Order Summary", { addressData: locationData });
     }
-    // Alert.alert('Handle Place Order',locationData.address)
+  }else{
+    console.log("not within radius");
+    return false;
+  }
+}
+ 
   };
 
   const increaseCartItem = async (item) => {

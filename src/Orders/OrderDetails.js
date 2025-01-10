@@ -96,7 +96,7 @@ const OrderDetails = () => {
 
   useEffect(() => {
     // handleSubmit()
-    // feedbackGet();
+    feedbackGet();
   }, []);
 
   const feedbackGet = async () => {
@@ -487,7 +487,7 @@ const OrderDetails = () => {
 
         {/* Billing Details */}
         <Text style={styles.sectionTitle}>Billing Details</Text>
-        <View style={styles.totalSection}>
+        <View style={styles.section}>
           {/* Subtotal */}
           <View style={styles.row}>
             <Text style={styles.label}>Sub Total:</Text>

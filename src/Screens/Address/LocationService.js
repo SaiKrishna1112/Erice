@@ -49,13 +49,13 @@ export const isWithinRadius = (coord1) => {
 
   if (isWithin) {
     // Alert.alert("Success", `We can deliver to this address within the radius.`);
-    return { status: "success", distanceInKm, isWithin };
+    return { status: "success", distanceInKm, isWithin,coord1 };
   } else {
     Alert.alert(
       "Sorry",
       `We cannot deliver to this address because your distance is ${distanceInKm} km, which is not within the ${radius / 1000} km radius.`
     );
-    return { status: "error", distanceInKm, isWithin };
+    return { status: "error", distanceInKm, isWithin, coord1 };
   }
 };
 }
@@ -76,7 +76,7 @@ export const getCoordinates = async (address) => {
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
     address
   )}&key=${API_KEY}`;
-
+var results;
   try {
     const response = await axios.get(url);
     console.log("Coordinates response:", response.data);
@@ -84,9 +84,10 @@ export const getCoordinates = async (address) => {
     if (response.data.status === "OK") {
       const location = response.data.results[0].geometry.location;
 
-     isWithinRadius(
+    results = isWithinRadius(
         { latitude: location.lat, longitude: location.lng }
-      );
+      )
+      
     } else {
       console.error("Error fetching coordinates:", response.data.status);
       Alert.alert("Error", "Could not fetch coordinates for the given address.");
@@ -97,4 +98,5 @@ export const getCoordinates = async (address) => {
     Alert.alert("Error", "An error occurred while fetching the address details.");
     return { status: "error", distance: 0, isWithin: false };
   }
+  return results;
 };
