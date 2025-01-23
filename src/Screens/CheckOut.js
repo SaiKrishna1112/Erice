@@ -211,6 +211,7 @@ const CheckOut = ({ navigation, route }) => {
     console.log("within radius");
     if (grandTotal == 0 || grandTotal == null) {
       setGrandStatus(true);
+      Alert.alert("Sorry", "your cart is empty. Please add some items to your cart.");
       return false;
     } else {
       navigation.navigate("Order Summary", { addressData: locationData });
@@ -575,7 +576,7 @@ const CheckOut = ({ navigation, route }) => {
                 paddingHorizontal: 20,
                 borderRadius: 5,
               }}
-              onPress={() => navigation.navigate("Rice")}
+              onPress={() => navigation.navigate("Dashboard")}
             >
               <Text style={{ color: "#fff", fontSize: 16 }}>
                 Browse Products

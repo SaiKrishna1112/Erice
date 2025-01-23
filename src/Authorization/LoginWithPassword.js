@@ -89,7 +89,8 @@ const LoginWithPassword = () => {
 
             dispatch(AccessToken(response.data));
             Alert.alert("Success", response.data.status);
-            navigation.navigate("Home")} 
+            navigation.navigate("Home")
+          } 
             else {
               Alert.alert("Error",`You have logged in as ${response.data.primaryType} , Please login as Customer`);
             }
@@ -124,8 +125,14 @@ const LoginWithPassword = () => {
               setFormData({ ...formData, loading: false });
 
               dispatch(AccessToken(response.data));
+              if (response.data.userStatus == "ACTIVE" || response.data.userStatus == null) {
+              
+                  navigation.navigate("Home");
+                } else {
+                  Alert.alert("Deactivated","Your account is deactivated, Are you want to reactivate your account to continue?",[{text:"Yes",onPress:()=>navigation.navigate("Active")},{text:"No",onPress:()=>BackHandler.exitApp()}]);
+                }
               // Alert.alert("Success", response.data.status);
-              navigation.navigate("Home");
+              // navigation.navigate("Home");
             })
             .catch(function (error) {
               console.log(error.response);

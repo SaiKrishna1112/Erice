@@ -23,8 +23,7 @@ export default function CustomNavigationBar({
 
   const goBack = () => {
     AsyncStorage.removeItem('accessToken');
-    AsyncStorage.removeItem('userId'); 
-    AsyncStorage.removeItem('organizationId')
+    AsyncStorage.removeItem('userData')
     navigation.navigate("Login")
   }
 

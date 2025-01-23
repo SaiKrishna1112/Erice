@@ -6,6 +6,7 @@ import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import CustomNavigationBar from "../Components/AppBar";
 import Rice from "../Screens/View/Rice";
+import MainErice from "../Screens/MainErice";
 import ProfilePage from "../Screens/Profile";
 import CartScreen from "../Screens/View/CartScreen";
 import OrderScreen from "../../src/Orders/OrderScreen";
@@ -70,7 +71,7 @@ const cartCountValue = (focused) => {
 
   return (
     <Tab.Navigator
-      initialRouteName="Rice"
+      initialRouteName="Dashboard"
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
@@ -80,7 +81,7 @@ const cartCountValue = (focused) => {
       }}
     >
       <Tab.Screen
-        name="Home"
+        name="Dashboard"
         component={Rice}
         options={{
           tabBarIcon: ({ focused }) => (

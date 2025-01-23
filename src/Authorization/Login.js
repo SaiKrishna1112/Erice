@@ -11,10 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  BackHandler
 } from "react-native";
 import axios from "axios";
 import { TextInput } from "react-native-paper";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, useNavigationState } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
 import { AccessToken } from "../../Redux/action/index";
@@ -58,7 +59,7 @@ const Login = () => {
 
           // setMobileNumber(storedmobilenumber);
           setFormData({...formData,mobileNumber:storedmobilenumber})
-          console.log("mobileNumber sravani", formData.mobileNumber);
+          console.log("mobileNumber", formData.mobileNumber);
 
           if (loginData) {
             const user = JSON.parse(loginData);
@@ -77,6 +78,37 @@ const Login = () => {
     }, [])
   );
 
+ const currentScreen = useNavigationState(
+    (state) => state.routes[state.index]?.name
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const handleBackPress = () => {
+        // if (currentScreen === 'Login') {
+          // Custom behavior for Login screen
+          Alert.alert(
+            'Exit',
+            'Are you sure you want to exit?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'OK', onPress: () => BackHandler.exitApp() },
+            ],
+            { cancelable: false }
+          )
+  
+        return true;
+      };
+  
+      // Add BackHandler event listener
+      BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+  
+      // Cleanup
+      return () => {
+        BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+      };
+    }, [currentScreen])
+  )
 
 
    const getVersion = async ()=>{
@@ -187,10 +219,16 @@ const Login = () => {
             await AsyncStorage.setItem("userData", JSON.stringify(response.data));
             await AsyncStorage.setItem('mobileNumber',formData.mobileNumber)
             // await AsyncStorage.setItem("userData", JSON.stringify(response.data));
-            Alert.alert("Success", "Login successful!");
-            navigation.navigate("Home");
+            // Alert.alert("Success", "Login successful!");
             setFormData({...formData,otp:""})
+        if (response.data.userStatus == "ACTIVE") {
+
+            navigation.navigate("Home");
+         } else {
+            Alert.alert("Deactivated","Your account is deactivated, Are you want to reactivate your account to continue?",[{text:"Yes",onPress:()=>navigation.navigate("Active")},{text:"No",onPress:()=>BackHandler.exitApp()}]);
+          }
           } else {
+            setFormData({...formData,otp:""})
             Alert.alert(
               `You have logged in as ${response.data.primaryType} , Please login as Customer`
             );
@@ -652,7 +690,7 @@ const styles = StyleSheet.create({
   },
   rowbtn: {
     //   width: width * 0.35,
-    //   height: 45,
+      // height: 45,
     padding: 5,
     backgroundColor: "white",
     borderRadius: 5,

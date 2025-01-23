@@ -435,7 +435,7 @@ const OrderDetails = () => {
         ) : (
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={() => navigation.navigate("Rice")}
+            onPress={() => navigation.navigate("Dashboard")}
           >
             <View>
               <Text style={styles.cancelButtonText}>Reorder</Text>

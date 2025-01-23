@@ -35,6 +35,7 @@ const CartScreen = () => {
   const [removalLoading, setRemovalLoading] = useState({});
   const [user, setUser] = useState({});
   const [deleteLoader, setDeleteLoader] = useState(false);
+  const [deactivateStatus, setDeactivateStatus] = useState(false);
 
   const [address, setAddress] = useState({
     email: "",
@@ -322,6 +323,15 @@ const CartScreen = () => {
     );
   };
 
+  const handleDeactivateStatus = async () => {
+    console.log("reactivate");
+    const reactivate = await AsyncStorage.getItem("deactivate");
+    console.log({reactivate});
+    if(reactivate=="false"){
+      Alert.alert("Deactivated","Your account is deactivated, Are you want to reactivate your account to continue?",[{text:"Yes",onPress:()=>navigation.navigate("Write To Us")},{text:"No"}]);
+    }
+  }
+
   return (
     <View style={styles.container}>
       {loading ? (
@@ -475,7 +485,7 @@ const CartScreen = () => {
               paddingHorizontal: 20,
               borderRadius: 5,
             }}
-            onPress={() => navigation.navigate("Home")}
+            onPress={() => navigation.navigate("Dashboard")}
           >
             <Text style={{ color: "#fff", fontSize: 16 }}>Browse Items</Text>
           </TouchableOpacity>
@@ -489,11 +499,10 @@ const CartScreen = () => {
           <View style={styles.actionButtonsContainer}>
             <TouchableOpacity
               style={styles.addButton}
-              onPress={() => navigation.navigate("Home")}
+              onPress={() => navigation.navigate("Dashboard")}
             >
               <Text style={styles.actionButtonText}>Add More</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.checkoutButton}
               onPress={() => {

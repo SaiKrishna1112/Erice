@@ -15,18 +15,21 @@ import React, { useState, useEffect, useCallback } from "react";
 import Animated, { FadeInDown, SlideInDown } from "react-native-reanimated";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import * as Location from "expo-location";
 import BASE_URL from "../../../Config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { AccessToken } from "../../../Redux/action/index";
 const { height, width } = Dimensions.get("window");
+
 import { useNavigationState } from '@react-navigation/native';
 import { isWithinRadius } from "../Address/LocationService";
+import LottieView from "lottie-react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 const Rice = () => {
   const userData = useSelector((state) => state.counter);
-  const token = userData.accessToken;
-  const customerId = userData.userId;
-
   const navigation = useNavigation();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,18 +39,59 @@ const Rice = () => {
     latitude: 0,
     longitude: 0, 
   });
+  const dispatch = useDispatch();
 
   // Request location permission when the component is focused
   useFocusEffect(
     useCallback(() => {
+      
+      
       requestLocationPermission();
+      // if(!userData){
+      checkLoginData();
+      // }
     }, [])
   );
 
-
+  const checkLoginData = async () => {
+    console.log("userData", userData);
+    if(userData && userData.accessToken){
+      if(userData.userStatus=="ACTIVE" || userData.userStatus==null){
+        navigation.navigate("Home");
+      }else{
+        navigation.navigate("Active");
+      }
+    }else{
+    try {
+      const loginData = await AsyncStorage.getItem("userData");
+      // console.log("logindata",loginData);
+      if (loginData) {
+        const user = JSON.parse(loginData);
+        if (user.accessToken) {
+          // console.log("user",user);
+          if(user.userStatus=="ACTIVE" || user.userStatus==null){
+            console.log("Active");
+            dispatch(AccessToken(user));
+            navigation.navigate("Home");
+          }else{ 
+            console.log("Inactive"); 
+            dispatch(AccessToken(user));
+            navigation.navigate("Active");
+          }
+          // navigation.navigate("Home");
+        }
+      }else{
+        navigation.navigate("Rice");
+      }
+    } catch (error) {
+      console.error("Error fetching login data", error.response);
+    }
+  }
+  }
   const currentScreen = useNavigationState(
     (state) => state.routes[state.index]?.name
   );
+
 useFocusEffect(
   useCallback(() => {
     const handleBackPress = () => {
@@ -61,19 +105,8 @@ useFocusEffect(
             { text: 'OK', onPress: () => BackHandler.exitApp() },
           ],
           { cancelable: false }
-        );
-      // } else {
-      //   // Default behavior for other screens
-      //   Alert.alert(
-      //     'Go Back',
-      //     'Are you sure you want to go back?',
-      //     [
-      //       { text: 'Cancel', style: 'cancel' },
-      //       { text: 'OK', onPress: () => BackHandler.exitApp() },
-      //     ],
-      //     { cancelable: false }
-      //   );
-      // }
+        )
+
       return true;
     };
 
@@ -102,10 +135,10 @@ useFocusEffect(
         setHasLocationPermission(false);
       }
       setPermissionRequested(true);
-      setLoading(false);
+
     } catch (error) {
       console.error("Error requesting location permission", error);
-      setLoading(false);
+    
     }
   };
 
@@ -115,9 +148,15 @@ useFocusEffect(
       console.log("Location Permission Status:", status);
       if (status === "granted") {
         setHasLocationPermission(true);
-        setLoading(false);
+       
       } else {
         requestLocationPermission();
+        Alert.alert(
+          'Location Permission',
+          'We need your location to check delivery availability. Please enable location permissions in your settings.',
+          [{ text: 'OK' }]
+        );
+        return;
       }
     };
 
@@ -128,8 +167,6 @@ useFocusEffect(
    const getLocation = async () => {
     try {
       const location = await Location.getCurrentPositionAsync({});
-      // console.log("Latitude1:", location.coords.latitude);  
-      // console.log("Longitude1:", location.coords.longitude); 
        setUser({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -148,13 +185,7 @@ useFocusEffect(
         const { isWithin, distance } = isWithinRadius(user,20000);
         console.log("Is within radius:", isWithin);
         console.log("Distance:", distance);
-        
-        // Latitude: 17.4752533
-        // Longitude: 78.3847054
-      // }
-      // else{
-      //   requestLocationPermission();
-      // }
+
     }, [])
   );
 
@@ -168,12 +199,12 @@ useFocusEffect(
         // headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log("rice",response.data);
+        // console.log("rice",response.data);
         
         setCategories(response.data);
-        
+        setTimeout(() => {
         setLoading(false);
-       
+        }, 3000);
       })
       .catch((error) => {
         console.log(error.response);
@@ -183,14 +214,14 @@ useFocusEffect(
 
   if (loading) {
     return (
-      <Animated.View style={styles.loaderContainer}>
-        <Animated.View
-          style={styles.loader}
-          entering={SlideInDown.duration(500)}
-        >
-          <ActivityIndicator size="large" color="#3e2723" />
-        </Animated.View>
-      </Animated.View>
+      <View style={styles.loaderContainer}>
+        <LottieView 
+          source={require("../../../assets/AnimationLoading.json")}
+          autoPlay
+          loop
+          style={{ width: 200, height: 200 }}
+        />
+      </View>
     );
   }
 
@@ -251,10 +282,17 @@ useFocusEffect(
       {/* Main Content - Rice Categories */}
 
       {/* {hasLocationPermission && ( */}
-      
+      <ScrollView>
         <View>
-          <Text style={styles.title}>Rice Categories</Text>
+           <View style={styles.imageView}>
+               <Image source={require("../../../assets/container.jpg")} style={styles.imgView}/>
+               {/* <TouchableOpacity style={{width:width*0.5,height:"10%",backgroundColor:"#e87f02",justifyContent:"center",alignItems:"center",borderRadius:10,marginTop:20}} onPress={()=>navigation.navigate("Container Policy")}>
+                  <Text style={{color:"white",fontSize:20,fontWeight:"bold"}}>Know More</Text>
+               </TouchableOpacity> */}
+           </View>
+           <Text style={styles.title}>Rice Categories</Text>
 
+         {filteredCategories?
           <FlatList
             data={filteredCategories}
             keyExtractor={(item) => item.categoryName}
@@ -262,8 +300,16 @@ useFocusEffect(
             numColumns={2}
             contentContainerStyle={styles.contentContainerStyle}
             showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            scrollEnabled={true}
           />
+          :
+         <View>
+            <Text>No Data Found</Text>
+         </View>
+}
         </View>
+        </ScrollView>
       {/* )} */}
     </View>
   );
@@ -354,5 +400,41 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 18,
+  },
+  imageView: {
+    marginBottom: 10,
+    marginTop: "5%",
+    alignSelf: "center",
+    justifyContent: "center",
+    width: width * 0.9,
+    height: 240,
+    borderRadius: 10,
+    backgroundColor: "white",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  imgView: {
+    width: width * 0.9,
+    height: "100%",
+    resizeMode: "contain",
+    alignSelf: "center",
+
+    // iOS Shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+
+    // Android Elevation
+    elevation: 6,
+
+    // Optional: Add stroke
+    borderWidth: 1,
+    borderColor: "white",
   },
 });

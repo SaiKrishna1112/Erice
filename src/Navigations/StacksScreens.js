@@ -10,6 +10,8 @@ import Register from "../Authorization/Register";
 // import Register from "../Authorization/OldRegister";
 import LoginWithPassword from "../Authorization/LoginWithPassword";
 import Refund from "../Screens/View/Refund";
+import Activated from "../Authorization/Activated";
+import Support from "../Screens/View/Active_Support";
 
 // import ShareLinks from "../Referral Links/ShareLinks";
 
@@ -36,11 +38,12 @@ import TicketHistoryComments from "../Screens/View/TicketHistoryComments";
 import ItemDetails from "../Screens/ItemDetails";
 import UserCancelledOrderDetails from "../Orders/UserCancelledOrderDetails";
 import UserExchangeOrderDetails from "../Orders/UserExchangeOrderDetails";
+import ContainerPolicy from "../Screens/View/ContainerPolicy";
 export default function StacksScreens() {
   const Stack = createStackNavigator();
   return (
     <Stack.Navigator
-      initialRouteName="Login"
+      initialRouteName="Rice"
       screenOptions={{
         headerTintColor: "white",
         headerTitleStyle: styles.headerTitleStyle,
@@ -56,6 +59,7 @@ export default function StacksScreens() {
         component={Login}
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="Active" component={Activated} />
       <Stack.Screen
         name="LoginWithPassword"
         component={LoginWithPassword}
@@ -97,13 +101,14 @@ export default function StacksScreens() {
       <Stack.Screen name="Order Summary" component={OrderSummary}/>
       <Stack.Screen name="Payment Details" component={PaymentDetails}/>
       <Stack.Screen name="Order Details" component={OrderDetails}/>
-      {/* <Stack.Screen name="Write To Us" component={WriteToUs}/> */}
       <Stack.Screen name="Ticket History" component={TicketHistory}/>
       <Stack.Screen name="View Comments" component={TicketHistoryComments} />
       <Stack.Screen name="Item Details" component={ItemDetails}/>
       <Stack.Screen name="Refund" component={Refund} />
       <Stack.Screen name="My Cancelled Item Details" component={UserCancelledOrderDetails} />
       <Stack.Screen name="My Exchanged Item Details" component={UserExchangeOrderDetails} />
+      <Stack.Screen name="Support" component={Support} />
+      <Stack.Screen name="Container Policy" component={ContainerPolicy} />
     </Stack.Navigator>
   );
 }

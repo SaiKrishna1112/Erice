@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "OxyRice",
-    "slug": "OxyRice",
-    "version": "1.0.5",
+    "slug": "Oxyrice",
+    "version": "1.0.11",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.oxyrice.customer",
-      "buildNumber": "5"
+      "buildNumber": "10",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to show available delivery options, calculate delivery times, and ensure your order reaches you accurately.",
+        "NSLocationAlwaysUsageDescription": "We need your location to ensure timely delivery updates even when the app is in the background.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Your location will help us provide the best delivery experience, including background tracking if needed."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.oxyrice.oxyrice_customer",
-      "versionCode": 7
+      "versionCode": 11
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,7 +39,9 @@
       "url": "https://u.expo.dev/5a84fd6f-6ba0-45a1-92c2-dfd6caa52e85"
     },
     "extra": {
-      
+      "eas": {
+        "projectId": "ce226648-f9fe-48e4-b9d1-02f76cf9fcee"
+      }
     }
   }
 }

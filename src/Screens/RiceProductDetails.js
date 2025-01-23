@@ -26,11 +26,10 @@ const { height, width } = Dimensions.get("window");
 import { useSelector } from "react-redux";
 import BASE_URL from "../../Config";
 import { useFocusEffect } from "@react-navigation/native";
+import { set } from "core-js/core/dict";
 
 const RiceProductDetails = ({ route, navigation }) => {
-  const userData = useSelector((state) => state.counter);
-  const token = userData.accessToken;
-  const customerId = userData.userId;
+  
   // console.log("Rice Product Details route",route.params.details.categoryName)
 
   const [items, setItems] = useState([]);
@@ -40,6 +39,7 @@ const RiceProductDetails = ({ route, navigation }) => {
   const [loadingItems, setLoadingItems] = useState({});
   const [cartData, setCartData] = useState([]);
   const [loader, setLoader] = useState(false);
+  // const [userData, setUserData] = useState();
 
   const [error, setError] = useState();
 
@@ -64,12 +64,22 @@ const RiceProductDetails = ({ route, navigation }) => {
     await decrementQuantity(item);
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
   };
+  const userData = useSelector((state) => state.counter);
 
   useFocusEffect(
     useCallback(() => {
+      if(userData){
       fetchCartItems();
+      }
+      console.log("userData",userData);
+      
+      
     }, [])
   );
+
+  //
+  const token = userData?.accessToken;
+  const customerId = userData?.userId;
 
   const fetchCartItems = async () => {
     try {
@@ -103,9 +113,14 @@ const RiceProductDetails = ({ route, navigation }) => {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ marginRight: 15 }}>
-          <Pressable onPress={() => navigation.navigate("My Cart")}>
+          {userData && (
+          <Pressable onPress={() => {
+              console.log({userData});
+            navigation.navigate("My Cart")
+            }}>
             <View style={styles.cartIconContainer}>
               <Icon name="cart-outline" size={30} color="#FFF" />
+
               {cartCount > 0 && (
                 <View
                   style={{
@@ -125,8 +140,10 @@ const RiceProductDetails = ({ route, navigation }) => {
                   </Text>
                 </View>
               )}
+
             </View>
           </Pressable>
+          )}
         </View>
       ),
     });
@@ -134,6 +151,10 @@ const RiceProductDetails = ({ route, navigation }) => {
 
   const UpdateCartCount = (newCount) => setCartCount(newCount);
   const handleAddToCart = async (item) => {
+    if(!userData){
+      Alert.alert("Alert","Please login to continue",[{text:"OK",onPress:()=>navigation.navigate("Login")},{text:"Cancel"}])
+      return
+    }
     const data = { customerId: customerId, itemId: item.itemId, quantity: 1 };
     // setLoader(true)
     try {

@@ -209,8 +209,8 @@ const Subscription = () => {
           console.log("==========");
           const data = {
             mid: "1152305",
-            // amount: details.amount,
-            amount:1,
+            amount: details.amount,
+            // amount:1,
             merchantTransactionId: response.data.paymentId,
             transactionDate: new Date(),
             terminalId: "getepay.merchant128638@icici",

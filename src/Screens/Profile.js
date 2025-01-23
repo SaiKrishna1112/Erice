@@ -34,6 +34,7 @@ import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BASE_URL from "../../Config";
 import ShareLinks from "../../src/Referral Links/ShareLinks";
+import { set } from "core-js/core/dict";
 
 const ProfilePage = () => {
   const userData = useSelector((state) => state.counter);
@@ -69,11 +70,13 @@ const ProfilePage = () => {
   const scaleAnim = useState(new Animated.Value(1))[0];
   const [profileData, setProfileData] = useState();
   const [isLoading, setIsLoading] = useState(false);
+  const [state, setState] = useState()
 
   useFocusEffect(
     useCallback(() => {
       animateProfile();
       getProfile();
+      HandledeactivateStatus();
     }, [getProfile])
   );
 
@@ -272,6 +275,16 @@ const ProfilePage = () => {
     }
   };
 
+  const HandledeactivateStatus = async () => {
+    const deactivate = userData.userStatus;
+    console.log({deactivate});
+    if(deactivate=="ACTIVE"){
+      setState(true)
+    }else{
+      setState(false);
+    }
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -391,6 +404,8 @@ const ProfilePage = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 marginTop: 5,
+                fontSize: 16,
+                fontWeight: "bold",
               }}
               onPress={handleProfileSubmit}
               disabled={isLoading}
@@ -407,8 +422,9 @@ const ProfilePage = () => {
             </TouchableOpacity>
 
             <View style={styles.optionContainer}>
+              <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
               <TouchableOpacity
-                style={styles.optionButton}
+                style={styles.btn}
                 onPress={() => navigation.navigate("Subscription")}
               >
                 <Text style={styles.optionText}>Subscription</Text>
@@ -426,25 +442,12 @@ const ProfilePage = () => {
                 />
                 <Text style={styles.optionText}>Wallet</Text>
               </TouchableOpacity>
+              </View>
 
-              {/* <TouchableOpacity style={styles.optionButton} onPress={onShare}>
-                        <Text style={styles.optionText}>Refer & Share App Link</Text>
-                    </TouchableOpacity> */}
+              <TouchableOpacity style={[styles.btn,{backgroundColor:state?"#f44336":"#4CAF50"}]} onPress={() => navigation.navigate("Active")}>
+                        <Text style={styles.optionText}>{state?"Deactivate Account":"Activate Account"}</Text>
+                    </TouchableOpacity>
             </View>
-            {/* <View style={styles.footer}>
-                    <Text>MY REFERRAL CODE: <Text style={styles.bold}>{user.referral_code}</Text></Text>
-                    <Text>Version: 1.0.24</Text>
-                </View> */}
-
-            {/* <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={() => {
-            navigation.navigate("Login"), AsyncStorage.removeItem("userData");
-          }}
-        >
-          <Ionicons name="log-out-outline" size={20} color="white" />
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity> */}
           </View>
         </ScrollView>
       </View>
@@ -509,22 +512,23 @@ const styles = StyleSheet.create({
   optionContainer: {
     marginTop: 20,
   },
-  optionButton: {
+  btn: {
     backgroundColor: "#FFF",
     paddingHorizontal: 15,
-    paddingVertical: 10,
+    // paddingVertical: 10,
     borderRadius: 10,
     marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 2,
+    elevation: 3,
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
-    minWidth: 150,
+    minWidth: 155,
     height: 50,
+    backgroundColor: "#4CAF50",
   },
 
   optionText: {
@@ -570,18 +574,19 @@ const styles = StyleSheet.create({
   },
   optionButton: {
     flexDirection: "row",
-
     alignItems: "center",
     backgroundColor: "#4CAF50",
-    paddingVertical: 10,
-    // paddingHorizontal: 20,
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
     elevation: 3,
+    minWidth: 150,
+    height: 50,
+    alignSelf: "center",
+    justifyContent: "center",
   },
   optionText: {
     fontSize: 18,

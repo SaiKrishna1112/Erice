@@ -68,7 +68,7 @@ const SubscriptionPage = () => {
   const exitAndGoHome = () => {
     navigation.reset({
       index: 0,
-      routes: [{ name: 'Home' }], // Adjust to the home route name
+      routes: [{ name: 'Dashboard' }], // Adjust to the home route name
     });
   };
 

@@ -9,12 +9,12 @@ import BASE_URL from "../../Config";
 
 // ItemDetailsScreen Component
 const ItemDetails = ({ route,navigation }) => {
-  const { item } = route.params;
+  const { item } = route?.params;
   console.log("Item details page", item);
 
   const userData = useSelector((state) => state.counter);
-  const token = userData.accessToken;
-  const customerId = userData.userId;
+  const token = userData?.accessToken;
+  const customerId = userData?.userId;
 
   const [cartData, setCartData] = useState([]);
   const [cartItems, setCartItems] = useState({});
@@ -22,6 +22,7 @@ const ItemDetails = ({ route,navigation }) => {
   const [loadingItems, setLoadingItems] = useState({});
 
   useEffect(() => {
+
     fetchCartData();
     
   }, []);
@@ -55,7 +56,12 @@ const ItemDetails = ({ route,navigation }) => {
   };
 
 
-
+  const handleRemove = async (item) => {
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
+    await removeCartItem(item);
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
+  };
+  
   const handleIncrease = async (item) => {
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
     await increaseCartItem(item);
@@ -68,11 +74,7 @@ const ItemDetails = ({ route,navigation }) => {
     setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
   };
 
-  const handleRemove = async (item) => {
-    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
-    await removeCartItem(item);
-    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }));
-  };
+ 
 
 
   const decreaseCartItem = async (item) => {
@@ -243,6 +245,10 @@ const increaseCartItem = async (item) => {
   };
 
   const handleAddToCart = async (item) => {
+     if(!userData){
+          Alert.alert("Alert","Please login to continue",[{text:"OK",onPress:()=>navigation.navigate("Login")},{text:"Cancel"}])
+          return
+        }
     const data = { customerId: customerId, itemId: item.itemId, quantity: 1 };
     try {
       const response = await axios.post(
@@ -339,7 +345,7 @@ const increaseCartItem = async (item) => {
         {loadingItems[item.itemId] ? (
           <ActivityIndicator size="small" color="#FFF" />
         ) : (
-          <Text style={styles.addButtonText}>Add to Cart</Text>
+          <Text style={styles.addbuttontext}>Add to Cart</Text>
         )}
       </TouchableOpacity>
       ):null}
@@ -353,10 +359,16 @@ const increaseCartItem = async (item) => {
 
       <View style={styles.footer}>
   <View style={styles.rowContainer}>
-    <TouchableOpacity onPress={() => navigation.navigate("Rice")} style={styles.smallButton}>
+    <TouchableOpacity onPress={() => navigation.navigate("Dashboard")} style={styles.smallButton}>
       <Text style={styles.buttonText}>Add More</Text>
     </TouchableOpacity>
-    <TouchableOpacity onPress={() => navigation.navigate("My Cart")} style={styles.smallButton}>
+    <TouchableOpacity onPress={() =>{
+      if (userData){ 
+      navigation.navigate("My Cart")
+    }else{
+      Alert.alert("Alert", "Please login to continue", [{text:"OK", onPress:()=>navigation.navigate("Login")}, {text:"Cancel"}])
+    }
+    }} style={styles.smallButton}>
       <Text style={styles.buttonText}>View Cart</Text>
     </TouchableOpacity>
   </View>

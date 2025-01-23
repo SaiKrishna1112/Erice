@@ -20,6 +20,7 @@ import BASE_URL from "../../../Config";
 import * as DocumentPicker from "expo-document-picker";
 import { FormData } from "formdata-node";
 import Icon from "react-native-vector-icons/Ionicons"
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const{height,width}=Dimensions.get('window')
 
@@ -52,7 +53,6 @@ const WriteToUs = ({navigation,route}) => {
     uploadLoader:false,
     loading:false
   });
-
   // Validation and Submit Handler
 
 
@@ -263,6 +263,10 @@ else{
       })
       .catch(function (error) {});
   };
+
+
+
+
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
